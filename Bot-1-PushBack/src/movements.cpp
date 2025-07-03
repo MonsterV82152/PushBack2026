@@ -24,17 +24,23 @@ namespace rollers
         int importance; // 0 for high importance, 10 for low importance
     };
     inline rollerState state = {"none", 0, 0, 0, 0};
+    inline rollerState currentState = {"none", 0, 0, 0, 0};
 
     inline std::vector<rollerState> rollerStates = {
         {"intake", 127, 127, 127, 0},
+        {"intakeC", 127, 127, 127, 0},
         {"outtake", -127, -127, -127, 0},
         {"scoreBottom", -127, -127, -127, 127},
         {"scoreMiddle", 30, -30, 0, 127},
+        {"scoreMiddleC", 127, -127, 127, 0},
         {"scoreTop", 60, 60, -60, 127},
+        {"scoreTopC", 127, 127, -127, 0},
         {"directIntake", 127, 0, 0, -127},
         {"cycle", 127, 127, 127, 127},
         {"cycleC", 127, 127, 127, 127},
-        {"none", 0, 0, 0, 0}};
+        {"none", 0, 0, 0, 0},
+        {"ejectMiddle", 127, -127, 0, 127}
+    };
     inline std::vector<temporaryRollerState> temporaryRollerStates;
     inline temporaryRollerState currentTemporaryState = {"none", 0, 0, 0, 0, 10};
     inline temporaryRollerState _stateToTemp(rollerState state, int importance = 0)
@@ -61,6 +67,7 @@ namespace rollers
                     top.move(rollerState.topSpeed);
                     bucket.move(rollerState.bucketSpeed);
                 }
+                currentState = rollerState;
                 state = rollerState;
                 return;
             }
@@ -79,6 +86,7 @@ namespace rollers
                 top.move(newState.topSpeed);
                 bucket.move(newState.bucketSpeed);
                 state = newState;
+                currentState = newState;
                 return;
             }
         }
@@ -88,6 +96,7 @@ namespace rollers
         top.move(newState.topSpeed);
         bucket.move(newState.bucketSpeed);
         state = newState;
+        currentState = newState;
     }
     inline void _runLowestTemporaryState()
     {
@@ -97,6 +106,7 @@ namespace rollers
             middle.move(state.middleSpeed);
             top.move(state.topSpeed);
             bucket.move(state.bucketSpeed);
+            currentState = state;
             return;
         }
         temporaryRollerState lowest = temporaryRollerStates[0];
@@ -108,6 +118,11 @@ namespace rollers
             }
         }
         currentTemporaryState = lowest;
+        currentState.name = lowest.name;
+        currentState.bottomSpeed = lowest.bottomSpeed;
+        currentState.middleSpeed = lowest.middleSpeed;
+        currentState.topSpeed = lowest.topSpeed;
+        currentState.bucketSpeed = lowest.bucketSpeed;
         bottom.move(lowest.bottomSpeed);
         middle.move(lowest.middleSpeed);
         top.move(lowest.topSpeed);
@@ -185,44 +200,127 @@ namespace rollers
 
 namespace colourSort
 {
-    inline double redMax = 30;
+    inline double redMax = 40;
     inline double redMin = 350;
     inline double blueMax = 240;
     inline double blueMin = 170;
+
     inline bool redTeam = true;
     inline void start(void *param)
     {
-
-        topColor.set_led_pwm(100);
+        bool top = false;
+        bool middle = false;
+        std::deque<int> blocks = {3, 3, 3};
         while (true)
         {
-            double topHue = topColor.get_hue();
-
-            if (!redTeam)
+            if (rollers::currentState.name != "none")
             {
-                if (autonSelect.isSkills())
+                double hue = colorSensor.get_hue();
+
+                if (colorSensor.get_led_pwm() != 100)
+                    colorSensor.set_led_pwm(100);
+                if (middleDS.get_distance() < 50)
                 {
-                    if ((topHue > redMin || topHue < redMax) && rollers::currentTemporaryState.name == "scoreTop")
+
+                    if (middle)
                     {
-                        rollers::addTemporaryState("cycleC", 1);
-                        pros::delay(350);
-                        rollers::removeTemporaryState("cycleC");
+                        if (hue > blueMin && hue < blueMax)
+                        {
+                            middle = false;
+                            blocks.push_front(2);
+                            master.print(1, 1, "%d %d %d", blocks[0], blocks[1], blocks[2]);
+                        }
+                        else if (hue > redMin || hue < redMax)
+                        {
+                            middle = false;
+                            blocks.push_front(1);
+                            master.print(1, 1, "%d %d %d", blocks[0], blocks[1], blocks[2]);
+                        }
+                        if (blocks[0] == redTeam + 1)
+                        {
+                            if (autonSelect.isSkills())
+                            {
+                                if (rollers::currentState.name == "scoreMiddle")
+                                {
+                                    rollers::addTemporaryState("cycleC", 1);
+                                    pros::Task([&]()
+                                               {pros::delay(300);
+                            rollers::removeTemporaryState("cycleC"); });
+                                }
+                            }
+                            else
+                            {
+                                if (rollers::currentState.name == "scoreMiddle")
+                                {
+                                    rollers::addTemporaryState("scoreTopC", 1);
+                                    pros::Task([&]()
+                                               {pros::delay(300);
+                            rollers::removeTemporaryState("scoreTopC"); });
+                                }
+                                else if (rollers::currentState.name == "intake")
+                                {
+                                    rollers::addTemporaryState("scoreMiddleC", 1);
+                                    blocks.pop_front();
+                                    master.print(1, 1, "%d %d %d", blocks[0], blocks[1], blocks[2]);
+
+                                    pros::delay(400);
+                                    rollers::removeTemporaryState("scoreMiddleC");
+                                } else if (rollers::currentState.name == "cycle") {
+                                    pros::delay(100);
+                                    rollers::addTemporaryState("ejectMiddle", 1);
+                                    blocks.pop_front();
+                                    master.print(1, 1, "%d %d %d", blocks[0], blocks[1], blocks[2]);
+
+                                    pros::delay(300);
+                                    rollers::removeTemporaryState("ejectMiddle");
+                                }
+                            }
+                        }
                     }
+                }
+                else
+                {
+                    middle = true;
+                }
+                if (topDS.get_distance() < 50)
+                {
+                    if (top)
+                    {
+                        top = false;
+                        if (blocks[0] == redTeam + 1)
+                        {
+                            if (autonSelect.isSkills() && rollers::currentState.name == "scoreTop")
+                            {
+                                rollers::addTemporaryState("intakeC", 1);
+                                pros::Task([&]()
+                                           {pros::delay(300);
+                            rollers::removeTemporaryState("intakeC"); });
+                            }
+                            else if (!autonSelect.isSkills() && rollers::currentState.name == "intake")
+                            {
+                                rollers::addTemporaryState("scoreTopC", 1);
+                                pros::Task([&]()
+                                           {pros::delay(400);
+                            rollers::removeTemporaryState("scoreTopC"); });
+                            }
+                            else if (!autonSelect.isSkills() && rollers::currentState.name == "scoreTop")
+                            {
+                                rollers::addTemporaryState("intakeC", 1);
+                                pros::Task([&]()
+                                           {pros::delay(300);
+                            rollers::removeTemporaryState("intakeC"); });
+                            }
+                        }
+                        blocks.pop_front();
+                        master.print(1, 1, "%d %d %d", blocks[0], blocks[1], blocks[2]);
+                    }
+                }
+                else
+                {
+                    top = true;
                 }
             }
-            else
-            {
-                if (autonSelect.isSkills())
-                {
-                    if (topHue > blueMin && topHue < blueMax && rollers::currentTemporaryState.name == "scoreTop")
-                    {
-                        rollers::addTemporaryState("cycleC", 1);
-                        pros::delay(350);
-                        rollers::removeTemporaryState("cycleC");
-                    }
-                }
-                        }
-            pros::delay(20);
+            pros::delay(10);
         }
     }
 

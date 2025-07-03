@@ -8,9 +8,11 @@
 #include <sstream>
 #include <string>
 #include <cmath>
+#include <deque>
 #include "AutonSelector.hpp"
 #include "lemlib/api.hpp"
 #include "sensor_loc.cpp"
+#include "piston.cpp"
 
 
 inline AutonSelector autonSelect;
@@ -46,18 +48,33 @@ const pros::motor_brake_mode_e_t coast = pros::E_MOTOR_BRAKE_COAST;
 const pros::motor_brake_mode_e_t hold = pros::E_MOTOR_BRAKE_HOLD;
 
 /*-------------Define all configurations-------------*/
-inline pros::MotorGroup leftDT({-11, -12, 13}); // Change these ports to match your left drivetrain motors
-inline pros::MotorGroup rightDT({14, 15, -16}); // Change these ports to match your left drivetrain motors
-inline pros::Imu IMU(8);
+inline pros::MotorGroup leftDT({-1, -2, 3}); // Change these ports to match your left drivetrain motors
+inline pros::MotorGroup rightDT({-8, 9, 10}); // Change these ports to match your left drivetrain motors
+inline pros::Imu IMU(4);
 
-inline pros::Motor bottom(-1);
-inline pros::Motor middle(2);
-inline pros::Motor top(-3);
-inline pros::Motor bucket(-4);
+inline pros::Motor bottom(-15);
+inline pros::Motor middle(20);
+inline pros::Motor top(-12);
+inline pros::Motor bucket(-18);
 
-inline pros::Optical topColor(5);
+inline pros::Optical colorSensor(16);
 
-inline pros::ADIDigitalOut matchLoader('A');
+namespace localization {
+    inline pros::Distance rightDS(7);
+    inline pros::Distance leftDS(6);
+    inline pros::Distance frontDS(14);
+    inline pros::Distance backDS(17);
+}
+
+inline pros::Distance topDS(11);
+inline pros::Distance bottomDS(13);
+inline pros::Distance middleDS(21);
+
+
+inline pros::ADIDigitalOut matchLoaderPiston('A');
+inline Piston matchLoader(&matchLoaderPiston);
+inline pros::ADIDigitalOut parkPiston('B');
+inline Piston park(&parkPiston);
 
 
 
@@ -71,25 +88,20 @@ namespace OdometryConfigs {
         static constexpr double angularKi = 0.0;
         static constexpr double angularKd = 50.0;
     };
-    inline pros::Rotation vertical(-12); // Change this port to match your vertical tracking wheel rotation sensor
-    inline pros::Rotation horizontal(-13); // Change this port to match your horizontal tracking wheel rotation sensor. Delete / Comment if not using
+    inline pros::Rotation vertical(5); // Change this port to match your vertical tracking wheel rotation sensor
 
     inline lemlib::Drivetrain LEMLIB_drivetrain(&leftDT, &rightDT, 
         13, // Measure distance between left and right wheels in inches
-        lemlib::Omniwheel::NEW_275, // Change to the wheel size you are using
+        lemlib::Omniwheel::NEW_325, // Change to the wheel size you are using
         450, // Wheel RPM
         2 // Leave as 2 for now
     );
     inline lemlib::TrackingWheel LEMLIB_vertical_TW(&vertical, 
-        2, // Tracking wheel diameter in inches
-        0.22 // Distance from the tracking wheel to the center vertical axis in inches
+        lemlib::Omniwheel::NEW_275, // Tracking wheel diameter in inches
+        0 // Distance from the tracking wheel to the center vertical axis in inches
     );
-    inline lemlib::TrackingWheel LEMLIB_horizontal_TW(&horizontal, 
-        2, // Tracking wheel diameter in inches
-        1.5 // Distance from the tracking wheel to the center horizontal axis in inches
-    ); // Delete / Comment if not using
 
-    inline lemlib::OdomSensors LEMLIB_sensors(&LEMLIB_vertical_TW, nullptr, &LEMLIB_horizontal_TW, nullptr, &IMU);
+    inline lemlib::OdomSensors LEMLIB_sensors(&LEMLIB_vertical_TW, nullptr, nullptr, nullptr, &IMU);
     inline lemlib::ControllerSettings LEMLIB_lateral_controller(
         PID::lateralKp, // proportional gain (kP)
         PID::lateralKi, // integral gain (kI)

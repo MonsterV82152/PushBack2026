@@ -51,6 +51,12 @@ void opcontrol()
         if (master.get_digital_new_press(buttons::Y)) {
             colourSort::redTeam = !colourSort::redTeam;
         }
+        if (master.get_digital_new_press(buttons::LEFT)) {
+            matchLoader.toggle();
+        }
+        if (master.get_digital_new_press(buttons::RIGHT)) {
+            park.toggle();
+        }
         if (master.get_digital_new_press(buttons::R1))
         {
             if (rollers::state.name == "intake")
