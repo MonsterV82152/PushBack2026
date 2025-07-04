@@ -45,16 +45,56 @@ void opcontrol()
     colourSort::redTeam = autonSelect.isRedTeam();
     while (true)
     {
+        // double leftY;
+        // if (master.get_digital(buttons::DOWN))
+        // {
+        //     if (leftY * 1.5 > 127)
+        //     {
+        //         leftY = 127;
+        //     }
+        //     else if (leftY == 0)
+        //     {
+        //         leftY = 5;
+        //     }
+        //     else
+        //     {
+        //         leftY += abs(leftY * 0.5);
+        //     }
+        // }
+        // else if (master.get_digital(buttons::B)) {
+        //     if (leftY * 1.5 < -127)
+        //     {
+        //         leftY = -127;
+        //     }
+        //     else if (leftY == 0)
+        //     {
+        //         leftY = -5;
+        //     }
+        //     else
+        //     {
+        //         leftY -= abs(leftY * 0.5);
+        //     }
+        // }
+        // else {
+        //     if (leftY * 0.5 < 10) {
+        //         leftY = 0;
+        //     } else {
+        //         leftY *= 0.5;
+        //     }
+        // }
         double rightX = master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
         double leftY = master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
         chassis.arcade(leftY, rightX);
-        if (master.get_digital_new_press(buttons::Y)) {
+        if (master.get_digital_new_press(buttons::Y))
+        {
             colourSort::redTeam = !colourSort::redTeam;
         }
-        if (master.get_digital_new_press(buttons::LEFT)) {
+        if (master.get_digital_new_press(buttons::B))
+        {
             matchLoader.toggle();
         }
-        if (master.get_digital_new_press(buttons::RIGHT)) {
+        if (master.get_digital_new_press(buttons::DOWN))
+        {
             park.toggle();
         }
         if (master.get_digital_new_press(buttons::R1))

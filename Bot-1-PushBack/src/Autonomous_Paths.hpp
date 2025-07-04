@@ -8,7 +8,7 @@ void redSAWP() {
     chassis.setPose(-60.3,-17.5,180);
     chassis.moveToPoint(-48,-48,1000);
     chassis.turnToPoint(-70,-48,700);
-    matchLoader.set_value(true);
+    matchLoader.setState(true);
     chassis.moveToPoint(-70,-48,1000,{.maxSpeed = 70});
     rollers::setState("intake");
     chassis.waitUntilDone();
