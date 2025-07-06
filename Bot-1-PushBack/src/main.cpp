@@ -11,11 +11,11 @@ void initialize()
     autonSelect.setAutons(std::vector<autonomousRoute>{
         autonomousRoute{"red", "Red SAWP", "Solo AWP", redSAWP},
         autonomousRoute{"red", "Red Auton 2", "2nd Red Auton", redAuton2},
-        autonomousRoute{"blue", "Blue Auton 1", "1st Blue Auton", blueAuton1},
+        autonomousRoute{"blue", "Blue Auton 1", "1st Blue Auton", blueSAWP},
         autonomousRoute{"blue", "Blue Auton 2", "2nd Blue Auton", blueAuton2}});
     autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", exampleAuton});
     autonSelect.start();
-    pros::Task colourSort(colourSort::start);
+    // pros::Task colourSort(colourSort::start);
     // pros::Task screen_task([&]() {
     //     while (true) {
     //         // print robot location to the brain screen
@@ -45,43 +45,60 @@ void opcontrol()
     colourSort::redTeam = autonSelect.isRedTeam();
     while (true)
     {
-        // double leftY;
-        // if (master.get_digital(buttons::DOWN))
-        // {
-        //     if (leftY * 1.5 > 127)
-        //     {
-        //         leftY = 127;
-        //     }
-        //     else if (leftY == 0)
-        //     {
-        //         leftY = 5;
-        //     }
-        //     else
-        //     {
-        //         leftY += abs(leftY * 0.5);
-        //     }
+        // double leftY; if (master.get_digital(buttons::DOWN)) { if (leftY * 1.5 > 127) { leftY = 127;} else if (leftY == 0) {leftY = 5;}else{ leftY += abs(leftY * 0.5);}}else if (master.get_digital(buttons::B)) {if (leftY * 1.5 < -127){leftY = -127;} else if (leftY == 0) {leftY = -5;}else{leftY -= abs(leftY * 0.5);}}else {if (leftY * 0.5 < 10) {leftY = 0;} else {leftY *= 0.5;}}
+
+
+
+        // angular awr
+        // double tot = 0;
+        // for (double i = 9.99; i <= 180; i += 10) {
+        // 	double target = chassis.getPose().theta + i;
+        // 	chassis.turnToHeading(target, 1500);
+        // 	delay(2000);
+        // 	tot += target - chassis.getPose().theta;
         // }
-        // else if (master.get_digital(buttons::B)) {
-        //     if (leftY * 1.5 < -127)
-        //     {
-        //         leftY = -127;
-        //     }
-        //     else if (leftY == 0)
-        //     {
-        //         leftY = -5;
-        //     }
-        //     else
-        //     {
-        //         leftY -= abs(leftY * 0.5);
-        //     }
+
+        // delay(500);
+        // master.print(1, 0, "%.5f", tot);
+        // lcd::print(6, 0, "%.5f", tot);
+        // delay(3000);
+
+        // int tar = 180;
+        // chassis.turnToHeading(tar, 3000);
+        // delay(2500);
+        // master.print(1, 0, "%.3f", tar - chassis.getPose().theta);
+        // delay(3000);
+
+        // lateral awr
+        // double tot = 0;
+        // for (double i = 8; i <= 40; i += 8) {
+        // 	double target = chassis.getPose().y + i;
+        // 	chassis.moveToPoint(0, target, 4000);
+        // 	delay(4050);
+        // 	master.print(0, 0, "%f", target-chassis.getPose().y);
+        // 	tot += target-chassis.getPose().y;
         // }
-        // else {
-        //     if (leftY * 0.5 < 10) {
-        //         leftY = 0;
-        //     } else {
-        //         leftY *= 0.5;
-        //     }
-        // }
+        // master.print(1, 0, "%.2f", tot);
+        // delay(5000);
+
+        // double tar = 24;
+        // int time = 4000;
+        // chassis.moveToPoint(0, tar, time);
+        // delay(time+100);
+        // master.print(1, 0, "%.2f", tar-chassis.getPose().y);
+        // delay(100);
+        // master.print(2, 0, "%.2f", chassis.getPose().y);
+
+        // chassis.turnToHeading(90, 1500);
+        // delay(2000);
+        // master.print(1, 0, "%.2f", chassis.getPose().theta);
+        // delay(1000);
+
+        // int tar = 48;
+        // chassis.moveToPoint(0, tar, 2000);
+        // delay(2000);
+        // master.print(1, 0, "%.2f", tar - chassis.getPose().y);
+        // delay(1000);
         double rightX = master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
         double leftY = master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
         chassis.arcade(leftY, rightX);
@@ -89,9 +106,15 @@ void opcontrol()
         {
             colourSort::redTeam = !colourSort::redTeam;
         }
-        if (master.get_digital_new_press(buttons::B))
+        if (master.get_digital_new_press(buttons::UP))
         {
-            matchLoader.toggle();
+            colourSort::on = !colourSort::on;
+        }
+        if (master.get_digital(buttons::B))
+        {
+            matchLoader.setState(true);
+        } else {
+            if (matchLoader.getState()) matchLoader.setState(false);
         }
         if (master.get_digital_new_press(buttons::DOWN))
         {

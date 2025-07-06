@@ -57,7 +57,7 @@ inline pros::Motor middle(20);
 inline pros::Motor top(-12);
 inline pros::Motor bucket(-18);
 
-inline pros::Optical colorSensor(16);
+inline pros::Optical bottomColor(16);
 
 namespace localization {
     inline pros::Distance rightDS(7);
@@ -66,7 +66,7 @@ namespace localization {
     inline pros::Distance backDS(17);
 }
 
-inline pros::Distance topDS(11);
+inline pros::Optical topColor(11);
 inline pros::Distance bottomDS(13);
 inline pros::Distance middleDS(21);
 
