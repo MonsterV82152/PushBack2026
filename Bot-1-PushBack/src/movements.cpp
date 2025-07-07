@@ -223,94 +223,16 @@ namespace colourSort
     {
         bool top = false;
         bool middle = false;
-        topColor.set_led_pwm(100);
         bottomColor.set_led_pwm(100);
         while (true)
         {
+            // Top sensor triggers colour sensor to read next block - fixes the ghost block issue
             if (rollers::currentState.name != "none" && !matchLoader.getState() && on);
             {
-                double topHue = topColor.get_hue();
                 double bottomHue = bottomColor.get_hue();
 
-                bool bottomRed = bottomHue < redMax || bottomHue > redMin;
-                bool bottomBlue = bottomHue < blueMax && bottomHue > blueMin;
-                if (bottomRed) {
-                    if (!redTeam) {
-                        if (autonSelect.isSkills()) {
-                            if (rollers::findState("scoreMiddle")) {
-                                rollers::addTemporaryState("cycleC", 1);
-                            }
-                        } else {
-                            if (rollers::findState("scoreMiddle")) {
-                                rollers::addTemporaryState("scoreTopC", 1);
-                            } else if (rollers::findState("intake")) {
-                                rollers::addTemporaryState("scoreMiddleC", 1);
-                            }
-                        }
-                    } else {
-                        rollers::removeTemporaryState("cycleC");
-                        rollers::removeTemporaryState("scoreTopC");
-                        rollers::removeTemporaryState("scoreMiddleC");
-                    }
-                }
-                if (bottomBlue) {
-                    if (redTeam) {
-                        if (autonSelect.isSkills()) {
-                            if (rollers::findState("scoreMiddle")) {
-                                rollers::addTemporaryState("cycleC", 1);
-                            }
-                        } else {
-                            if (rollers::findState("scoreMiddle")) {
-                                rollers::addTemporaryState("scoreTopC", 1);
-                            } else if (rollers::findState("intake")) {
-                                rollers::addTemporaryState("scoreMiddleC", 1);
-                            }
-                        }
-                    } else {
-                        rollers::removeTemporaryState("cycleC");
-                        rollers::removeTemporaryState("scoreTopC");
-                        rollers::removeTemporaryState("scoreMiddleC");
-                    }
-                }
-
-                bool topRed = topHue < redMax || topHue > redMin;
-                bool topBlue = topHue < blueMax && topHue > blueMin;
-                if (topRed) {
-                    if (!redTeam) {
-                        if (autonSelect.isSkills()) {
-                            if (rollers::findState("scoreTop")) {
-                                rollers::addTemporaryState("cycleC", 1);
-                            }
-                        } else {
-                            if (rollers::findState("scoreTop")) {
-                                rollers::addTemporaryState("cycleC", 1);
-                            } else if (rollers::findState("intake")) {
-                                rollers::addTemporaryState("scoreTopC", 1);
-                            }
-                        }
-                    } else {
-                        rollers::removeTemporaryState("cycleC");
-                        rollers::removeTemporaryState("scoreTopC");
-                    }
-                }
-                if (topBlue) {
-                    if (redTeam) {
-                        if (autonSelect.isSkills()) {
-                            if (rollers::findState("scoreTop")) {
-                                rollers::addTemporaryState("cycleC", 1);
-                            }
-                        } else {
-                            if (rollers::findState("scoreTop")) {
-                                rollers::addTemporaryState("cycleC", 1);
-                            } else if (rollers::findState("intake")) {
-                                rollers::addTemporaryState("scoreTopC", 1);
-                            }
-                        }
-                    } else {
-                        rollers::removeTemporaryState("cycleC");
-                        rollers::removeTemporaryState("scoreTopC");
-                    }
-                }
+                
+                
             }           
             pros::delay(10);
         }

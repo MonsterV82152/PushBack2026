@@ -66,7 +66,7 @@ namespace localization {
     inline pros::Distance backDS(17);
 }
 
-inline pros::Optical topColor(11);
+inline pros::Distance topDS(11);
 inline pros::Distance bottomDS(13);
 inline pros::Distance middleDS(21);
 
