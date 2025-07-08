@@ -41,8 +41,7 @@ namespace rollers
         {"cycleC", 127, 127, 127, 127},
         {"cycleCT", 127, 127, 127, 127},
         {"none", 0, 0, 0, 0},
-        {"ejectMiddle", 127, -127, 0, 127}
-    };
+        {"ejectMiddle", 127, -127, 0, 127}};
     inline std::vector<temporaryRollerState> temporaryRollerStates;
     inline temporaryRollerState currentTemporaryState = {"none", 0, 0, 0, 0, 10};
     inline temporaryRollerState _stateToTemp(rollerState state, int importance = 0)
@@ -168,17 +167,32 @@ namespace rollers
         }
         _runLowestTemporaryState();
     }
-    inline bool findState(std::string a) {
-        if (state.name == a) {
+    inline bool findState(std::string a)
+    {
+        if (state.name == a)
+        {
             return true;
         }
-        for (const auto &tempState : temporaryRollerStates) {
-            if (tempState.name == a) {
+        for (const auto &tempState : temporaryRollerStates)
+        {
+            if (tempState.name == a)
+            {
                 return true;
             }
         }
         return false;
     }
+    inline temporaryRollerState findLowestState(int importance = 0)
+    {
+        for (temporaryRollerState i : temporaryRollerStates)
+        {
+            if (i.importance >= importance)
+            {
+                return i;
+            }
+        }
+    }
+
     inline void removeAllTemporaryState()
     {
         temporaryRollerStates.clear();
@@ -219,21 +233,32 @@ namespace colourSort
     inline double blueMin = 170;
     inline bool redTeam = true;
     inline bool on = true;
+    inline std::deque<std::string> ballIndex = {};
+    inline short currentState = 0;
     inline void start(void *param)
     {
-        bool top = false;
-        bool middle = false;
         bottomColor.set_led_pwm(100);
         while (true)
         {
             // Top sensor triggers colour sensor to read next block - fixes the ghost block issue
-            if (rollers::currentState.name != "none" && !matchLoader.getState() && on);
+            if (rollers::currentState.name != "none" && !matchLoader.getState() && on)
+                ;
             {
-                double bottomHue = bottomColor.get_hue();
-
-                
-                
-            }           
+                if (bottomDS.get_distance() < 50)
+                {
+                    double bottomHue = bottomColor.get_hue();
+                    if (rollers::currentState.bottomSpeed > 0)
+                    {
+                        if (bottomHue > redMin || bottomHue < redMax)
+                        {
+                            if (currentState != 1)
+                            {
+                                ballIndex.pushFront()
+                            }
+                        }
+                    }
+                }
+            }
             pros::delay(10);
         }
     }
