@@ -3,10 +3,15 @@
 #include "Autonomous_Paths.hpp"
 #include "movements.cpp"
 
+using namespace pros;
+
 void on_center_button() {}
+pros::Task colourSortThread(colourSort::start);
 
 void initialize()
 {
+    // pros::lcd::initialize();
+    master.clear();
     pros::delay(1000);
     autonSelect.setAutons(std::vector<autonomousRoute>{
         autonomousRoute{"red", "Red SAWP", "Solo AWP", redSAWP},
@@ -15,8 +20,11 @@ void initialize()
         autonomousRoute{"blue", "Blue Auton 2", "2nd Blue Auton", blueAuton2}});
     autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", exampleAuton});
     autonSelect.start();
-    // pros::Task colourSort(colourSort::start);
-    // pros::Task screen_task([&]() {
+    
+
+    // pros::lcd::initialize();
+    // pros::Task screen_task([&]()
+    //                        {
     //     while (true) {
     //         // print robot location to the brain screen
     //         pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
@@ -24,11 +32,10 @@ void initialize()
     //         pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
     //         // delay to save resources
     //         pros::delay(20);
-    //     }
-    // });
+    //     } });
 
-    // chassis.calibrate();
-    // chassis.setPose(0,0,0);
+    chassis.calibrate();
+    chassis.setPose(0, 0, 0);
 }
 
 void disabled() {}
@@ -37,16 +44,16 @@ void competition_initialize() {}
 
 void autonomous()
 {
-    exampleAuton();
+    // exampleAuton();
+    // chassis.setPose(0, 0, 0);
+    // chassis.moveToPoint(0, 24, 10000);
+    colourSort::redTeam = autonSelect.isRedTeam();
+    redSAWP();
+
 }
 
 void opcontrol()
 {
-    colourSort::redTeam = autonSelect.isRedTeam();
-    while (true)
-    {
-        // double leftY; if (master.get_digital(buttons::DOWN)) { if (leftY * 1.5 > 127) { leftY = 127;} else if (leftY == 0) {leftY = 5;}else{ leftY += abs(leftY * 0.5);}}else if (master.get_digital(buttons::B)) {if (leftY * 1.5 < -127){leftY = -127;} else if (leftY == 0) {leftY = -5;}else{leftY -= abs(leftY * 0.5);}}else {if (leftY * 0.5 < 10) {leftY = 0;} else {leftY *= 0.5;}}
-
 
 
         // angular awr
@@ -63,7 +70,7 @@ void opcontrol()
         // lcd::print(6, 0, "%.5f", tot);
         // delay(3000);
 
-        // int tar = 180;
+        // int tar = 90;
         // chassis.turnToHeading(tar, 3000);
         // delay(2500);
         // master.print(1, 0, "%.3f", tar - chassis.getPose().theta);
@@ -71,22 +78,23 @@ void opcontrol()
 
         // lateral awr
         // double tot = 0;
-        // for (double i = 8; i <= 40; i += 8) {
+        // for (double i = 48; i <= 48; i += 8) {
         // 	double target = chassis.getPose().y + i;
         // 	chassis.moveToPoint(0, target, 4000);
-        // 	delay(4050);
+        // 	pros::delay(4050);
         // 	master.print(0, 0, "%f", target-chassis.getPose().y);
         // 	tot += target-chassis.getPose().y;
         // }
-        // master.print(1, 0, "%.2f", tot);
-        // delay(5000);
+        // pros::delay(1000);
+        // master.print(1, 0, "tot: %.2f", tot);
+        // pros::delay(5000);
 
-        // double tar = 24;
+        // double tar = 48;
         // int time = 4000;
         // chassis.moveToPoint(0, tar, time);
-        // delay(time+100);
+        // pros::delay(time+100);
         // master.print(1, 0, "%.2f", tar-chassis.getPose().y);
-        // delay(100);
+        // pros::delay(100);
         // master.print(2, 0, "%.2f", chassis.getPose().y);
 
         // chassis.turnToHeading(90, 1500);
@@ -99,24 +107,47 @@ void opcontrol()
         // delay(2000);
         // master.print(1, 0, "%.2f", tar - chassis.getPose().y);
         // delay(1000);
+    colourSort::redTeam = autonSelect.isRedTeam();
+    while (true)
+    {
+        // double leftY; if (master.get_digital(buttons::DOWN)) { if (leftY * 1.5 > 127) { leftY = 127;} else if (leftY == 0) {leftY = 5;}else{ leftY += abs(leftY * 0.5);}}else if (master.get_digital(buttons::B)) {if (leftY * 1.5 < -127){leftY = -127;} else if (leftY == 0) {leftY = -5;}else{leftY -= abs(leftY * 0.5);}}else {if (leftY * 0.5 < 10) {leftY = 0;} else {leftY *= 0.5;}}
         double rightX = master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
         double leftY = master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
         chassis.arcade(leftY, rightX);
         if (master.get_digital_new_press(buttons::Y))
         {
-            colourSort::redTeam = !colourSort::redTeam;
+            if (!colourSort::on) {
+                colourSort::on = true;
+                colourSort::redTeam = true;
+                master.print(0, 0, colourSort::on ? colourSort::redTeam ? "red " : "blue" : "off ");
+
+            } else if (colourSort::redTeam) {
+                colourSort::redTeam = !colourSort::redTeam;
+                master.print(0, 0, colourSort::on ? colourSort::redTeam ? "red " : "blue" : "off ");
+            } else if (!colourSort::redTeam) {
+                colourSort::on = false;
+                master.print(0, 0, colourSort::on ? colourSort::redTeam ? "red " : "blue" : "off ");
+
+
+
+            }
+            
         }
-        if (master.get_digital_new_press(buttons::UP))
+        if (master.get_digital_new_press(buttons::LEFT))
         {
-            colourSort::on = !colourSort::on;
+            colourSortThread.remove();
+            colourSortThread = new pros::Task(colourSort::start);
         }
         if (master.get_digital(buttons::B))
         {
             matchLoader.setState(true);
-        } else {
-            if (matchLoader.getState()) matchLoader.setState(false);
         }
-        if (master.get_digital_new_press(buttons::DOWN))
+        else
+        {
+            if (matchLoader.getState())
+                matchLoader.setState(false);
+        }
+        if (master.get_digital_new_press(buttons::UP))
         {
             park.toggle();
         }
@@ -138,6 +169,14 @@ void opcontrol()
         else if (rollers::currentTemporaryState.name == "cycle" && !master.get_digital(buttons::A))
         {
             rollers::removeTemporaryState("cycle");
+        }
+        if (master.get_digital_new_press(buttons::DOWN))
+        {
+            rollers::addTemporaryState("clearIntake", 7);
+        }
+        else if (rollers::currentTemporaryState.name == "clearIntake" && !master.get_digital(buttons::DOWN))
+        {
+            rollers::removeTemporaryState("clearIntake");
         }
         if (master.get_digital_new_press(buttons::X))
         {

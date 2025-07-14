@@ -9,6 +9,7 @@
 #include <string>
 #include <cmath>
 #include <deque>
+#include <atomic>
 #include "AutonSelector.hpp"
 #include "lemlib/api.hpp"
 #include "sensor_loc.cpp"
@@ -65,6 +66,10 @@ namespace localization {
     inline pros::Distance frontDS(14);
     inline pros::Distance backDS(17);
 }
+inline dist_sensor rightLoc({&localization::rightDS, lemlib::Pose(4, -1, 90)});
+inline dist_sensor leftLoc({&localization::leftDS, lemlib::Pose(-4, -1, 270)});
+inline dist_sensor frontLoc({&localization::frontDS, lemlib::Pose(-4, 7, 0)});
+inline dist_sensor backLoc({&localization::backDS, lemlib::Pose(4, -7, 180)});
 
 inline pros::Distance topDS(11);
 inline pros::Distance bottomDS(13);
@@ -81,19 +86,19 @@ inline Piston park(&parkPiston);
 
 namespace OdometryConfigs {
     struct PID {
-        static constexpr double lateralKp = 1.0;
-        static constexpr double lateralKi = 0.0;
-        static constexpr double lateralKd = 25.0;
-        static constexpr double angularKp = 1.0;
-        static constexpr double angularKi = 0.0;
-        static constexpr double angularKd = 50.0;
+        static constexpr double lateralKp = 5;
+        static constexpr double lateralKi = 2.5;
+        static constexpr double lateralKd = 30.0;
+        static constexpr double angularKp = 2;
+        static constexpr double angularKi = 1.0;
+        static constexpr double angularKd = 16.65;
     };
     inline pros::Rotation vertical(5); // Change this port to match your vertical tracking wheel rotation sensor
 
     inline lemlib::Drivetrain LEMLIB_drivetrain(&leftDT, &rightDT, 
         13, // Measure distance between left and right wheels in inches
         lemlib::Omniwheel::NEW_325, // Change to the wheel size you are using
-        450, // Wheel RPM
+        450, // Wheel RPMs
         2 // Leave as 2 for now
     );
     inline lemlib::TrackingWheel LEMLIB_vertical_TW(&vertical, 
@@ -106,7 +111,7 @@ namespace OdometryConfigs {
         PID::lateralKp, // proportional gain (kP)
         PID::lateralKi, // integral gain (kI)
         PID::lateralKd, // derivative gain (kD)
-        3,         // anti windup
+        0.035,         // anti windup
 
         1,   // small error range, in inches
         100, // small error range timeout, in milliseconds
@@ -119,7 +124,8 @@ namespace OdometryConfigs {
         PID::angularKp, // proportional gain (kP)
         PID::angularKi, // integral gain (kI)
         PID::angularKd, // derivative gain (kD)
-        0,         // anti windup
+        3.053,         // anti windup
+
         0,         // small error range, in inches
         0,         // small error range timeout, in milliseconds
         0,         // large error range, in inches

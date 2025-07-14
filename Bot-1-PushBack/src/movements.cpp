@@ -31,7 +31,9 @@ namespace rollers
         {"intakeC", 127, 127, 127, 0},
         {"outtake", -127, -127, -127, 0},
         {"scoreBottom", -127, -127, -127, 127},
-        {"scoreMiddle", 30, -30, 127, 127},
+        {"scoreMiddle", 60, -60, 127, 127},
+        {"scoreMiddleAuton", 127, -127, 127, 127},
+
         {"scoreMiddleC", 127, -127, 127, 0},
         {"scoreTop", 60, 60, -60, 127},
         {"scoreTopC", 127, 127, -127, 0},
@@ -39,8 +41,13 @@ namespace rollers
         {"directIntake", 127, 0, 0, -127},
         {"cycle", 127, 127, 127, 127},
         {"cycleC", 127, 127, 127, 127},
-        {"cycleCT", 127, 127, 127, 127},
+        {"cycleCT", 0, 127, 127, 0},
         {"none", 0, 0, 0, 0},
+        {"reverseTop", 0, 0, -127, 0},
+
+        {"clearIntake", -127, -127, -127, 0},
+        {"clearIntakeC", -127, -127, -127, 0},
+
         {"ejectMiddle", 127, -127, 0, 127}};
     inline std::vector<temporaryRollerState> temporaryRollerStates;
     inline temporaryRollerState currentTemporaryState = {"none", 0, 0, 0, 0, 10};
@@ -191,6 +198,7 @@ namespace rollers
                 return i;
             }
         }
+        return temporaryRollerState{state.name, state.bottomSpeed, state.middleSpeed, state.topSpeed, state.bucketSpeed, 0};
     }
 
     inline void removeAllTemporaryState()
@@ -225,120 +233,203 @@ namespace rollers
     }
 }
 
-struct timeout
-{
-    int cycleCount;
-    std::string name;
-};
 namespace colourSort
 {
-    inline double redMax = 40;
-    inline double redMin = 350;
-    inline double blueMax = 240;
-    inline double blueMin = 170;
-    inline bool redTeam = true;
-    inline bool on = true;
-    inline std::deque<std::string> ballIndex = {};
-    inline short currentState = 0;
-    inline int cycleCount = 0;
-    inline std::vector<timeout> timeouts = {};
-    inline void start(void *param)
+    struct timeout
     {
+        int cycleCount;
+        std::string name;
+    };
+    inline std::atomic<bool> redTeam(true);
+    inline std::atomic<bool> on(true);
+    inline int command = 0;
+    inline void stopAfter(int count)
+    {
+        command = count;
+    }
+    inline void start(void *params)
+    {
+        double redMax = 40;
+        double redMin = 350;
+        double blueMax = 240;
+        double blueMin = 170;
+        bool middle = true;
+        bool top = true;
+        std::vector<timeout> timeouts = {};
+        std::vector<timeout> starts = {};
+        std::deque<int> ballIndex = {};
+        short currentState = 0;
+        int cycleCount = 0;
+
         bottomColor.set_led_pwm(100);
         while (true)
         {
             std::string currentRollerState = rollers::findLowestState(2).name;
             cycleCount++;
-            for (timeout tempA : timeouts)
+            for (int i = 0; i < timeouts.size(); i++)
             {
-                if (tempA.cycleCount == cycleCount)
+                if (timeouts[i].cycleCount == cycleCount)
                 {
-                    rollers::removeTemporaryState(tempA.name);
+                    rollers::removeTemporaryState(timeouts[i].name);
+                    timeouts.erase(timeouts.begin() + i);
+                }
+            }
+            for (int i = 0; i < starts.size(); i++)
+            {
+                if (starts[i].cycleCount == cycleCount)
+                {
+                    rollers::addTemporaryState(starts[i].name, 1);
+                    starts.erase(starts.begin() + i);
                 }
             }
             // Top sensor triggers colour sensor to read next block - fixes the ghost block issue
-            if (rollers::currentState.name != "none" && !matchLoader.getState() && on)
+            if (rollers::currentState.name != "none" && on.load() && (!autonSelect.isSkills() && !matchLoader.getState() || autonSelect.isSkills()))
             {
-                if (bottomDS.get_distance() < 50)
+                double bottomHue = bottomColor.get_hue();
+                if (rollers::currentState.bottomSpeed > 0)
                 {
-                    double bottomHue = bottomColor.get_hue();
-                    if (rollers::currentState.bottomSpeed > 0)
+                    if (bottomHue > redMin || bottomHue < redMax)
                     {
-                        if (bottomHue > redMin || bottomHue < redMax)
+                        if (currentState != 1)
                         {
-                            if (currentState != 1)
-                            {
-                                ballIndex.push_front("blue");
-                                currentState = 1;
-                            }
-                        }
-                        else if (bottomHue > blueMin && bottomHue < blueMax)
-                        {
-                            if (currentState != 2)
-                            {
-                                ballIndex.push_front("red");
-                                currentState = 2;
-                            }
+                            ballIndex.push_front(2);
+                            std::cout << "Red Block!" << std::endl;
+                            currentState = 1;
+                            middle = true;
                         }
                     }
-
-                    if (autonSelect.isSkills())
+                    else if (bottomHue > blueMin && bottomHue < blueMax)
                     {
+                        if (currentState != 2)
+                        {
+                            ballIndex.push_front(1);
+                            std::cout << "Blue Block!" << std::endl;
+                            middle = true;
 
-                        if (currentRollerState == "scoreBottom")
-                        {
-                            ballIndex.pop_back();
-                        }
-                        else if (currentRollerState == "scoreMiddle")
-                        {
-                            rollers::addTemporaryState("cycleC", 1);
-                            timeouts.push_back(timeout{cycleCount + 20, "cycleC"});
+                            currentState = 2;
                         }
                     }
                     else
                     {
-                        if (currentRollerState == "scoreMiddle")
+                        currentState = 0;
+                    }
+                }
+                if (bottomDS.get_distance() < 45)
+                {
+                    std::cout << "bottom" << std::endl;
+                    if (middle && !ballIndex.empty())
+                    {
+                        middle = false;
+                        if (currentRollerState == "scoreBottom" || currentRollerState == "clearIntake")
                         {
-                            rollers::addTemporaryState("cycleC", 1);
-                            
-                            timeouts.push_back(timeout{cycleCount + 20, "cycleC"});
-                        }
-                        else if (currentRollerState == "cycle" || currentRollerState == "intake")
-                        {
-                            rollers::addTemporaryState("scoreMiddleC", 1);
                             ballIndex.pop_back();
-                            timeouts.push_back(timeout{cycleCount + 20, "scoreMiddleC"});
                         }
+                        if ((ballIndex.back() == 2) == !redTeam.load())
+                        {
+                            std::cout << redTeam.load() << " , " << (ballIndex.back() == 1) << " , " << ballIndex.back() << std::endl;
+                            if (autonSelect.isSkills())
+                            {
+                                if (currentRollerState == "scoreMiddle")
+                                {
+                                    starts.push_back(timeout{cycleCount + 5, "cycleC"});
+                                    timeouts.push_back(timeout{cycleCount + 40, "cycleC"});
+                                }
+                                else if ((currentRollerState == "cycle" || currentRollerState == "intake") && !matchLoader.getState())
+                                {
+                                    starts.push_back(timeout{cycleCount + 5, "scoreMiddleC"});
+                                    std::cout << "Popped1!" << std::endl;
+
+                                    if (!ballIndex.empty())
+                                        ballIndex.pop_back();
+
+                                    timeouts.push_back(timeout{cycleCount + 40, "scoreMiddleC"});
+                                }
+                            }
+                            else
+                            {
+                                if (currentRollerState == "scoreMiddle")
+                                {
+                                    starts.push_back(timeout{cycleCount + 5, "cycleC"});
+
+                                    timeouts.push_back(timeout{cycleCount + 40, "cycleC"});
+                                }
+                                else if (currentRollerState == "cycle" || currentRollerState == "intake")
+                                {
+                                    starts.push_back(timeout{cycleCount + 5, "scoreMiddleC"});
+                                    std::cout << "Popped1!" << std::endl;
+
+                                    if (!ballIndex.empty())
+                                        ballIndex.pop_back();
+
+                                    timeouts.push_back(timeout{cycleCount + 40, "scoreMiddleC"});
+                                }
+                            }
+                        }
+                        else if (currentRollerState == "scoreMiddle")
+                        {
+                            ballIndex.pop_back();
+                        }
+                    }
+                }
+                if (topDS.get_distance() < 50)
+                {
+                    if (top && !ballIndex.empty())
+                    {
+
+                        top = false;
+
+                        if ((ballIndex.back() == 2) == !redTeam.load())
+                        {
+                            command++;
+
+                            if (autonSelect.isSkills())
+                            {
+                                if (matchLoader.getState())
+                                {
+                                    rollers::addTemporaryState("reverseTop", 1);
+                                    timeouts.push_back(timeout{cycleCount + 5, "reverseTop"});
+                                    starts.push_back(timeout{cycleCount + 5, "none"});
+                                    timeouts.push_back(timeout{cycleCount + 70, "none"});
+                                    starts.push_back(timeout{cycleCount + 70, "clearIntakeC"});
+                                    timeouts.push_back(timeout{cycleCount + 170, "clearIntakeC"});
+                                }
+                                else if (currentRollerState == "scoreTop")
+                                {
+                                    // starts.push_back(timeout{cycleCount + 1, "cycleCT"});
+                                    rollers::addTemporaryState("cycleCT", 1);
+
+                                    timeouts.push_back(timeout{cycleCount + 35, "cycleCT"});
+                                    std::cout << "Cycled" << std::endl;
+                                }
+                                else if ((currentRollerState == "cycle" || currentRollerState == "intake") && !matchLoader.getState())
+                                {
+                                    rollers::addTemporaryState("scoreTopC", 1);
+                                    timeouts.push_back(timeout{cycleCount + 20, "scoreTopC"});
+                                }
+                            }
+                            else
+                            {
+                                if (currentRollerState == "scoreTop")
+                                {
+                                    // starts.push_back(timeout{cycleCount + 1, "cycleC"});
+                                    rollers::addTemporaryState("cycleCT", 1);
+
+                                    timeouts.push_back(timeout{cycleCount + 35, "cycleCT"});
+                                }
+                                else if (currentRollerState == "cycle" || currentRollerState == "intake")
+                                {
+                                    rollers::addTemporaryState("scoreTopC", 1);
+                                    timeouts.push_back(timeout{cycleCount + 20, "scoreTopC"});
+                                }
+                            }
+                        }
+                        ballIndex.pop_back();
+                        std::cout << "Popped!" << std::endl;
                     }
                 }
                 else
                 {
-                    currentState = 0;
-                }
-                if (topDS.get_distance() < 50)
-                {
-                    ballIndex.pop_back();
-                    if (autonSelect.isSkills())
-                    {
-                        if (currentRollerState == "scoreTop")
-                        {
-                            rollers::addTemporaryState("cycleC", 1);
-                            timeouts.push_back(timeout{cycleCount + 20, "cycleC"});
-                        }
-                    }
-                    else
-                    {
-                        if (currentRollerState == "scoreTop")
-                        {
-                            rollers::addTemporaryState("cycleC", 1);
-                            timeouts.push_back(timeout{cycleCount + 20, "cycleC"});
-                        }
-                        else if (currentRollerState == "cycle" || currentRollerState == "intake")
-                        {
-                            rollers::addTemporaryState("scoreMiddleC", 1);
-                            timeouts.push_back(timeout{cycleCount + 20, "scoreMiddleC"});
-                        }
-                    }
+                    top = true;
                 }
             }
             pros::delay(10);
