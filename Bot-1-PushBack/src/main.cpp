@@ -138,12 +138,12 @@ void opcontrol()
             colourSortThread.remove();
             colourSortThread = new pros::Task(colourSort::start);
         }
-        if (master.get_digital(buttons::B))
+        if (master.get_digital(buttons::RIGHT))
         {
             matchLoader.setState(true);
             colourSort::sortML = true;
         }
-        else if (master.get_digital(buttons::RIGHT)) {
+        else if (master.get_digital(buttons::B)) {
             matchLoader.setState(true);
             colourSort::sortML = false;
         } 
