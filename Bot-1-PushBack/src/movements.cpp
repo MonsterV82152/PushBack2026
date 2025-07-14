@@ -242,6 +242,7 @@ namespace colourSort
     };
     inline std::atomic<bool> redTeam(true);
     inline std::atomic<bool> on(true);
+    inline std::atomic<bool> sortML(true);
     inline int command = 0;
     inline void stopAfter(int count)
     {
@@ -255,6 +256,7 @@ namespace colourSort
         double blueMin = 170;
         bool middle = true;
         bool top = true;
+        
         std::vector<timeout> timeouts = {};
         std::vector<timeout> starts = {};
         std::deque<int> ballIndex = {};
@@ -384,7 +386,7 @@ namespace colourSort
 
                             if (autonSelect.isSkills())
                             {
-                                if (matchLoader.getState())
+                                if (matchLoader.getState() && sortML.load())
                                 {
                                     rollers::addTemporaryState("reverseTop", 1);
                                     timeouts.push_back(timeout{cycleCount + 5, "reverseTop"});

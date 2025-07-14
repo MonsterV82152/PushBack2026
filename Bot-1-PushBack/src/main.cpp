@@ -141,12 +141,19 @@ void opcontrol()
         if (master.get_digital(buttons::B))
         {
             matchLoader.setState(true);
+            colourSort::sortML = true;
         }
+        else if (master.get_digital(buttons::RIGHT)) {
+            matchLoader.setState(true);
+            colourSort::sortML = false;
+        } 
         else
         {
             if (matchLoader.getState())
                 matchLoader.setState(false);
+                colourSort::sortML = false;
         }
+        
         if (master.get_digital_new_press(buttons::UP))
         {
             park.toggle();
