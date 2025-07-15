@@ -8,12 +8,12 @@ void redSAWP() {
 
     chassis.setPose(-60.3,-18.5,180);
 
-    chassis.moveToPoint(-48,-48,700);
-    correct_position(rightLoc, &chassis, true);
+    chassis.moveToPoint(-48,-47,700);
+    correct_position(rightLoc, &chassis, true); 
 
-    chassis.turnToPoint(-70,-48,400);
+    chassis.turnToPoint(-70,-47,400);
     matchLoader.setState(true);
-    chassis.moveToPoint(-70,-46,1000,{.maxSpeed = 70});
+    chassis.moveToPoint(-64,-46,1000,{.maxSpeed = 70});
     rollers::setState("intake");
     chassis.waitUntilDone();
     pros::delay(200);
@@ -35,12 +35,13 @@ void redSAWP() {
     chassis.turnToPoint(-24,-24,400);
     rollers::setState("directIntake");
     chassis.moveToPoint(-24,-24,1000);
-    chassis.turnToPoint(-9,-9, 700);
-    chassis.moveToPoint(-9,-9,1000,{.maxSpeed = 40});
-    chassis.waitUntilDone();
-    pros::delay(400);
+    chassis.turnToPoint(-17,-17, 700);
+    chassis.moveToPoint(-17,-17,700,{.maxSpeed = 40});
+    pros::delay(200);
     rollers::setState("scoreBottom");
-    pros::delay(1200);
+
+    chassis.waitUntilDone();
+    pros::delay(1000);
     rollers::setState("none");
     chassis.moveToPoint(-24,-24,300,{false});
     chassis.turnToPoint(-24,24,400);
@@ -50,9 +51,10 @@ void redSAWP() {
     chassis.moveToPoint(-24,24,1000,{.maxSpeed = 50});
     chassis.turnToPoint(0,0,700);
     chassis.moveToPoint(-12,10,700);
-    chassis.turnToPoint(0,0,200);
-    chassis.waitUntilDone();
+    chassis.turnToPoint(0,-3,300);
     rollers::setState("scoreMiddleAuton");
+
+    chassis.waitUntilDone();
 
     
     
@@ -62,7 +64,22 @@ void redSAWP() {
     
 }
 void redAuton2() {
-    
+    chassis.setPose(-60.3,18.5,0);
+
+    chassis.moveToPoint(-48,47,700);
+    correct_position(leftLoc, &chassis, true); 
+
+    chassis.turnToPoint(-70,47,400);
+    matchLoader.setState(true);
+    chassis.moveToPoint(-70,46,1000,{.maxSpeed = 70});
+    rollers::setState("intake");
+    chassis.waitUntilDone();
+    pros::delay(200);
+    chassis.moveToPoint(-48,46,700,{false});
+    matchLoader.setState(false);
+    chassis.waitUntilDone();
+    correct_position(leftLoc, &chassis, false);
+
 }
 void blueSAWP() {
     chassis.setPose(60.3,-17.5,180);
@@ -85,5 +102,9 @@ void blueAuton2() {
 
 void exampleAuton() {
 
+}
+
+void skills() {
+    
 }
 #endif

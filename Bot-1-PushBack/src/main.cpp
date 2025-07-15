@@ -18,24 +18,24 @@ void initialize()
         autonomousRoute{"red", "Red Auton 2", "2nd Red Auton", redAuton2},
         autonomousRoute{"blue", "Blue Auton 1", "1st Blue Auton", blueSAWP},
         autonomousRoute{"blue", "Blue Auton 2", "2nd Blue Auton", blueAuton2}});
-    autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", exampleAuton});
-    autonSelect.start();
+    autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", skills});
+    // autonSelect.start();
     
 
-    // pros::lcd::initialize();
-    // pros::Task screen_task([&]()
-    //                        {
-    //     while (true) {
-    //         // print robot location to the brain screen
-    //         pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
-    //         pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
-    //         pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
-    //         // delay to save resources
-    //         pros::delay(20);
-    //     } });
+    pros::lcd::initialize();
+    pros::Task screen_task([&]()
+                           {
+        while (true) {
+            // print robot location to the brain screen
+            pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
+            pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
+            pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
+            // delay to save resources
+            pros::delay(20);
+        } });
 
     chassis.calibrate();
-    chassis.setPose(0, 0, 0);
+    chassis.setPose(48, 48, 0);
 }
 
 void disabled() {}
@@ -138,7 +138,7 @@ void opcontrol()
             colourSortThread.remove();
             colourSortThread = new pros::Task(colourSort::start);
         }
-        if (master.get_digital(buttons::RIGHT))
+        if (master.get_digital(buttons::X))
         {
             matchLoader.setState(true);
             colourSort::sortML = true;
@@ -184,14 +184,6 @@ void opcontrol()
         else if (rollers::currentTemporaryState.name == "clearIntake" && !master.get_digital(buttons::DOWN))
         {
             rollers::removeTemporaryState("clearIntake");
-        }
-        if (master.get_digital_new_press(buttons::X))
-        {
-            rollers::addTemporaryState(rollers::rollerState{"middleIntake", 0, 127, 127, 0}, 7);
-        }
-        else if (rollers::currentTemporaryState.name == "middleIntake" && !master.get_digital(buttons::X))
-        {
-            rollers::removeTemporaryState("middleIntake");
         }
         if (master.get_digital_new_press(buttons::R2))
         {

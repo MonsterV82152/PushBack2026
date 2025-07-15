@@ -31,7 +31,9 @@ namespace rollers
         {"intakeC", 127, 127, 127, 0},
         {"outtake", -127, -127, -127, 0},
         {"scoreBottom", -127, -127, -127, 127},
-        {"scoreMiddle", 60, -60, 127, 127},
+        {"scorePark", -127, -127, -127, 127},
+
+        {"scoreMiddle", 30, -30, 127, 127},
         {"scoreMiddleAuton", 127, -127, 127, 127},
 
         {"scoreMiddleC", 127, -127, 127, 0},
@@ -266,6 +268,20 @@ namespace colourSort
         bottomColor.set_led_pwm(100);
         while (true)
         {
+            if (master.get_digital_new_press(buttons::RIGHT)) {
+                rollers::setState("scorePark");
+                pros::delay(500);
+                while (bottomDS.get_distance() >= 80) {
+                    pros::delay(10);
+                }
+                while (bottomDS.get_distance() <= 80) {
+                    pros::delay(10);
+                }
+                pros::delay(90);
+
+                rollers::setState("none");
+                park.setState(true);
+            }
             std::string currentRollerState = rollers::findLowestState(2).name;
             cycleCount++;
             for (int i = 0; i < timeouts.size(); i++)
@@ -316,7 +332,7 @@ namespace colourSort
                         currentState = 0;
                     }
                 }
-                if (bottomDS.get_distance() < 45)
+                if (middleDS.get_distance() < 45)
                 {
                     std::cout << "bottom" << std::endl;
                     if (middle && !ballIndex.empty())
