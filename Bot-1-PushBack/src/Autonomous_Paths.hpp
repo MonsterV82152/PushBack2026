@@ -65,20 +65,32 @@ void redSAWP() {
 }
 void redAuton2() {
     chassis.setPose(-60.3,18.5,0);
-
     chassis.moveToPoint(-48,47,700);
     correct_position(leftLoc, &chassis, true); 
 
-    chassis.turnToPoint(-70,47,400);
+    chassis.turnToPoint(-70,47,700);
     matchLoader.setState(true);
-    chassis.moveToPoint(-70,46,1000,{.maxSpeed = 70});
+    chassis.moveToPoint(-65,47,1000,{.maxSpeed = 70});
     rollers::setState("intake");
     chassis.waitUntilDone();
-    pros::delay(200);
-    chassis.moveToPoint(-48,46,700,{false});
+    pros::delay(500);
+    chassis.moveToPoint(-48,47,700,{false});
     matchLoader.setState(false);
     chassis.waitUntilDone();
-    correct_position(leftLoc, &chassis, false);
+    correct_position(rightLoc, &chassis, false);
+    chassis.turnToPoint(-48,24,400);
+    chassis.moveToPoint(-48,24,700);
+    chassis.turnToPoint(-24,24,400);
+    rollers::setState("intake");
+    chassis.moveToPoint(-16,24,1800,{.maxSpeed = 40});
+    chassis.turnToPoint(-48,48, 700, {false});
+    chassis.moveToPoint(-48,48,1000,{false});
+    chassis.turnToPoint(-24,48, 700);
+    chassis.moveToPoint(-37,48,1000);
+    chassis.turnToHeading(90,300);
+    chassis.waitUntilDone();
+    rollers::setState("scoreTop");
+
 
 }
 void blueSAWP() {

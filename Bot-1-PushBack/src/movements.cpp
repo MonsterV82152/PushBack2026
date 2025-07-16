@@ -1,31 +1,40 @@
+
 #ifndef MOVEMENTS_CPP
 #define MOVEMENTS_CPP
 
-#include "globals.hpp"
-#include "AutonSelector.hpp"
+// Main header guard for movements.cpp
 
+
+#include "globals.hpp" // Global variables and hardware definitions
+#include "AutonSelector.hpp" // Autonomous routine selector
+
+// Namespace for roller mechanism control
 namespace rollers
 {
+    // Structure for a roller state
     struct rollerState
     {
-        std::string name;
-        double bottomSpeed;
-        double middleSpeed;
-        double topSpeed;
-        double bucketSpeed;
+        std::string name; // State name
+        double bottomSpeed; // Speed for bottom roller
+        double middleSpeed; // Speed for middle roller
+        double topSpeed; // Speed for top roller
+        double bucketSpeed; // Speed for bucket
     };
+    // Structure for a temporary roller state
     struct temporaryRollerState
     {
-        std::string name;
+        std::string name; // State name
         double bottomSpeed;
         double middleSpeed;
         double topSpeed;
         double bucketSpeed;
         int importance; // 0 for high importance, 10 for low importance
     };
+    // Current and default roller states
     inline rollerState state = {"none", 0, 0, 0, 0};
     inline rollerState currentState = {"none", 0, 0, 0, 0};
 
+    // List of all possible roller states
     inline std::vector<rollerState> rollerStates = {
         {"intake", 80, 80, 80, 0},
         {"intakeC", 127, 127, 127, 0},
@@ -51,8 +60,10 @@ namespace rollers
         {"clearIntakeC", -127, -127, -127, 0},
 
         {"ejectMiddle", 127, -127, 0, 127}};
+    // List of temporary roller states and current temporary state
     inline std::vector<temporaryRollerState> temporaryRollerStates;
     inline temporaryRollerState currentTemporaryState = {"none", 0, 0, 0, 0, 10};
+    // Helper to convert rollerState to temporaryRollerState
     inline temporaryRollerState _stateToTemp(rollerState state, int importance = 0)
     {
         return temporaryRollerState{
@@ -64,6 +75,7 @@ namespace rollers
             importance};
     }
 
+    // Set roller state by name
     inline void setState(std::string newState)
     {
         for (const auto &rollerState : rollerStates)
@@ -85,6 +97,7 @@ namespace rollers
 
         std::cerr << "Invalid roller state: " << newState << std::endl;
     }
+    // Set roller state by rollerState object
     inline void setState(rollerState newState)
     {
         for (const auto &rollerState : rollerStates)
@@ -108,6 +121,7 @@ namespace rollers
         state = newState;
         currentState = newState;
     }
+    // Run the lowest importance temporary state
     inline void _runLowestTemporaryState()
     {
         if (temporaryRollerStates.empty())
@@ -127,6 +141,7 @@ namespace rollers
                 lowest = tempState;
             }
         }
+        // Update the current temporary state and roller state to the lowest importance temporary state
         currentTemporaryState = lowest;
         currentState.name = lowest.name;
         currentState.bottomSpeed = lowest.bottomSpeed;
@@ -138,6 +153,7 @@ namespace rollers
         top.move(lowest.topSpeed);
         bucket.move(lowest.bucketSpeed);
     }
+    // Add a temporary roller state by name and importance
     inline void addTemporaryState(std::string newState, int importance)
     {
         for (const auto &rollerState : rollerStates)
@@ -151,6 +167,7 @@ namespace rollers
         _runLowestTemporaryState();
     }
 
+    // Add a temporary roller state by rollerState object and importance
     inline void addTemporaryState(rollerState newState, int importance)
     {
         temporaryRollerStates.push_back(_stateToTemp(newState, importance));
@@ -164,6 +181,7 @@ namespace rollers
         }
         rollerStates.push_back(newState);
     }
+    // Remove a temporary roller state by name
     inline void removeTemporaryState(std::string stateName)
     {
         for (auto it = temporaryRollerStates.begin(); it != temporaryRollerStates.end(); ++it)
@@ -176,6 +194,7 @@ namespace rollers
         }
         _runLowestTemporaryState();
     }
+    // Check if a state exists in current or temporary states
     inline bool findState(std::string a)
     {
         if (state.name == a)
@@ -191,6 +210,7 @@ namespace rollers
         }
         return false;
     }
+    // Find the lowest importance temporary state
     inline temporaryRollerState findLowestState(int importance = 0)
     {
         for (temporaryRollerState i : temporaryRollerStates)
@@ -203,87 +223,108 @@ namespace rollers
         return temporaryRollerState{state.name, state.bottomSpeed, state.middleSpeed, state.topSpeed, state.bucketSpeed, 0};
     }
 
+    // Remove all temporary roller states
     inline void removeAllTemporaryState()
     {
         temporaryRollerStates.clear();
         _runLowestTemporaryState();
     }
 
+    // Set roller to intake state
     inline void intake()
     {
         setState("intake");
     }
+    // Set roller to outtake state
     inline void outtake()
     {
         setState("outtake");
     }
+    // Set roller to stop state
     inline void stop()
     {
         setState("none");
     }
+    // Set roller to score middle state
     inline void scoreMiddle()
     {
         setState("scoreMiddle");
     }
+    // Set roller to score top state
     inline void scoreTop()
     {
         setState("scoreTop");
     }
+    // Set roller to score bottom state
     inline void scoreBottom()
     {
         setState("scoreBottom");
     }
 }
 
+// Namespace for color sorting logic
 namespace colourSort
 {
+    // Structure for timeouts used in color sorting
     struct timeout
     {
-        int cycleCount;
-        std::string name;
+        int cycleCount; // When to trigger
+        std::string name; // State name to trigger
     };
+    // Team and sorting flags
     inline std::atomic<bool> redTeam(true);
     inline std::atomic<bool> on(true);
     inline std::atomic<bool> sortML(true);
+    // Deque for ball color index (2=red, 1=blue)
+    inline std::deque<int> ballIndex = {};
+
+    // Command counter for color sort
     inline int command = 0;
+    // Set command to stop after count
     inline void stopAfter(int count)
     {
         command = count;
     }
+    // Main color sorting thread entry point
     inline void start(void *params)
     {
+        // Color thresholds and state variables
         double redMax = 40;
         double redMin = 350;
         double blueMax = 240;
         double blueMin = 170;
         bool middle = true;
         bool top = true;
-        
+        // Vectors for timeouts and starts
         std::vector<timeout> timeouts = {};
         std::vector<timeout> starts = {};
-        std::deque<int> ballIndex = {};
         short currentState = 0;
         int cycleCount = 0;
 
+        // Set color sensor LED brightness
         bottomColor.set_led_pwm(100);
+        // Main color sorting loop
         while (true)
         {
+            // Parking routine triggered by RIGHT button
             if (master.get_digital_new_press(buttons::RIGHT)) {
-                rollers::setState("scorePark");
-                pros::delay(500);
+                rollers::setState("scorePark"); // Set rollers for parking
+                pros::delay(500); // Wait for mechanism
                 while (bottomDS.get_distance() >= 80) {
-                    pros::delay(10);
+                    pros::delay(10); // Wait until ball leaves
                 }
                 while (bottomDS.get_distance() <= 80) {
-                    pros::delay(10);
+                    pros::delay(10); // Wait until ball enters
                 }
-                pros::delay(90);
+                pros::delay(90); // Final delay
 
-                rollers::setState("none");
-                park.setState(true);
+                rollers::setState("none"); // Stop rollers
+                park.setState(true); // Set park state
             }
+            // Get current roller state and increment cycle counter
             std::string currentRollerState = rollers::findLowestState(2).name;
             cycleCount++;
+            // Handle timeouts for removing temporary states
             for (int i = 0; i < timeouts.size(); i++)
             {
                 if (timeouts[i].cycleCount == cycleCount)
@@ -292,6 +333,7 @@ namespace colourSort
                     timeouts.erase(timeouts.begin() + i);
                 }
             }
+            // Handle starts for adding temporary states
             for (int i = 0; i < starts.size(); i++)
             {
                 if (starts[i].cycleCount == cycleCount)
@@ -300,67 +342,81 @@ namespace colourSort
                     starts.erase(starts.begin() + i);
                 }
             }
+            // Main color sensing and sorting logic
             // Top sensor triggers colour sensor to read next block - fixes the ghost block issue
             if (rollers::currentState.name != "none" && on.load() && (!autonSelect.isSkills() && !matchLoader.getState() || autonSelect.isSkills()))
             {
+                // Get hue value from color sensor
                 double bottomHue = bottomColor.get_hue();
+                // Only sort if rollers are moving forward
                 if (rollers::currentState.bottomSpeed > 0)
                 {
+                    // Detect red block
                     if (bottomHue > redMin || bottomHue < redMax)
                     {
+                        // If not already in red state, push red
                         if (currentState != 1)
                         {
-                            ballIndex.push_front(2);
+                            ballIndex.push_front(2); // 2 = red
                             std::cout << "Red Block!" << std::endl;
                             currentState = 1;
                             middle = true;
                         }
                     }
+                    // Detect blue block
                     else if (bottomHue > blueMin && bottomHue < blueMax)
                     {
+                        // If not already in blue state, push blue
                         if (currentState != 2)
                         {
-                            ballIndex.push_front(1);
+                            ballIndex.push_front(1); // 1 = blue
                             std::cout << "Blue Block!" << std::endl;
                             middle = true;
-
-                            currentState = 2;
+                            currentState = 2; 
                         }
                     }
                     else
                     {
+                        // No color detected
                         currentState = 0;
                     }
                 }
+                // Middle sensor triggers block handling
                 if (middleDS.get_distance() < 45)
                 {
                     std::cout << "bottom" << std::endl;
                     if (middle && !ballIndex.empty())
                     {
                         middle = false;
+                        // Remove ball if scoring bottom or clearing intake
                         if (currentRollerState == "scoreBottom" || currentRollerState == "clearIntake")
                         {
                             ballIndex.pop_back();
                         }
+                        // Check if ball matches team color
                         if ((ballIndex.back() == 2) == !redTeam.load())
                         {
                             std::cout << redTeam.load() << " , " << (ballIndex.back() == 1) << " , " << ballIndex.back() << std::endl;
+                            // Autonomous skills routine
                             if (autonSelect.isSkills())
                             {
+                                // Score middle block
                                 if (currentRollerState == "scoreMiddle")
                                 {
                                     starts.push_back(timeout{cycleCount + 5, "cycleC"});
-                                    timeouts.push_back(timeout{cycleCount + 40, "cycleC"});
+                                    timeouts.push_back(timeout{cycleCount + 30, "cycleC"});
                                 }
+                                // Cycle or intake block
                                 else if ((currentRollerState == "cycle" || currentRollerState == "intake") && !matchLoader.getState())
                                 {
                                     starts.push_back(timeout{cycleCount + 5, "scoreMiddleC"});
                                     std::cout << "Popped1!" << std::endl;
 
+                                    // Remove ball if not empty
                                     if (!ballIndex.empty())
                                         ballIndex.pop_back();
 
-                                    timeouts.push_back(timeout{cycleCount + 40, "scoreMiddleC"});
+                                    timeouts.push_back(timeout{cycleCount + 30, "scoreMiddleC"});
                                 }
                             }
                             else
@@ -369,7 +425,7 @@ namespace colourSort
                                 {
                                     starts.push_back(timeout{cycleCount + 5, "cycleC"});
 
-                                    timeouts.push_back(timeout{cycleCount + 40, "cycleC"});
+                                    timeouts.push_back(timeout{cycleCount + 30, "cycleC"});
                                 }
                                 else if (currentRollerState == "cycle" || currentRollerState == "intake")
                                 {
@@ -379,16 +435,18 @@ namespace colourSort
                                     if (!ballIndex.empty())
                                         ballIndex.pop_back();
 
-                                    timeouts.push_back(timeout{cycleCount + 40, "scoreMiddleC"});
+                                    timeouts.push_back(timeout{cycleCount + 30, "scoreMiddleC"});
                                 }
                             }
                         }
                         else if (currentRollerState == "scoreMiddle")
                         {
+                            // Remove ball if scoring middle
                             ballIndex.pop_back();
                         }
                     }
                 }
+                // Top sensor triggers block handling
                 if (topDS.get_distance() < 50)
                 {
                     if (top && !ballIndex.empty())
@@ -396,12 +454,16 @@ namespace colourSort
 
                         top = false;
 
+                        // Check if ball matches team color
                         if ((ballIndex.back() == 2) == !redTeam.load())
                         {
+                            // Increment command counter
                             command++;
 
+                            // Autonomous skills routine
                             if (autonSelect.isSkills())
                             {
+                                // If match loader is active and sortML enabled
                                 if (matchLoader.getState() && sortML.load())
                                 {
                                     rollers::addTemporaryState("reverseTop", 1);
@@ -411,6 +473,7 @@ namespace colourSort
                                     starts.push_back(timeout{cycleCount + 70, "clearIntakeC"});
                                     timeouts.push_back(timeout{cycleCount + 170, "clearIntakeC"});
                                 }
+                                // Score top block
                                 else if (currentRollerState == "scoreTop")
                                 {
                                     // starts.push_back(timeout{cycleCount + 1, "cycleCT"});
@@ -419,6 +482,7 @@ namespace colourSort
                                     timeouts.push_back(timeout{cycleCount + 35, "cycleCT"});
                                     std::cout << "Cycled" << std::endl;
                                 }
+                                // Cycle or intake block
                                 else if ((currentRollerState == "cycle" || currentRollerState == "intake") && !matchLoader.getState())
                                 {
                                     rollers::addTemporaryState("scoreTopC", 1);
@@ -427,6 +491,7 @@ namespace colourSort
                             }
                             else
                             {
+                                // Non-skills autonomous routine
                                 if (currentRollerState == "scoreTop")
                                 {
                                     // starts.push_back(timeout{cycleCount + 1, "cycleC"});
@@ -441,19 +506,22 @@ namespace colourSort
                                 }
                             }
                         }
+                        // Remove ball from back after handling
                         ballIndex.pop_back();
                         std::cout << "Popped!" << std::endl;
                     }
                 }
                 else
                 {
+                    // Reset top flag if sensor not triggered
                     top = true;
                 }
             }
+            // Delay for 10ms to prevent CPU overload
             pros::delay(10);
         }
     }
 
 }
 
-#endif
+#endif // End of header guard
