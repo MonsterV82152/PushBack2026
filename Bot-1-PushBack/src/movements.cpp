@@ -27,11 +27,11 @@ namespace rollers
     inline rollerState currentState = {"none", 0, 0, 0, 0};
 
     inline std::vector<rollerState> rollerStates = {
-        {"intake", 80, 80, 80, 0},
-        {"intakeC", 60, 60, 60, 0},
-        {"outtake", -60, -60, -60, 0},
-        {"scoreBottom", -60, -60, -60, 60},
-        {"scorePark", -60, -60, -60, 60},
+        {"intake", 127, 127, 127, 0},
+        {"intakeC", 127, 127, 127, 0},
+        {"outtake", -127, -127, -127, 0},
+        {"scoreBottom", -127, -127, -127, 127},
+        {"scorePark", -127, -127, -127, 127},
 
         {"scoreMiddle", 30, -30, 60, 60},
         {"scoreMiddleAuton", 60, -60, 60, 60},
@@ -313,7 +313,6 @@ namespace colourSort
                             ballIndex.push_front(2);
                             std::cout << "Red Block!" << std::endl;
                             currentState = 1;
-                            middle = true;
                         }
                     }
                     else if (bottomHue > blueMin && bottomHue < blueMax)
@@ -322,9 +321,7 @@ namespace colourSort
                         {
                             ballIndex.push_front(1);
                             std::cout << "Blue Block!" << std::endl;
-                            middle = true;
-
-                            currentState = 2;
+                            currentState = 2; 
                         }
                     }
                     else
@@ -388,6 +385,8 @@ namespace colourSort
                             ballIndex.pop_back();
                         }
                     }
+                } else {
+                    middle = true;
                 }
                 if (topDS.get_distance() < 50)
                 {
