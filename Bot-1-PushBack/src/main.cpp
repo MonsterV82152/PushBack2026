@@ -138,7 +138,7 @@ void opcontrol()
             colourSortThread.remove();
             colourSortThread = new pros::Task(colourSort::start);
         }
-        if (master.get_digital(buttons::X))
+        if (master.get_digital(buttons::DOWN))
         {
             matchLoader.setState(true);
             colourSort::sortML = true;
@@ -177,7 +177,7 @@ void opcontrol()
         {
             rollers::removeTemporaryState("cycle");
         }
-        if (master.get_digital_new_press(buttons::DOWN))
+        if (master.get_digital_new_press(buttons::X))
         {
             rollers::addTemporaryState("clearIntake", 7);
         }

@@ -28,29 +28,29 @@ namespace rollers
 
     inline std::vector<rollerState> rollerStates = {
         {"intake", 80, 80, 80, 0},
-        {"intakeC", 127, 127, 127, 0},
-        {"outtake", -127, -127, -127, 0},
-        {"scoreBottom", -127, -127, -127, 127},
-        {"scorePark", -127, -127, -127, 127},
+        {"intakeC", 60, 60, 60, 0},
+        {"outtake", -60, -60, -60, 0},
+        {"scoreBottom", -60, -60, -60, 60},
+        {"scorePark", -60, -60, -60, 60},
 
-        {"scoreMiddle", 30, -30, 127, 127},
-        {"scoreMiddleAuton", 127, -127, 127, 127},
+        {"scoreMiddle", 30, -30, 60, 60},
+        {"scoreMiddleAuton", 60, -60, 60, 60},
 
-        {"scoreMiddleC", 127, -127, 127, 0},
-        {"scoreTop", 60, 60, -60, 127},
-        {"scoreTopC", 127, 127, -127, 0},
-        {"scoreTopCT", 127, 127, -127, 0},
-        {"directIntake", 127, 0, 0, -127},
-        {"cycle", 127, 127, 127, 127},
-        {"cycleC", 127, 127, 127, 127},
-        {"cycleCT", 0, 127, 127, 0},
+        {"scoreMiddleC", 90, -90, 90, 0},
+        {"scoreTop", 60, 60, -60, 60},
+        {"scoreTopC", 90, 90, -90, 0},
+        {"scoreTopCT", 90, 90, -90, 0},
+        {"directIntake", 60, 0, 0, -60},
+        {"cycle", 60, 60, 60, 60},
+        {"cycleC", 60, 60, 60, 60},
+        {"cycleCT", 0, 60, 60, 0},
         {"none", 0, 0, 0, 0},
-        {"reverseTop", 0, 0, -127, 0},
+        {"reverseTop", 0, 0, -60, 0},
 
-        {"clearIntake", -127, -127, -127, 0},
-        {"clearIntakeC", -127, -127, -127, 0},
+        {"clearIntake", -60, -60, -60, 0},
+        {"clearIntakeC", -60, -60, -60, 0},
 
-        {"ejectMiddle", 127, -127, 0, 127}};
+        {"ejectMiddle", 60, -60, 0, 60}};
     inline std::vector<temporaryRollerState> temporaryRollerStates;
     inline temporaryRollerState currentTemporaryState = {"none", 0, 0, 0, 0, 10};
     inline temporaryRollerState _stateToTemp(rollerState state, int importance = 0)
@@ -349,37 +349,37 @@ namespace colourSort
                             {
                                 if (currentRollerState == "scoreMiddle")
                                 {
-                                    starts.push_back(timeout{cycleCount + 5, "cycleC"});
-                                    timeouts.push_back(timeout{cycleCount + 40, "cycleC"});
+                                    starts.push_back(timeout{cycleCount + 1, "cycleC"});
+                                    timeouts.push_back(timeout{cycleCount + 1, "cycleC"});
                                 }
                                 else if ((currentRollerState == "cycle" || currentRollerState == "intake") && !matchLoader.getState())
                                 {
-                                    starts.push_back(timeout{cycleCount + 5, "scoreMiddleC"});
+                                    starts.push_back(timeout{cycleCount + 1, "scoreMiddleC"});
                                     std::cout << "Popped1!" << std::endl;
 
                                     if (!ballIndex.empty())
                                         ballIndex.pop_back();
 
-                                    timeouts.push_back(timeout{cycleCount + 40, "scoreMiddleC"});
+                                    timeouts.push_back(timeout{cycleCount + 1, "scoreMiddleC"});
                                 }
                             }
                             else
                             {
                                 if (currentRollerState == "scoreMiddle")
                                 {
-                                    starts.push_back(timeout{cycleCount + 5, "cycleC"});
+                                    starts.push_back(timeout{cycleCount + 1, "cycleC"});
 
-                                    timeouts.push_back(timeout{cycleCount + 40, "cycleC"});
+                                    timeouts.push_back(timeout{cycleCount + 1, "cycleC"});
                                 }
                                 else if (currentRollerState == "cycle" || currentRollerState == "intake")
                                 {
-                                    starts.push_back(timeout{cycleCount + 5, "scoreMiddleC"});
+                                    starts.push_back(timeout{cycleCount + 1, "scoreMiddleC"});
                                     std::cout << "Popped1!" << std::endl;
 
                                     if (!ballIndex.empty())
                                         ballIndex.pop_back();
 
-                                    timeouts.push_back(timeout{cycleCount + 40, "scoreMiddleC"});
+                                    timeouts.push_back(timeout{cycleCount + 1, "scoreMiddleC"});
                                 }
                             }
                         }
