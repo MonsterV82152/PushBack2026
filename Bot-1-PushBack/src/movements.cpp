@@ -33,24 +33,24 @@ namespace rollers
         {"scoreBottom", -127, -127, -127, 127},
         {"scorePark", -127, -127, -127, 127},
 
-        {"scoreMiddle", 30, -30, 60, 60},
-        {"scoreMiddleAuton", 60, -60, 60, 60},
+        {"scoreMiddle", 30, -30, 127, 127},
+        {"scoreMiddleAuton", 127, -127, 127, 127},
 
         {"scoreMiddleC", 90, -90, 90, 0},
-        {"scoreTop", 60, 60, -60, 60},
+        {"scoreTop", 127, 127, -127, 127},
         {"scoreTopC", 90, 90, -90, 0},
         {"scoreTopCT", 90, 90, -90, 0},
-        {"directIntake", 60, 0, 0, -60},
-        {"cycle", 60, 60, 60, 60},
-        {"cycleC", 60, 60, 60, 60},
-        {"cycleCT", 0, 60, 60, 0},
+        {"directIntake", 127, 0, 0, -127},
+        {"cycle", 127, 127, 127, 127},
+        {"cycleC", 127, 127, 127, 127},
+        {"cycleCT", 0, 127, 127, 0},
         {"none", 0, 0, 0, 0},
-        {"reverseTop", 0, 0, -60, 0},
+        {"reverseTop", 0, 0, -127, 0},
 
-        {"clearIntake", -60, -60, -60, 0},
-        {"clearIntakeC", -60, -60, -60, 0},
+        {"clearIntake", -127, -127, -127, 0},
+        {"clearIntakeC", -127, -127, -127, 0},
 
-        {"ejectMiddle", 60, -60, 0, 60}};
+        {"ejectMiddle", 127, -127, 0, 127}};
     inline std::vector<temporaryRollerState> temporaryRollerStates;
     inline temporaryRollerState currentTemporaryState = {"none", 0, 0, 0, 0, 10};
     inline temporaryRollerState _stateToTemp(rollerState state, int importance = 0)
@@ -258,23 +258,26 @@ namespace colourSort
         double blueMin = 170;
         bool middle = true;
         bool top = true;
-        
+
         std::vector<timeout> timeouts = {};
         std::vector<timeout> starts = {};
         std::deque<int> ballIndex = {};
         short currentState = 0;
         int cycleCount = 0;
 
-        bottomColor.set_led_pwm(100);
+        topColour.set_led_pwm(100);
         while (true)
         {
-            if (master.get_digital_new_press(buttons::RIGHT)) {
+            if (master.get_digital_new_press(buttons::RIGHT))
+            {
                 rollers::setState("scorePark");
                 pros::delay(500);
-                while (bottomDS.get_distance() >= 80) {
+                while (bottomDS.get_distance() >= 80)
+                {
                     pros::delay(10);
                 }
-                while (bottomDS.get_distance() <= 80) {
+                while (bottomDS.get_distance() <= 80)
+                {
                     pros::delay(10);
                 }
                 pros::delay(90);
@@ -303,150 +306,66 @@ namespace colourSort
             // Top sensor triggers colour sensor to read next block - fixes the ghost block issue
             if (rollers::currentState.name != "none" && on.load() && (!autonSelect.isSkills() && !matchLoader.getState() || autonSelect.isSkills()))
             {
-                double bottomHue = bottomColor.get_hue();
-                if (rollers::currentState.bottomSpeed > 0)
+                double topColor = topColour.get_hue();
+                if (topColor > redMin || topColor < redMax)
                 {
-                    if (bottomHue > redMin || bottomHue < redMax)
+                    if (!redTeam.load() && currentState != 1)
                     {
-                        if (currentState != 1)
+                        currentState = 1;
+                        if (autonSelect.isSkills())
                         {
-                            ballIndex.push_front(2);
-                            std::cout << "Red Block!" << std::endl;
-                            currentState = 1;
+                            if (currentRollerState == "scoreTop")
+                            {
+                                rollers::addTemporaryState("cycleC", 1);
+                                timeouts.push_back(timeout{cycleCount + 50, "cycleC"});
+                            }
+                            else if (currentRollerState == "intake")
+                            {
+                                rollers::addTemporaryState("scoreTopC", 1);
+                                timeouts.push_back(timeout{cycleCount + 50, "scoreTopC"});
+                            }
                         }
-                    }
-                    else if (bottomHue > blueMin && bottomHue < blueMax)
-                    {
-                        if (currentState != 2)
+                        else
                         {
-                            ballIndex.push_front(1);
-                            std::cout << "Blue Block!" << std::endl;
-                            currentState = 2; 
+                            if (currentRollerState == "intake")
+                            {
+                                rollers::addTemporaryState("scoreTopC", 1);
+                                timeouts.push_back(timeout{cycleCount + 60, "scoreTopC"});
+                            }
                         }
-                    }
-                    else
-                    {
-                        currentState = 0;
                     }
                 }
-                if (middleDS.get_distance() < 45)
+                else if (topColor > blueMin && topColor < blueMax)
                 {
-                    std::cout << "bottom" << std::endl;
-                    if (middle && !ballIndex.empty())
+                    if (redTeam.load() && currentState != 2)
                     {
-                        middle = false;
-                        if (currentRollerState == "scoreBottom" || currentRollerState == "clearIntake")
+                        currentState = 2;
+
+                        if (autonSelect.isSkills())
                         {
-                            ballIndex.pop_back();
-                        }
-                        if ((ballIndex.back() == 2) == !redTeam.load())
-                        {
-                            std::cout << redTeam.load() << " , " << (ballIndex.back() == 1) << " , " << ballIndex.back() << std::endl;
-                            if (autonSelect.isSkills())
+                            if (currentRollerState == "scoreTop")
                             {
-                                if (currentRollerState == "scoreMiddle")
-                                {
-                                    starts.push_back(timeout{cycleCount + 1, "cycleC"});
-                                    timeouts.push_back(timeout{cycleCount + 1, "cycleC"});
-                                }
-                                else if ((currentRollerState == "cycle" || currentRollerState == "intake") && !matchLoader.getState())
-                                {
-                                    starts.push_back(timeout{cycleCount + 1, "scoreMiddleC"});
-                                    std::cout << "Popped1!" << std::endl;
-
-                                    if (!ballIndex.empty())
-                                        ballIndex.pop_back();
-
-                                    timeouts.push_back(timeout{cycleCount + 1, "scoreMiddleC"});
-                                }
+                                rollers::addTemporaryState("cycleC", 1);
+                                timeouts.push_back(timeout{cycleCount + 60, "cycleC"});
                             }
-                            else
+                            else if (currentRollerState == "intake")
                             {
-                                if (currentRollerState == "scoreMiddle")
-                                {
-                                    starts.push_back(timeout{cycleCount + 1, "cycleC"});
-
-                                    timeouts.push_back(timeout{cycleCount + 1, "cycleC"});
-                                }
-                                else if (currentRollerState == "cycle" || currentRollerState == "intake")
-                                {
-                                    starts.push_back(timeout{cycleCount + 1, "scoreMiddleC"});
-                                    std::cout << "Popped1!" << std::endl;
-
-                                    if (!ballIndex.empty())
-                                        ballIndex.pop_back();
-
-                                    timeouts.push_back(timeout{cycleCount + 1, "scoreMiddleC"});
-                                }
+                                rollers::addTemporaryState("scoreTopC", 1);
+                                timeouts.push_back(timeout{cycleCount + 60, "scoreTopC"});
                             }
                         }
-                        else if (currentRollerState == "scoreMiddle")
+                        else
                         {
-                            ballIndex.pop_back();
+                            if (currentRollerState == "intake")
+                            {
+                                rollers::addTemporaryState("scoreTopC", 1);
+                                timeouts.push_back(timeout{cycleCount + 60, "scoreTopC"});
+                            }
                         }
                     }
-                } else {
-                    middle = true;
-                }
-                if (topDS.get_distance() < 50)
-                {
-                    if (top && !ballIndex.empty())
-                    {
-
-                        top = false;
-
-                        if ((ballIndex.back() == 2) == !redTeam.load())
-                        {
-                            command++;
-
-                            if (autonSelect.isSkills())
-                            {
-                                if (matchLoader.getState() && sortML.load())
-                                {
-                                    rollers::addTemporaryState("reverseTop", 1);
-                                    timeouts.push_back(timeout{cycleCount + 5, "reverseTop"});
-                                    starts.push_back(timeout{cycleCount + 5, "none"});
-                                    timeouts.push_back(timeout{cycleCount + 70, "none"});
-                                    starts.push_back(timeout{cycleCount + 70, "clearIntakeC"});
-                                    timeouts.push_back(timeout{cycleCount + 170, "clearIntakeC"});
-                                }
-                                else if (currentRollerState == "scoreTop")
-                                {
-                                    // starts.push_back(timeout{cycleCount + 1, "cycleCT"});
-                                    rollers::addTemporaryState("cycleCT", 1);
-
-                                    timeouts.push_back(timeout{cycleCount + 35, "cycleCT"});
-                                    std::cout << "Cycled" << std::endl;
-                                }
-                                else if ((currentRollerState == "cycle" || currentRollerState == "intake") && !matchLoader.getState())
-                                {
-                                    rollers::addTemporaryState("scoreTopC", 1);
-                                    timeouts.push_back(timeout{cycleCount + 20, "scoreTopC"});
-                                }
-                            }
-                            else
-                            {
-                                if (currentRollerState == "scoreTop")
-                                {
-                                    // starts.push_back(timeout{cycleCount + 1, "cycleC"});
-                                    rollers::addTemporaryState("cycleCT", 1);
-
-                                    timeouts.push_back(timeout{cycleCount + 35, "cycleCT"});
-                                }
-                                else if (currentRollerState == "cycle" || currentRollerState == "intake")
-                                {
-                                    rollers::addTemporaryState("scoreTopC", 1);
-                                    timeouts.push_back(timeout{cycleCount + 20, "scoreTopC"});
-                                }
-                            }
-                        }
-                        ballIndex.pop_back();
-                        std::cout << "Popped!" << std::endl;
-                    }
-                }
-                else
-                {
-                    top = true;
+                } 
+                else {
+                    currentState = 0;
                 }
             }
             pros::delay(10);

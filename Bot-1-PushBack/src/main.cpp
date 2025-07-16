@@ -19,20 +19,20 @@ void initialize()
         autonomousRoute{"blue", "Blue Auton 1", "1st Blue Auton", blueSAWP},
         autonomousRoute{"blue", "Blue Auton 2", "2nd Blue Auton", blueAuton2}});
     autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", skills});
-    // autonSelect.start();
+    autonSelect.start();
     
 
-    pros::lcd::initialize();
-    pros::Task screen_task([&]()
-                           {
-        while (true) {
-            // print robot location to the brain screen
-            pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
-            pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
-            pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
-            // delay to save resources
-            pros::delay(20);
-        } });
+    // pros::lcd::initialize();
+    // pros::Task screen_task([&]()
+    //                        {
+    //     while (true) {
+    //         // print robot location to the brain screen
+    //         pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
+    //         pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
+    //         pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
+    //         // delay to save resources
+    //         pros::delay(20);
+    //     } });
 
     chassis.calibrate();
     chassis.setPose(48, 48, 0);
