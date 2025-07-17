@@ -1,7 +1,7 @@
 {
   "py/object": "pros.conductor.project.Project",
   "py/state": {
-    "project_name": "Jul 16 TEST",
+    "project_name": "asdfasdf",
     "target": "v5",
     "templates": {
       "LemLib": {
@@ -298,9 +298,9 @@
       }
     },
     "upload_options": {
-      "icon": "clawbot",
-      "slot": 8,
-      "description": "SKILL ISSUE"
+      "icon": "X",
+      "slot": 1,
+      "description": "SDFsfSFd"
     },
     "use_early_access": false
   }

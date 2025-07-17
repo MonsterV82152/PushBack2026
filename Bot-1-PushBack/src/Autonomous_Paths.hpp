@@ -117,6 +117,22 @@ void exampleAuton() {
 }
 
 void skills() {
+    chassis.setPose(-61,-17, 0);
+    correct_position(leftLoc, &chassis, true);
+    chassis.moveToPoint(-52,48, 1800);
+    chassis.waitUntil(40);
+    correct_position(frontLoc, &chassis, false);
+    correct_position(leftLoc, &chassis, true);
+    matchLoader.setState(true);
+    chassis.turnToPoint(-70,48,700);
+    chassis.moveToPoint(-65,47,1000,{.maxSpeed = 70});
+    chassis.waitUntilDone();
+    pros::delay(1000);
+    
+    chassis.moveToPoint(-48,48,700,{false});
+    chassis.turnToPoint(-24,36, 1000);
+    chassis.moveToPoint(-24,36, 700, {.minSpeed = 70, .earlyExitRange = 4});
+    chassis.moveToPoint(24,36,700,{.minSpeed = 70, .earlyExitRange = 4});
     
 }
 #endif

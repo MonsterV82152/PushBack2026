@@ -71,7 +71,7 @@ inline dist_sensor leftLoc({&localization::leftDS, lemlib::Pose(-4, -1, 270)});
 inline dist_sensor frontLoc({&localization::frontDS, lemlib::Pose(-4, 7, 0)});
 inline dist_sensor backLoc({&localization::backDS, lemlib::Pose(4, -7, 180)});
 
-inline pros::Distance topDS(11);
+inline pros::Optical topColour(11);
 inline pros::Distance bottomDS(13);
 inline pros::Distance middleDS(21);
 
