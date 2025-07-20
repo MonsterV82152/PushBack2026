@@ -34,7 +34,7 @@ namespace rollers
         {"scorePark", -127, -127, -127, 127},
 
         {"scoreMiddle", 30, -30, 127, 127},
-        {"scoreMiddleAuton", 127, -127, 127, 127},
+        {"scoreMiddleAuton", 90, -90, 127, 127},
 
         {"scoreMiddleC", 90, -90, 90, 0},
         {"scoreTop", 127, 127, -127, 127},
@@ -280,7 +280,6 @@ namespace colourSort
                 {
                     pros::delay(10);
                 }
-                pros::delay(90);
 
                 rollers::setState("none");
                 park.setState(true);
@@ -307,65 +306,43 @@ namespace colourSort
             if (rollers::currentState.name != "none" && on.load() && (!autonSelect.isSkills() && !matchLoader.getState() || autonSelect.isSkills()))
             {
                 double topColor = topColour.get_hue();
-                if (topColor > redMin || topColor < redMax)
+                if (((topColor > redMin || topColor < redMax) && !redTeam.load()) || ((topColor > blueMin && topColor < blueMax) && redTeam.load()))
                 {
-                    if (!redTeam.load() && currentState != 1)
+                    if (autonSelect.isSkills())
                     {
-                        currentState = 1;
-                        if (autonSelect.isSkills())
+                        if (currentRollerState == "scoreTop")
                         {
-                            if (currentRollerState == "scoreTop")
-                            {
-                                rollers::addTemporaryState("cycleC", 1);
-                                timeouts.push_back(timeout{cycleCount + 50, "cycleC"});
-                            }
-                            else if (currentRollerState == "intake")
-                            {
-                                rollers::addTemporaryState("scoreTopC", 1);
-                                timeouts.push_back(timeout{cycleCount + 50, "scoreTopC"});
-                            }
+                            rollers::addTemporaryState("cycleC", 1);
+                            timeouts.push_back(timeout{cycleCount + 20, "cycleC"});
                         }
-                        else
+                        else if ((currentRollerState == "intake" || currentRollerState == "intake") && !matchLoader.getState())
                         {
-                            if (currentRollerState == "intake")
-                            {
-                                rollers::addTemporaryState("scoreTopC", 1);
-                                timeouts.push_back(timeout{cycleCount + 60, "scoreTopC"});
-                            }
+                            rollers::addTemporaryState("scoreTopC", 1);
+                            timeouts.push_back(timeout{cycleCount + 20, "scoreTopC"});
+                        }
+                        else if (currentRollerState == "intake" && matchLoader.getState() && sortML.load())
+                        {
+                            rollers::addTemporaryState("reverseTop", 1);
+                            timeouts.push_back(timeout{cycleCount + 5, "reverseTop"});
+                            starts.push_back(timeout{cycleCount + 5, "none"});
+                            timeouts.push_back(timeout{cycleCount + 70, "none"});
+                            starts.push_back(timeout{cycleCount + 70, "clearIntakeC"});
+                            timeouts.push_back(timeout{cycleCount + 170, "clearIntakeC"});
                         }
                     }
-                }
-                else if (topColor > blueMin && topColor < blueMax)
-                {
-                    if (redTeam.load() && currentState != 2)
+                    else
                     {
-                        currentState = 2;
-
-                        if (autonSelect.isSkills())
+                        if (currentRollerState == "intake")
                         {
-                            if (currentRollerState == "scoreTop")
-                            {
-                                rollers::addTemporaryState("cycleC", 1);
-                                timeouts.push_back(timeout{cycleCount + 60, "cycleC"});
-                            }
-                            else if (currentRollerState == "intake")
-                            {
-                                rollers::addTemporaryState("scoreTopC", 1);
-                                timeouts.push_back(timeout{cycleCount + 60, "scoreTopC"});
-                            }
+                            rollers::addTemporaryState("scoreTopC", 1);
+                            timeouts.push_back(timeout{cycleCount + 20, "scoreTopC"});
                         }
-                        else
+                        else if (currentRollerState == "scoreTop")
                         {
-                            if (currentRollerState == "intake")
-                            {
-                                rollers::addTemporaryState("scoreTopC", 1);
-                                timeouts.push_back(timeout{cycleCount + 60, "scoreTopC"});
-                            }
+                            rollers::addTemporaryState("cycleC", 1);
+                            timeouts.push_back(timeout{cycleCount + 20, "cycleC"});
                         }
                     }
-                } 
-                else {
-                    currentState = 0;
                 }
             }
             pros::delay(10);

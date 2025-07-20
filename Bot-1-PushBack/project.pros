@@ -1,7 +1,7 @@
 {
   "py/object": "pros.conductor.project.Project",
   "py/state": {
-    "project_name": "asdfasdf",
+    "project_name": "queera",
     "target": "v5",
     "templates": {
       "LemLib": {
@@ -299,8 +299,8 @@
     },
     "upload_options": {
       "icon": "X",
-      "slot": 1,
-      "description": "SDFsfSFd"
+      "slot": 2,
+      "description": "lesra"
     },
     "use_early_access": false
   }

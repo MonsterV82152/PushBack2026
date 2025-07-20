@@ -13,11 +13,12 @@ void initialize()
     // pros::lcd::initialize();
     master.clear();
     pros::delay(1000);
+    topColour.set_integration_time(40);
     autonSelect.setAutons(std::vector<autonomousRoute>{
         autonomousRoute{"red", "Red SAWP", "Solo AWP", redSAWP},
         autonomousRoute{"red", "Red Auton 2", "2nd Red Auton", redAuton2},
-        autonomousRoute{"blue", "Blue Auton 1", "1st Blue Auton", blueSAWP},
-        autonomousRoute{"blue", "Blue Auton 2", "2nd Blue Auton", blueAuton2}});
+        autonomousRoute{"blue", "Blue Auton 1", "1st Blue Auton", redSAWP},
+        autonomousRoute{"blue", "Blue Auton 2", "2nd Blue Auton", redAuton2}});
     autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", skills});
     autonSelect.start();
     
@@ -39,7 +40,6 @@ void initialize()
 }
 
 void disabled() {}
-
 void competition_initialize() {}
 
 void autonomous()
@@ -48,14 +48,16 @@ void autonomous()
     // chassis.setPose(0, 0, 0);
     // chassis.moveToPoint(0, 24, 10000);
     colourSort::redTeam = autonSelect.isRedTeam();
-    redAuton2();
+    autonSelect.runAuton();
+    // redAuton2();
+    // redSAWP();
 
 }
 
 void opcontrol()
 {
 
-
+    int teamSequence[5] = {1, 2, 1, 2, 0};
         // angular awr
         // double tot = 0;
         // for (double i = 9.99; i <= 180; i += 10) {
@@ -107,6 +109,7 @@ void opcontrol()
         // delay(2000);
         // master.print(1, 0, "%.2f", tar - chassis.getPose().y);
         // delay(1000);
+    int teamIndex = 0;
     colourSort::redTeam = autonSelect.isRedTeam();
     while (true)
     {
@@ -116,28 +119,28 @@ void opcontrol()
         chassis.arcade(leftY, rightX);
         if (master.get_digital_new_press(buttons::Y))
         {
-            if (!colourSort::on) {
+            if (teamSequence[teamIndex] == 1) {
+                colourSort::on = true;
+                colourSort::redTeam = false;
+                master.print(0, 0, colourSort::on ? colourSort::redTeam ? "red " : "blue" : "off ");
+
+            } else if (teamSequence[teamIndex] == 2) {
                 colourSort::on = true;
                 colourSort::redTeam = true;
                 master.print(0, 0, colourSort::on ? colourSort::redTeam ? "red " : "blue" : "off ");
-
-            } else if (colourSort::redTeam) {
-                colourSort::redTeam = !colourSort::redTeam;
-                master.print(0, 0, colourSort::on ? colourSort::redTeam ? "red " : "blue" : "off ");
-            } else if (!colourSort::redTeam) {
+            } else {
                 colourSort::on = false;
                 master.print(0, 0, colourSort::on ? colourSort::redTeam ? "red " : "blue" : "off ");
 
-
-
+            }
+            if (teamIndex < 5) {
+                teamIndex++;
+            } else {
+                teamIndex = 0;
             }
             
         }
-        if (master.get_digital_new_press(buttons::LEFT))
-        {
-            colourSort::ballIndex.clear();
-        }
-        if (master.get_digital(buttons::DOWN))
+        if (master.get_digital(buttons::DOWN) && autonSelect.isSkills())
         {
             matchLoader.setState(true);
             colourSort::sortML = true;
