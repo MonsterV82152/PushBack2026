@@ -33,7 +33,7 @@ namespace rollers
         {"scoreBottom", -127, -127, -127, 127},
         {"scorePark", -127, -127, -127, 127},
 
-        {"scoreMiddle", 30, -30, 127, 127},
+        {"scoreMiddle", 127, -127, 127, 127},
         {"scoreMiddleAuton", 90, -90, 127, 127},
 
         {"scoreMiddleC", 90, -90, 90, 0},

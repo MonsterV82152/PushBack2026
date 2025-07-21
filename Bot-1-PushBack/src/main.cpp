@@ -6,13 +6,10 @@
 using namespace pros;
 
 void on_center_button() {}
-pros::Task colourSortThread(colourSort::start);
 
 void initialize()
 {
     // pros::lcd::initialize();
-    master.clear();
-    pros::delay(1000);
     topColour.set_integration_time(40);
     autonSelect.setAutons(std::vector<autonomousRoute>{
         autonomousRoute{"red", "Red SAWP", "Solo AWP", redSAWP},
@@ -21,6 +18,8 @@ void initialize()
         autonomousRoute{"blue", "Blue Auton 2", "2nd Blue Auton", redAuton2}});
     autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", skills});
     autonSelect.start();
+
+
     
 
     // pros::lcd::initialize();
@@ -36,6 +35,10 @@ void initialize()
     //     } });
 
     chassis.calibrate();
+    master.clear();
+
+    pros::Task colourSortThread(colourSort::start);
+
     chassis.setPose(48, 48, 0);
 }
 
@@ -183,7 +186,7 @@ void opcontrol()
         {
             rollers::addTemporaryState("clearIntake", 7);
         }
-        else if (rollers::currentTemporaryState.name == "clearIntake" && !master.get_digital(buttons::DOWN))
+        else if (rollers::currentTemporaryState.name == "clearIntake" && !master.get_digital(buttons::X))
         {
             rollers::removeTemporaryState("clearIntake");
         }
