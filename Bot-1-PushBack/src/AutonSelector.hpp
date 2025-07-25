@@ -127,7 +127,7 @@ public:
         pages = {
             page(
                 "home",
-                {true, false},
+                {true, true},
                 std::vector<screenElement>{
                     screenElement{"lineRect", pros::Color::white, 20, 15, 225, 220},
                     screenElement{"lineRect", pros::Color::white, 25, 20, 230, 225},

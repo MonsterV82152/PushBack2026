@@ -11,12 +11,16 @@ void initialize()
 {
     // pros::lcd::initialize();
     topColour.set_integration_time(40);
+    bottomColor.set_integration_time(40);
     autonSelect.setAutons(std::vector<autonomousRoute>{
-        autonomousRoute{"red", "Red SAWP", "Solo AWP", redSAWP},
-        autonomousRoute{"red", "Red Auton 2", "2nd Red Auton", redAuton2},
-        autonomousRoute{"blue", "Blue Auton 1", "1st Blue Auton", redSAWP},
-        autonomousRoute{"blue", "Blue Auton 2", "2nd Blue Auton", redAuton2}});
+        autonomousRoute{"red", "Solo AWP", "Position: Right \n Total: 3 goals, 7~10 blocks,  3-3-4", SAWP},
+        autonomousRoute{"red", "Left", "Position: Left \n Total: 1 goal, 7 blocks", Left},
+        autonomousRoute{"red", "Right", "Position: Right \n Total: 1 goal, 7 blocks", Right},
+        autonomousRoute{"blue", "Solo AWP", "Position: Right \n Total: 3 goals, 7~10 blocks,  3-3-4", SAWP},
+        autonomousRoute{"blue", "Left", "Position: Left \n Total: 1 goal, 7 blocks", Left},
+        autonomousRoute{"blue", "Right", "Position: Right \n Total: 1 goal, 7 blocks", Right}});
     autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", skills});
+    pros::delay(500);
     autonSelect.start();
 
 
@@ -51,16 +55,18 @@ void autonomous()
     // chassis.setPose(0, 0, 0);
     // chassis.moveToPoint(0, 24, 10000);
     colourSort::redTeam = autonSelect.isRedTeam();
-    autonSelect.runAuton();
+    // autonSelect.runAuton();
     // redAuton2();
     // redSAWP();
+    // Left2Goals();
+    skills();
 
 }
 
 void opcontrol()
 {
 
-    int teamSequence[5] = {1, 2, 1, 2, 0};
+    int teamSequence[6] = {0, 2, 1, 0, 2};
         // angular awr
         // double tot = 0;
         // for (double i = 9.99; i <= 180; i += 10) {
@@ -113,7 +119,7 @@ void opcontrol()
         // master.print(1, 0, "%.2f", tar - chassis.getPose().y);
         // delay(1000);
     int teamIndex = 0;
-    colourSort::redTeam = autonSelect.isRedTeam();
+    colourSort::redTeam = false;
     while (true)
     {
         // double leftY; if (master.get_digital(buttons::DOWN)) { if (leftY * 1.5 > 127) { leftY = 127;} else if (leftY == 0) {leftY = 5;}else{ leftY += abs(leftY * 0.5);}}else if (master.get_digital(buttons::B)) {if (leftY * 1.5 < -127){leftY = -127;} else if (leftY == 0) {leftY = -5;}else{leftY -= abs(leftY * 0.5);}}else {if (leftY * 0.5 < 10) {leftY = 0;} else {leftY *= 0.5;}}
@@ -136,7 +142,7 @@ void opcontrol()
                 master.print(0, 0, colourSort::on ? colourSort::redTeam ? "red " : "blue" : "off ");
 
             }
-            if (teamIndex < 5) {
+            if (teamIndex < 6) {
                 teamIndex++;
             } else {
                 teamIndex = 0;
@@ -208,7 +214,16 @@ void opcontrol()
         }
         if (master.get_digital_new_press(buttons::L1))
         {
+            rollers::rollerStates[5].middleSpeed = -90; // Adjust middle speed for scoreMiddle
+            rollers::rollerStates[5].bottomSpeed = 90; // Adjust bottom speed for scoreMiddle
             rollers::addTemporaryState("scoreMiddle", 7);
+        } else if (master.get_digital(buttons::L1)) {
+            if (rollers::rollerStates[5].middleSpeed < -40) {
+                rollers::rollerStates[5].middleSpeed += 1; // Increment middle speed
+                rollers::rollerStates[5].bottomSpeed -= 1; // Decrement bottom speed
+                rollers::addTemporaryState("scoreMiddle", 7);
+                rollers::removeTemporaryState("scoreMiddle");
+            }
         }
         else if (rollers::currentTemporaryState.name == "scoreMiddle" && !master.get_digital(buttons::L1))
         {

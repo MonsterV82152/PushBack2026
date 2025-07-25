@@ -1,7 +1,7 @@
 {
   "py/object": "pros.conductor.project.Project",
   "py/state": {
-    "project_name": "queera",
+    "project_name": "dont kill the bot",
     "target": "v5",
     "templates": {
       "LemLib": {
@@ -299,7 +299,7 @@
     },
     "upload_options": {
       "icon": "X",
-      "slot": 2,
+      "slot": 1,
       "description": "lesra"
     },
     "use_early_access": false
