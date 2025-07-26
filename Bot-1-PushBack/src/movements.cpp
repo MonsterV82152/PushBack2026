@@ -254,6 +254,7 @@ namespace colourSort
 		double redMin = 350;
 		double blueMax = 240;
 		double blueMin = 170;
+		short currentState = 0;
 
 		std::vector<timeout> timeouts = {};
 		std::vector<timeout> starts = {};
@@ -305,7 +306,7 @@ namespace colourSort
 			{
 				double middleColor = bottomColor.get_hue();
 				double topColor = topColour.get_hue();
-				if (((topColor > redMin || topColor < redMax) && !redTeam.load()) || ((topColor > blueMin && topColor < blueMax) && redTeam.load()))
+                if (((topColor > redMin || topColor < redMax) && !redTeam.load()) || ((topColor > blueMin && topColor < blueMax) && redTeam.load()) && currentState == 0)
 				{
 					if (autonSelect.isSkills())
 					{
@@ -321,12 +322,13 @@ namespace colourSort
 						}
 						else if (currentRollerState == "intake" && matchLoader.getState() && sortML.load())
 						{
+                            currentState = 1;
 							rollers::addTemporaryState("reverseTop", 1);
 							timeouts.push_back(timeout{cycleCount + 5, "reverseTop"});
 							starts.push_back(timeout{cycleCount + 5, "none"});
-							timeouts.push_back(timeout{cycleCount + 70, "none"});
-							starts.push_back(timeout{cycleCount + 70, "clearIntakeC"});
-							timeouts.push_back(timeout{cycleCount + 170, "clearIntakeC"});
+							timeouts.push_back(timeout{cycleCount + 40, "none"});
+							starts.push_back(timeout{cycleCount + 40, "scoreTopC"});
+							timeouts.push_back(timeout{cycleCount + 140, "scoreTopC"});
 						}
 					}
 					else
@@ -342,7 +344,10 @@ namespace colourSort
 							timeouts.push_back(timeout{cycleCount + 10, "cycleC"});
 						}
 					}
+				} else {
+					currentState = 0;
 				}
+
 				//     if (((middleColor > redMin || middleColor < redMax) && !redTeam.load()) || ((middleColor > blueMin && middleColor < blueMax) && redTeam.load()))
 				//     {
 				//         if (autonSelect.isSkills())

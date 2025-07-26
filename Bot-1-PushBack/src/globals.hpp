@@ -57,6 +57,7 @@ inline pros::Motor bottom(-15);
 inline pros::Motor middle(20);
 inline pros::Motor top(-12);
 inline pros::Motor bucket(-18);
+inline bool programmerMode = false;
 
 inline pros::Optical bottomColor(16);
 
@@ -66,10 +67,10 @@ namespace localization {
     inline pros::Distance frontDS(14);
     inline pros::Distance backDS(17);
 }
-inline dist_sensor rightLoc({&localization::rightDS, lemlib::Pose(4, -1, 90)});
-inline dist_sensor leftLoc({&localization::leftDS, lemlib::Pose(-4, -1, 270)});
-inline dist_sensor frontLoc({&localization::frontDS, lemlib::Pose(-4, 7, 0)});
-inline dist_sensor backLoc({&localization::backDS, lemlib::Pose(4, -7, 180)});
+inline dist_sensor rightLoc({&localization::rightDS, lemlib::Pose(3, -0.6, 90)});
+inline dist_sensor leftLoc({&localization::leftDS, lemlib::Pose(-3.4, -0.6, 270)});
+inline dist_sensor frontLoc({&localization::frontDS, lemlib::Pose(-4.13, 6, 0)});
+inline dist_sensor backLoc({&localization::backDS, lemlib::Pose(4, -4.1, 180)});
 
 inline pros::Optical topColour(11);
 inline pros::Distance bottomDS(13);
@@ -96,7 +97,7 @@ namespace OdometryConfigs {
     inline pros::Rotation vertical(5); // Change this port to match your vertical tracking wheel rotation sensor
 
     inline lemlib::Drivetrain LEMLIB_drivetrain(&leftDT, &rightDT, 
-        13, // Measure distance between left and right wheels in inches
+        12, // Measure distance between left and right wheels in inches
         lemlib::Omniwheel::NEW_325, // Change to the wheel size you are using
         450, // Wheel RPMs
         2 // Leave as 2 for now
