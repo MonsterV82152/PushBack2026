@@ -113,14 +113,6 @@ public:
 class AutonSelector
 {
 public:
-    std::string toLowerCase(const std::string &input)
-    {
-        std::string result = input;
-        std::transform(result.begin(), result.end(), result.begin(),
-                       [](unsigned char c)
-                       { return std::tolower(c); });
-        return result;
-    }
 
     AutonSelector()
     {
@@ -248,7 +240,7 @@ public:
         }
         for (autonomousRoute &route : autonomousRoutes)
         {
-            if (route.name == currentPage.name)
+            if (route.name+"blue" == currentPage.name || route.name+"red" == currentPage.name)
             {
                 route.autonFunction();
                 return;
@@ -277,14 +269,14 @@ public:
         double blues = 0;
         for (auto &auton : autons)
         {
-            if (toLowerCase(auton.teamColor).find("red") != std::string::npos)
+            if (auton.teamColor == "red")
             {
                 pages[3].elements[7 + reds].text = auton.name;
-                pages[3].buttons[reds + 1].nextPage = auton.name;
+                pages[3].buttons[reds + 1].nextPage = auton.name+"red";
                 reds++;
                 pages.push_back(
                     page(
-                        auton.name,
+                        auton.name+"red",
                         {true, false},
                         std::vector<screenElement>{
                             screenElement{"text", pros::Color::white, 20, 20, 0, 0, 0, pros::text_format_e_t::E_TEXT_LARGE_CENTER, auton.name},
@@ -295,14 +287,14 @@ public:
                         std::vector<button>{
                             button(10, 163, 394, 230, "redAutonPage")}));
             }
-            else if (toLowerCase(auton.teamColor).find("blue") != std::string::npos)
+            else if (auton.teamColor == "blue")
             {
                 pages[4].elements[7 + blues].text = auton.name;
-                pages[4].buttons[blues + 1].nextPage = auton.name;
+                pages[4].buttons[blues + 1].nextPage = auton.name+"blue";
                 blues++;
                 pages.push_back(
                     page(
-                        auton.name,
+                        auton.name+"blue",
                         {false, false},
                         std::vector<screenElement>{
                             screenElement{"text", pros::Color::white, 20, 20, 0, 0, 0, pros::text_format_e_t::E_TEXT_LARGE_CENTER, auton.name},

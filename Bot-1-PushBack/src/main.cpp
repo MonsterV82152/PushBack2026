@@ -16,25 +16,30 @@ void initialize()
         autonomousRoute{"red", "Solo AWP", "Position: Right \n Total: 3 goals, 7~10 blocks,  3-3-4", SAWP},
         autonomousRoute{"red", "Left", "Position: Left \n Total: 1 goal, 7 blocks", Left},
         autonomousRoute{"red", "Right", "Position: Right \n Total: 1 goal, 7 blocks", Right},
+        autonomousRoute{"red", "Right 2 Goals", "Position: Right \n Total: 1 goal, 7 blocks", Right2Goals},
+        autonomousRoute{"red", "Left 2 Goals", "Position: Left \n Total: 1 goal, 7 blocks", Left2Goals},
         autonomousRoute{"blue", "Solo AWP", "Position: Right \n Total: 3 goals, 7~10 blocks,  3-3-4", SAWP},
         autonomousRoute{"blue", "Left", "Position: Left \n Total: 1 goal, 7 blocks", Left},
-        autonomousRoute{"blue", "Right", "Position: Right \n Total: 1 goal, 7 blocks", Right}});
+        autonomousRoute{"blue", "Right", "Position: Right \n Total: 1 goal, 7 blocks", Right},
+        autonomousRoute{"blue", "Right 2 Goals", "Position: Right \n Total: 1 goal, 7 blocks", Right2Goals},
+        autonomousRoute{"blue", "Left 2 Goals", "Position: Left \n Total: 1 goal, 7 blocks", Left2Goals}});
     autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", skills});
     pros::delay(500);
-    // autonSelect.start();
+    autonSelect.start();
+    chassis.setBrakeMode(coast);
 
-    pros::lcd::initialize();
-    pros::Task screen_task([&]()
-                           {
-        while (true) {
-            // print robot location to the brain screen
-            pros::lcd::print(0, "X: %f    Theta: %f", chassis.getPose().x, chassis.getPose().theta); // x
-            pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
-            pros::lcd::print(2, "Front: %d    Right: %d", localization::frontDS.get_distance(), localization::rightDS.get_distance()); // heading
-            pros::lcd::print(3, "Left: %d    Left: %d", localization::leftDS.get_distance(), localization::backDS.get_distance()); // heading
-            // delay to save resources
-            pros::delay(20);
-        } });
+    // pros::lcd::initialize();
+    // pros::Task screen_task([&]()
+    //                        {
+    //     while (true) {
+    //         // print robot location to the brain screen
+    //         pros::lcd::print(0, "X: %f    Theta: %f", chassis.getPose().x, chassis.getPose().theta); // x
+    //         pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
+    //         pros::lcd::print(2, "Front: %d    Right: %d", localization::frontDS.get_distance(), localization::rightDS.get_distance()); // heading
+    //         pros::lcd::print(3, "Left: %d    Left: %d", localization::leftDS.get_distance(), localization::backDS.get_distance()); // heading
+    //         // delay to save resources
+    //         pros::delay(20);
+    //     } });
 
     chassis.calibrate();
     master.clear();
@@ -53,18 +58,22 @@ void autonomous()
     // chassis.setPose(0, 0, 0);
     // chassis.moveToPoint(0, 24, 10000);
     colourSort::redTeam = autonSelect.isRedTeam();
-    // autonSelect.runAuton();
+    autonSelect.runAuton();
     // redAuton2();
-    // redSAWP();
+    // SAWP();
+    // SAWP();
     // Left2Goals();
-    skills();
+    // skills();
+    // Left();
+    // Left2Goals();
     // example();
 }
 
 void opcontrol()
 {
 
-    int teamSequence[6] = {0, 2, 1, 0, 2};
+    int teamSequence[6] = {1, 0, 2, 0, 2, 1};
+    // skills();
     // angular awr
     // double tot = 0;
     // for (double i = 9.99; i <= 180; i += 10) {
@@ -117,13 +126,21 @@ void opcontrol()
     // master.print(1, 0, "%.2f", tar - chassis.getPose().y);
     // delay(1000);
     int teamIndex = 0;
-    colourSort::redTeam = false;
+    if (autonSelect.isSkills())
+    {
+        colourSort::redTeam = false;
+        colourSort::on = false;
+    } else {
+        colourSort::redTeam = autonSelect.isRedTeam();
+        colourSort::on = true;
+    }
+
     while (true)
     {
         // double leftY; if (master.get_digital(buttons::DOWN)) { if (leftY * 1.5 > 127) { leftY = 127;} else if (leftY == 0) {leftY = 5;}else{ leftY += abs(leftY * 0.5);}}else if (master.get_digital(buttons::B)) {if (leftY * 1.5 < -127){leftY = -127;} else if (leftY == 0) {leftY = -5;}else{leftY -= abs(leftY * 0.5);}}else {if (leftY * 0.5 < 10) {leftY = 0;} else {leftY *= 0.5;}}
         double rightX = master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
         double leftY = master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-        chassis.arcade(leftY, rightX);
+        chassis.arcade(leftY, rightX, false, 0.54);
         if (!programmerMode)
         {
             if (master.get_digital_new_press(buttons::Y))
@@ -154,21 +171,14 @@ void opcontrol()
                     teamIndex = 0;
                 }
             }
-            if (master.get_digital(buttons::DOWN) && autonSelect.isSkills())
+            if (master.get_digital(buttons::B))
             {
                 matchLoader.setState(true);
-                colourSort::sortML = true;
-            }
-            else if (master.get_digital(buttons::B))
-            {
-                matchLoader.setState(true);
-                colourSort::sortML = false;
             }
             else
             {
                 if (matchLoader.getState())
                     matchLoader.setState(false);
-                colourSort::sortML = false;
             }
 
             if (master.get_digital_new_press(buttons::UP))
@@ -186,11 +196,11 @@ void opcontrol()
                     rollers::setState("intake");
                 }
             }
-            if (master.get_digital_new_press(buttons::A))
+            if (master.get_digital_new_press(buttons::DOWN))
             {
                 rollers::addTemporaryState("cycle", 7);
             }
-            else if (rollers::currentTemporaryState.name == "cycle" && !master.get_digital(buttons::A))
+            else if (rollers::currentTemporaryState.name == "cycle" && !master.get_digital(buttons::DOWN))
             {
                 rollers::removeTemporaryState("cycle");
             }
@@ -245,32 +255,34 @@ void opcontrol()
             {
                 correct_position(frontLoc, &chassis, false);
             }
-            if (master.get_digital_new_press(buttons::RIGHT)){
+            if (master.get_digital_new_press(buttons::RIGHT))
+            {
                 correct_position(rightLoc, &chassis, true);
             }
             if (master.get_digital_new_press(buttons::LEFT))
             {
                 correct_position(leftLoc, &chassis, true);
             }
-            if (master.get_digital_new_press(buttons::DOWN)){
+            if (master.get_digital_new_press(buttons::DOWN))
+            {
                 correct_position(backLoc, &chassis, false);
             }
             if (master.get_digital_new_press(buttons::X))
             {
                 correct_position(frontLoc, &chassis, true);
             }
-            if (master.get_digital_new_press(buttons::A)){
+            if (master.get_digital_new_press(buttons::A))
+            {
                 correct_position(rightLoc, &chassis, false);
             }
             if (master.get_digital_new_press(buttons::Y))
             {
-                correct_position(leftLoc, &chassis,false);
+                correct_position(leftLoc, &chassis, false);
             }
-            if (master.get_digital_new_press(buttons::B)){
+            if (master.get_digital_new_press(buttons::B))
+            {
                 correct_position(backLoc, &chassis, true);
             }
-
-
         }
 
         // chassis.arcade(leftY, rightX);
