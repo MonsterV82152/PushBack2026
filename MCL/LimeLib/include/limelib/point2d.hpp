@@ -7,17 +7,11 @@
 
 namespace limelib
 {
-    class Point2D
+    struct Point2D
     {
-
-    public:
-        Point2D(real_t x, real_t y);
-        real_t getX() const;
-        real_t getY() const;
-
-    private:
         real_t x;
         real_t y;
+        Point2D(real_t x = 0, real_t y = 0) : x(x), y(y) {}
     };
 }
 

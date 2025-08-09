@@ -1,10 +1,15 @@
 #pragma once
 
-#ifndef CHASSIS_HPP
-#define CHASSIS_HPP
+#ifndef LIMELIB_CHASSIS_HPP
+#define LIMELIB_CHASSIS_HPP
+
+
 #include "limelib/types.hpp"
-#include "limelib/localization.hpp"
+#include "limelib/locator.hpp"
+#include "limelib/pid.hpp"
 #include "pros/motor_group.hpp"
+
+
 namespace limelib
 {
     struct moveToPointParams
@@ -33,7 +38,7 @@ namespace limelib
     class Chassis
     {
     public:
-        Chassis(Localization &locator, pros::MotorGroup &leftDr, pros::MotorGroup &rightDr);
+        Chassis(Locator &locator, pros::MotorGroup &leftDr, pros::MotorGroup &rightDr, PID &lateralController, PID &angularController);
         void calibrate();
         void moveToPoint(Point2D point, int timeout, moveToPointParams params = moveToPointParams());
         void moveToPoint(real_t x, real_t y, int timeout, moveToPointParams params = moveToPointParams());
@@ -44,9 +49,12 @@ namespace limelib
         void turnToPoint(real_t x, real_t y, int timeout, turnToHeadingParams params = turnToHeadingParams());
 
     private:
-        Localization &locator;
+        Locator &locator;
         pros::MotorGroup &leftDr;
         pros::MotorGroup &rightDr;
+        PID &lateralController;
+        PID &angularController;
+
         
     };
 }

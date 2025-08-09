@@ -10,11 +10,8 @@
 #include <cmath>
 #include <deque>
 #include <atomic>
-#include "AutonSelector.hpp"
 #include "lemlib/api.hpp"
 #include "sensor_loc.cpp"
-
-#include "limelib/limelib.hpp"
 
 
 /*----------------------Defines----------------------*/
@@ -65,8 +62,8 @@ inline dist_sensor backLoc({&localization::backDS, lemlib::Pose(4, -4.1, 180)});
 inline pros::Rotation vertical(5);
 
 limelib::TrackingWheel verticalTW(vertical, 2.75, 0.0);
-limelib::Field2D field(144, 144, {});
-limelib::MCL mcl(&verticalTW, nullptr, inertial, field, 100, 10, 10);\
+limelib::Field2D field(144, 144, {limelib::Rectangle2D(10,10,10,10)});
+limelib::MCL mcl(&verticalTW, nullptr, inertial, field, 100, 10, 10);
 limelib::Chassis chassis(mcl, leftDT, rightDT);
 
 #endif

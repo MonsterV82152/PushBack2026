@@ -14,6 +14,7 @@ void competition_initialize() {}
 void autonomous()
 {
     chassis.calibrate();
+    
 }
 
 void opcontrol()

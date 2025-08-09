@@ -14,12 +14,16 @@ namespace limelib
     class Object2D
     {
     public:
+        Object2D(real_t x = 0, real_t y = 0) : x(x), y(y) {}
         virtual ~Object2D() = default;
         bool isContacting(Pose2D pose) const;
         bool isContacting(real_t x, real_t y) const;
-        virtual bool isContacting(Point2D pose) const = 0;
-        virtual bool isContacting(Object2D *other) const = 0;
-        virtual std::vector<LineSegment2D> getEdges() const = 0;
+        virtual bool isContacting(Point2D pose) const;
+        virtual bool isContacting(Object2D *other) const;
+        virtual std::vector<LineSegment2D> getEdges() const;
+    private:
+        real_t x;
+        real_t y;
     };
 
     class Rectangle2D : public Object2D
@@ -57,7 +61,6 @@ namespace limelib
 
     class Polygon2D : public Object2D
     {
-        
     };
 
     class Line2D : public Object2D

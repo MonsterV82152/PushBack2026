@@ -12,11 +12,11 @@ namespace limelib
     {
     public:
         // Allow nullptr construction with default values
-        TrackingWheel(pros::Rotation& sensor, real_t diameter = 0, real_t offset = 0);
+        TrackingWheel(pros::Rotation& sensor, real_t diameter = 2, real_t offset = 0);
         
         // Return 0 if sensor is nullptr
         real_t getDistanceTravelled();
-        
+        void calibrate();
         real_t getOffset() const;
         real_t getDiameter() const;
 

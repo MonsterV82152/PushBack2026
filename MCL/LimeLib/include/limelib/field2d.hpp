@@ -11,6 +11,7 @@ namespace limelib
     public:
         Field2D(real_t width, real_t height, std::vector<Object2D> objects);
         void addObject(Object2D object);
+        void removeObject(Object2D object);
         real_t getWidth() const;
         real_t getHeight() const;
         std::vector<Object2D> getObjects() const;
@@ -19,6 +20,7 @@ namespace limelib
     private:
         real_t width;
         real_t height;
+        void calculateEdges();
         std::vector<Object2D> objects;
         std::vector<LineSegment2D> edges; 
         

@@ -6,19 +6,12 @@
 
 namespace limelib
 {
-    class Pose2D
+    struct Pose2D
     {
-
-    public:
-        Pose2D(real_t x, real_t y, real_t theta);
-        real_t getX() const;
-        real_t getY() const;
-        real_t getTheta() const;
-
-    private:
         real_t x;
         real_t y;
         real_t theta;
+        Pose2D(real_t x = 0, real_t y = 0, real_t theta = 0) : x(x), y(y), theta(theta) {}
     };
 }
 

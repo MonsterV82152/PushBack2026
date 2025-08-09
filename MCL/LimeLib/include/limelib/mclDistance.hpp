@@ -9,19 +9,12 @@
 
 namespace limelib
 {
-    class MCLDistance
+    struct MCLDistance
     {
-    public:
-        // Allow nullptr construction with default values
-        MCLDistance(pros::Distance& sensor, Pose2D pose);
-
-        Pose2D getPose() const;
-        real_t getDistance() const;
-        
-
-    private:
         pros::Distance& sensor;
         Pose2D pose;
+        real_t reading = 0;
+        MCLDistance(pros::Distance& sensor, Pose2D pose) : sensor(sensor), pose(pose) {}
     };
 }
 
