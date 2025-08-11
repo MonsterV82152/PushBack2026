@@ -5,6 +5,8 @@
 #include <vector>
 #include <cmath>
 #include <math.h>
+#include <algorithm>
+
 #include <random>
 #define M_PI 3.1415926535
 #define MM_TO_IN 0.0393701

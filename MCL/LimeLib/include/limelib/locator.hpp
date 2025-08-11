@@ -35,7 +35,7 @@ namespace limelib
         TrackingWheel *verticalTW;
         TrackingWheel *horizontalTW;
         pros::IMU &imu;
-        Pose2D currentPose;
+        Pose2D currentPose; 
         real_t headingOffset;
         void task(void *params);
     };

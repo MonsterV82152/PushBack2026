@@ -29,8 +29,8 @@ namespace limelib
     class Rectangle2D : public Object2D
     {
     public:
-        Rectangle2D(real_t x, real_t y, real_t width, real_t height, real_t theta = 0)
-            : pose(x, y, theta), width(width), height(height) {};
+        Rectangle2D(real_t x, real_t y, real_t width, real_t height, real_t theta = 0) {};
+        Rectangle2D(Pose2D, real_t width, real_t height) {};
         bool isContacting(Point2D pose) const override;
         bool isContacting(Object2D *other) const override;
         std::vector<LineSegment2D> getEdges() const override;
