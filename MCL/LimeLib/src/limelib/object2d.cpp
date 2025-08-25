@@ -20,8 +20,8 @@ limelib::Rectangle2D::Rectangle2D(real_t x, real_t y, real_t width, real_t heigh
 {
     std::vector<Point2D> corners = {
         Point2D(x,y),
-        Point2D(cos(theta)*width/2+x, sin(theta)*width/2+y),
-        Point2D(cos(theta)*width/2+x-cos(theta)*height/2, sin(theta)*width/2+y), // Adjusted
+        Point2D(cos(theta)*width+x, cos(theta+M_PI/2)*width+y),
+        Point2D(cos(theta)*width + x + cos(theta+M_PI)*height, sin(theta)*width+y), // Adjusted
         Point2D(cos(theta)*width/2+x, sin(theta)*width/2+y)
     };
     edges = {
