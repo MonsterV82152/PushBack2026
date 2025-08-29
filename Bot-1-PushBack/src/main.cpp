@@ -1,5 +1,4 @@
 #include "globals.hpp"
-#include "AutonSelector.hpp"
 #include "Autonomous_Paths.hpp"
 #include "movements.cpp"
 
