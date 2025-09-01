@@ -1,4 +1,5 @@
 #include "globals.hpp"
+#include "AutonSelector.hpp"
 #include "Autonomous_Paths.hpp"
 #include "movements.cpp"
 
@@ -43,10 +44,14 @@ void initialize()
     chassis.calibrate();
     master.clear();
 
-    pros::Task colourSortThread(colourSort::start); chassis.setPose(0, 0, 0);
+    pros::Task colourSortThread(colourSort::start);
+
+    chassis.setPose(0, 0, 0);
 }
+
 void disabled() {}
 void competition_initialize() {}
+
 void autonomous()
 {
     // exampleAuton();
@@ -63,10 +68,11 @@ void autonomous()
     // Left2Goals();
     // example();
 }
+
 void opcontrol()
 {
-    int teamSequence[6] = {1, 0, 2, 0, 2, 1};
 
+    int teamSequence[6] = {1, 0, 2, 0, 2, 1};
     // skills();
     // angular awr
     // double tot = 0;
@@ -190,7 +196,10 @@ void opcontrol()
                     rollers::setState("intake");
                 }
             }
-            if (master.get_digital_new_press(buttons::DOWN)) { rollers::addTemporaryState("cycle", 7);}
+            if (master.get_digital_new_press(buttons::DOWN))
+            {
+                rollers::addTemporaryState("cycle", 7);
+            }
             else if (rollers::currentTemporaryState.name == "cycle" && !master.get_digital(buttons::DOWN))
             {
                 rollers::removeTemporaryState("cycle");

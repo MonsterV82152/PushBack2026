@@ -2,6 +2,7 @@
 #define MOVEMENTS_CPP
 
 #include "globals.hpp"
+#include "AutonSelector.hpp"
 
 namespace rollers
 {

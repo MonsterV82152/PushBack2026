@@ -26,7 +26,7 @@ void limelib::Odometry::calibrate()
 
 void limelib::Odometry::setPose(limelib::Pose2D pose)
 {
-    headingOffset = -imu.get_heading() * M_PI / 180 + pose.theta;
+    headingOffset = (-imu.get_heading() + pose.theta) * M_PI / 180;
     currentPose = pose;
 }
 
@@ -49,7 +49,7 @@ limelib::Pose2D limelib::Odometry::update()
 
 limelib::Pose2D limelib::Odometry::getPose() const
 {
-    return currentPose;
+    return currentPose.toDegrees();
 }
 
 limelib::MCL::MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW,
@@ -127,7 +127,7 @@ void limelib::MCL::updateMCL()
     real_t totalWeight = 0.0;
     for (MCLDistance &sensor : sensors)
     {
-        sensor.reading = sensor.sensor.get();
+        sensor.reading = sensor.sensor.get_distance();
     }
     for (MCLParticle &particle : particles)
     {
@@ -145,7 +145,7 @@ void limelib::MCL::updateMCL()
             // Transform sensor position to global coordinates
             real_t sensorGlobalX = particle.point.x + sensor.pose.x * cos(particle.point.theta) + sensor.pose.y * sin(particle.point.theta);
             real_t sensorGlobalY = particle.point.y - sensor.pose.x * sin(particle.point.theta) + sensor.pose.y * cos(particle.point.theta);
-            real_t sensorGlobalTheta = particle.point.theta + sensor.pose.theta;
+            real_t sensorGlobalTheta = particle.point.theta + sensor.pose.theta * M_PI / 180;
 
             // Cast ray from sensor position in sensor direction
             Ray2D ray(Point2D(sensorGlobalX, sensorGlobalY), sensorGlobalTheta);
@@ -341,7 +341,7 @@ limelib::Pose2D limelib::MCL::getPose() const
     while (blendedPose.theta < 0) blendedPose.theta += 2 * M_PI;
     while (blendedPose.theta >= 2 * M_PI) blendedPose.theta -= 2 * M_PI;
     
-    return blendedPose;
+    return blendedPose.toDegrees();
 }
 
 limelib::real_t limelib::getRayCastDistance(const std::vector<LineSegment2D> &edges, Ray2D ray)
