@@ -2,7 +2,8 @@
 
 
 void left() {
-
+    chassis.setPose(-46.733, 15.607, 0);
+    chassis.moveToPoint()
 }
 
 void left2() {

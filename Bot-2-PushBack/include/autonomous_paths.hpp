@@ -2,6 +2,8 @@
 #define AUTON_HPP
 
 #include "globals.hpp"
+#include "defines.hpp"
+
 
 
 void left();

@@ -5,19 +5,33 @@
 #include "lemlib/api.hpp"
 #include "autonomous_selector.hpp"
 #include "sensor_loc.hpp"
+#include "movements.hpp"
 #include "piston.hpp"
 
 inline AutonSelector autonSelect;
 
-inline pros::MotorGroup leftDT({-1, -2, 3});  // Change these ports to match your left drivetrain motors
-inline pros::MotorGroup rightDT({-8, 9, 10}); // Change these ports to match your left drivetrain motors
+inline pros::MotorGroup leftDT({-20, -2, -1});  // Change these ports to match your left drivetrain motors
+inline pros::MotorGroup rightDT({19, 12, 13}); // Change these ports to match your left drivetrain motors
 inline pros::Imu imu(4);
 
 
-inline pros::Motor front(4);
-inline pros::Motor back(5);
-inline pros::Motor middle(6);
+inline pros::Motor front(18);
+inline pros::Motor back(-17);
+inline pros::Motor middle(-14);
 
+inline pros::ADIDigitalOut flipPiston('B');
+inline pros::ADIDigitalOut blockerPiston('A');
+inline pros::ADIDigitalOut matchLoaderPiston('C');
+inline pros::ADIDigitalOut parkPiston('D');
+
+inline Piston blocker(&blockerPiston);
+inline Piston flip(&flipPiston);
+inline Piston park(&parkPiston);
+inline Piston matchLoader(&matchLoaderPiston);
+
+inline Roller roller(front, middle, back, flip, blocker);
+
+inline Robot robot(roller, matchLoader, master);
 
 inline lemlib::Drivetrain LEMLIB_drivetrain(&leftDT, &rightDT,
                                             12,
