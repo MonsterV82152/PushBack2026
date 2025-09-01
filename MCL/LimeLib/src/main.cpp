@@ -1,6 +1,6 @@
-#include "globals.hpp"
+// using namespace pros;
 
-using namespace pros;
+#include "globals.hpp"
 
 void on_center_button() {}
 
@@ -13,7 +13,7 @@ void competition_initialize() {}
 
 void autonomous()
 {
-    chassis.calibrate();
+    // chassis.calibrate();
     
 }
 
