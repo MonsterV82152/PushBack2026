@@ -5,8 +5,8 @@ void limelib::Locator::setPose(real_t x, real_t y, real_t theta)
     setPose(limelib::Pose2D(x, y, theta));
 }
 
-limelib::Odometry::Odometry(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::IMU &imu)
-    : verticalTW(verticalTW), horizontalTW(horizontalTW), imu(imu), currentPose(0, 0, 0), headingOffset(0)
+limelib::Odometry::Odometry(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::IMU &imu, bool shouldTaskRun)
+    : verticalTW(verticalTW), horizontalTW(horizontalTW), imu(imu), currentPose(0, 0, 0), headingOffset(0), shouldTaskRun(shouldTaskRun)
 {
 }
 
@@ -22,6 +22,10 @@ void limelib::Odometry::calibrate()
         pros::delay(20);
     }
     headingOffset = -imu.get_heading() * M_PI / 180;
+    pros::delay(1000);
+    if (shouldTaskRun) {
+        pros::Task odomTask(Odometry::task);
+    }
 }
 
 void limelib::Odometry::setPose(limelib::Pose2D pose)
@@ -54,9 +58,9 @@ limelib::Pose2D limelib::Odometry::getPose() const
 
 limelib::MCL::MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW,
                   pros::Imu &imu, std::vector<MCLDistance> &sensors, Field2D &field, int num_particles, int rotationNoise, int translationNoise,
-                  int intensity = 10)
-    : odomHelper(verticalTW, horizontalTW, imu), sensors(sensors), field(field), NUM_PARTICLES(num_particles),
-      ROTATION_NOISE(rotationNoise), TRANSLATION_NOISE(translationNoise), INTENSITY(intensity), last_mcl_update(intensity), randomParticleCount(num_particles / 50)
+                  int intensity, bool shouldTaskRun)
+    : odomHelper(verticalTW, horizontalTW, imu, false), sensors(sensors), field(field), NUM_PARTICLES(num_particles),
+      ROTATION_NOISE(rotationNoise), TRANSLATION_NOISE(translationNoise), INTENSITY(intensity), last_mcl_update(intensity), randomParticleCount(num_particles / 50), shouldTaskRun(shouldTaskRun)
 {
     for (int i = 0; i < NUM_PARTICLES; i++)
     {
@@ -67,6 +71,9 @@ limelib::MCL::MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW,
 void limelib::MCL::calibrate()
 {
     odomHelper.calibrate();
+    if (shouldTaskRun) {
+        pros::Task mclTask(MCL::task);
+    }
 }
 
 void limelib::MCL::setPose(limelib::Pose2D pose)
@@ -81,7 +88,6 @@ void limelib::MCL::setPose(limelib::Pose2D pose)
 
 limelib::Pose2D limelib::MCL::update()
 {
-
     if (last_mcl_update > INTENSITY)
     {
         updateMCL();
@@ -99,6 +105,14 @@ limelib::Pose2D limelib::MCL::update()
             odomDelta.theta += 2 * M_PI;
         while (odomDelta.theta >= 2 * M_PI)
             odomDelta.theta -= 2 * M_PI;
+    }
+}
+
+void limelib::Odometry::task(void *params) {
+    while (true)
+    {
+        update();
+        pros::delay(10);
     }
 }
 
@@ -291,6 +305,15 @@ void limelib::MCL::updateMCL()
     }
     odomDelta = Pose2D(0, 0, 0); // Reset odomDelta after update
 }
+void limelib::MCL::task(void *params)
+{
+    while (true)
+    {
+        update();
+        pros::delay(10);
+    }
+}
+
 limelib::Pose2D limelib::MCL::getPose() const
 {
     // If we've never run MCL or have no valid estimate, fall back to pure odometry

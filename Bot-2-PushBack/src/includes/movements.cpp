@@ -55,6 +55,21 @@ void Robot::intake()
     runImportance();
 }
 
+void Robot::stop()
+{
+    defaultState = STOP;
+    runImportance();
+}
+
+void Robot::toggleIntake()
+{
+    if (defaultState == INTAKE || defaultState == INTAKE2 || defaultState == INTAKE3)
+        defaultState = STOP;
+    else
+        defaultState = INTAKE;
+    runImportance();
+}
+
 void Robot::scoreL1()
 {
     defaultState = L1;
@@ -216,7 +231,8 @@ void Robot::driverControl()
                 if (it->state == mapping.state)
                 {
                     it = tempStates.erase(it);
-                    if (defaultState == INTAKE2 || defaultState == INTAKE3) {
+                    if (defaultState == INTAKE2 || defaultState == INTAKE3)
+                    {
                         defaultState = INTAKE;
                     }
                     runImportance();

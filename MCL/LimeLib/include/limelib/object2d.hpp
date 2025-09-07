@@ -7,7 +7,8 @@
 #include "limelib/point2d.hpp"
 #include "limelib/lineSegment2d.hpp"
 #include "limelib/types.hpp"
-
+#include <fstream>
+ 
 namespace limelib
 {
     Point2D rotatePoint(Point2D point, Point2D origin, real_t angle);
@@ -87,20 +88,6 @@ namespace limelib
         std::vector<LineSegment2D> edges;
         std::vector<Point2D> corners;
         void constructEdges();
-    };
-
-    class DXFJsonFile : public Object2D
-    {
-    public:
-        DXFJsonFile(const std::string &filename);
-        bool isContacting(Point2D point) const override;
-        const std::vector<LineSegment2D> &getEdges() const override;
-        const std::vector<Point2D> &getCorners() const override;
-
-    private:
-        std::string filename;
-        std::vector<LineSegment2D> edges;
-        std::vector<Point2D> corners;
     };
 
 }

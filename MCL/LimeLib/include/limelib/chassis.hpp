@@ -54,6 +54,9 @@ namespace limelib
         pros::MotorGroup &rightDr;
         PID &lateralController;
         PID &angularController;
+        bool isMoving = false;
+        bool motionQueued = false;
+        
 
         
     };

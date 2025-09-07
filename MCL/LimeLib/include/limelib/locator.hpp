@@ -25,7 +25,7 @@ namespace limelib
     class Odometry : public Locator
     {
     public:
-        Odometry(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::IMU &imu);
+        Odometry(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::IMU &imu, bool shouldTaskRun = true);
         Pose2D update() override;
         void calibrate() override;
         Pose2D getPose() const override;
@@ -35,15 +35,16 @@ namespace limelib
         TrackingWheel *verticalTW;
         TrackingWheel *horizontalTW;
         pros::IMU &imu;
-        Pose2D currentPose; 
+        Pose2D currentPose;
         real_t headingOffset;
+        bool shouldTaskRun;
         void task(void *params);
     };
 
     class MCL : public Locator
     {
     public:
-        MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::Imu &imu, std::vector<MCLDistance>& sensors, Field2D &field, int num_particles, int rotationNoise, int translationNoise, int intensitivity = 10);
+        MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::Imu &imu, std::vector<MCLDistance> &sensors, Field2D &field, int num_particles, int rotationNoise, int translationNoise, int intensitivity = 10, bool shouldTaskRun = true);
         void calibrate() override;
         Pose2D update() override;
         Pose2D getPose() const override;
@@ -51,7 +52,7 @@ namespace limelib
 
     private:
         Odometry odomHelper;
-        std::vector<MCLDistance>& sensors;
+        std::vector<MCLDistance> &sensors;
         Field2D &field;
         Pose2D odomDelta;
         Pose2D poseOffset;
@@ -63,9 +64,10 @@ namespace limelib
         int INTENSITY;
         int last_mcl_update;
         int randomParticleCount;
+        bool shouldTaskRun;
         std::vector<MCLParticle> particles;
         void updateMCL();
-        
+        void task(void *params);
     };
     real_t getRayCastDistance(const std::vector<LineSegment2D> &edges, Ray2D ray);
 

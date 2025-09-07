@@ -6,6 +6,9 @@
 // Constants
 constexpr double PI = 3.141592;
 
+inline bool isRedTeam = true;
+inline bool colourSortOn = true;
+
 /*---Controller---*/
 inline pros::Controller master(pros::E_CONTROLLER_MASTER);
 inline pros::Controller slave(pros::E_CONTROLLER_PARTNER);

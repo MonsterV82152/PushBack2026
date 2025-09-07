@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef DEFINES_HPP
 #define DEFINES_HPP
 
@@ -12,12 +14,18 @@ inline AutonSelector autonSelect;
 
 inline pros::MotorGroup leftDT({-20, -2, -1});  // Change these ports to match your left drivetrain motors
 inline pros::MotorGroup rightDT({19, 12, 13}); // Change these ports to match your left drivetrain motors
-inline pros::Imu imu(4);
+inline pros::Imu imu(11);
 
 
 inline pros::Motor front(18);
 inline pros::Motor back(-17);
 inline pros::Motor middle(-14);
+
+inline pros::Distance frontDS(10);
+inline pros::Distance intakeDS(7);
+inline pros::Optical middleCS(9);
+
+inline pros::Rotation trackingVertical(-15);
 
 inline pros::ADIDigitalOut flipPiston('B');
 inline pros::ADIDigitalOut blockerPiston('A');
@@ -39,11 +47,13 @@ inline lemlib::Drivetrain LEMLIB_drivetrain(&leftDT, &rightDT,
                                             450,
                                             2);
 
-inline lemlib::OdomSensors LEMLIB_sensors(nullptr, nullptr, nullptr, nullptr, &imu);
+inline lemlib::TrackingWheel LEMLIB_tracking_vertical(&trackingVertical, lemlib::Omniwheel::NEW_275, 0);
+
+inline lemlib::OdomSensors LEMLIB_sensors(&LEMLIB_tracking_vertical, nullptr, nullptr, nullptr, &imu);
 inline lemlib::ControllerSettings LEMLIB_lateral_controller(
-    10,    // proportional gain (kP)
+    6,    // proportional gain (kP)
     0,     // integral gain (kI)
-    20,    // derivative gain (kD)
+    65,    // derivative gain (kD)
     0.035, // anti windup
 
     1,   // small error range, in inches
@@ -56,7 +66,7 @@ inline lemlib::ControllerSettings LEMLIB_lateral_controller(
 inline lemlib::ControllerSettings LEMLIB_angular_controller(
     2,  // proportional gain (kP)
     0,  // integral gain (kI)
-    10, // derivative gain (kD)
+    17, // derivative gain (kD)
     2,  // anti windup
 
     0, // small error range, in inches
