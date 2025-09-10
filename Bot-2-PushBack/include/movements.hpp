@@ -14,9 +14,10 @@ struct rollerState
 {
     short back = 0;
     short middle = 0;
+    short intake = 0;
     short front = 0;
     short flipPiston = 0;
-    short blockerPiston = 1;
+    short blockerPiston = 0;
 };
 
 struct tempState
@@ -27,31 +28,33 @@ struct tempState
 
 // Example operator== for rollerState
 bool operator==(const rollerState& lhs, const rollerState& rhs);
-inline const rollerState INTAKE = {127, 127, 127, OFF, ON};
-inline const rollerState INTAKE2 = {127, 127, 0, OFF, ON};
-inline const rollerState INTAKE3 = {0, 127, 0, OFF, ON};
-inline const rollerState L1 = {-127, -127, -127, OFF, LEAVE};
-inline const rollerState L2 = {127, 127, -127, OFF, LEAVE};
-inline const rollerState L3 = {127, 127, 127, OFF, OFF};
-inline const rollerState BACKL2 = {-127, 127, 0, OFF, ON};
-inline const rollerState BACKL3 = {127, 127, 0, ON, ON};
-inline const rollerState DESCORE = {0, 0, 0, LEAVE, OFF};
-inline const rollerState STOP = {0, 0, 0, OFF, ON};
-inline const rollerState COLOURSORT = {-127, LEAVE, LEAVE, LEAVE, LEAVE};
-inline const rollerState PARK = {-100, -100, -100, OFF, ON};
-inline const rollerState PARK2 = {-20, -20, -20, OFF, ON};
+inline const rollerState INTAKE = {127, 127, 127, 127, OFF, OFF};
+inline const rollerState INTAKE2 = {127, 127, 127, 0, OFF, OFF};
+inline const rollerState INTAKE3 = {0, 127, 127, 0, OFF, OFF};
+inline const rollerState L1 = {-127, -127, -127, -127, OFF, LEAVE};
+inline const rollerState L2 = {127, 127, 80, -80, OFF, LEAVE};
+inline const rollerState L3 = {127, 127, 127, 127, OFF, ON};
+inline const rollerState BACKL2 = {-127, 127, 127, 0, OFF, OFF};
+inline const rollerState BACKL3 = {127, 127, 127, 0, ON, OFF};
+inline const rollerState DESCORE = {0, 0, 0, 0, LEAVE, ON};
+inline const rollerState STOP = {0, 0, 0, 0, OFF, OFF};
+inline const rollerState COLOURSORT = {-127, LEAVE, LEAVE, LEAVE, LEAVE, LEAVE};
+inline const rollerState PARK = {-100, -100, -100, -100, OFF, OFF};
+inline const rollerState PARK2 = {-20, -20, -20, -20, OFF, OFF};
 
 
 class Roller
 {
 public:
-    Roller(pros::Motor &front, pros::Motor &middle, pros::Motor &back, Piston &flipPiston, Piston &blockerPiston);
+    Roller(pros::Motor &front, pros::Motor &middle, pros::Motor &intake, pros::Motor &back, Piston &flipPiston, Piston &blockerPiston);
     void setState(rollerState state);
     rollerState getState() const;
 private:
     pros::Motor &front;
     pros::Motor &middle;
+    pros::Motor &intake;
     pros::Motor &back;
+
     Piston &flipPiston;
     Piston &blockerPiston;
     rollerState state;

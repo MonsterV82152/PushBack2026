@@ -9,8 +9,8 @@ bool operator==(const rollerState &lhs, const rollerState &rhs)
            lhs.blockerPiston == rhs.blockerPiston;
 }
 
-Roller::Roller(pros::Motor &front, pros::Motor &middle, pros::Motor &back, Piston &flipPiston, Piston &blockerPiston)
-    : front(front), middle(middle), back(back), flipPiston(flipPiston), blockerPiston(blockerPiston), state(STOP)
+Roller::Roller(pros::Motor &front, pros::Motor &middle, pros::Motor &intake, pros::Motor &back, Piston &flipPiston, Piston &blockerPiston)
+    : front(front), middle(middle), intake(intake), back(back), flipPiston(flipPiston), blockerPiston(blockerPiston), state(STOP)
 {
 }
 
@@ -23,6 +23,10 @@ void Roller::setState(rollerState state)
     if (state.middle != LEAVE)
     {
         middle.move(state.middle);
+    }
+    if (state.intake != LEAVE)
+    {
+        intake.move(state.intake);
     }
     if (state.back != LEAVE)
     {

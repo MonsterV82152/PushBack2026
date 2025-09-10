@@ -12,14 +12,14 @@
 
 inline AutonSelector autonSelect;
 
-inline pros::MotorGroup leftDT({-20, -2, -1});  // Change these ports to match your left drivetrain motors
-inline pros::MotorGroup rightDT({19, 12, 13}); // Change these ports to match your left drivetrain motors
+inline pros::MotorGroup leftDT({-20, -2, -1}); 
+inline pros::MotorGroup rightDT({3, 12, 13}); 
 inline pros::Imu imu(11);
-
 
 inline pros::Motor front(18);
 inline pros::Motor back(-17);
-inline pros::Motor middle(-14);
+inline pros::Motor middle(16);
+inline pros::Motor intake(-19);
 
 inline pros::Distance frontDS(10);
 inline pros::Distance intakeDS(7);
@@ -37,7 +37,7 @@ inline Piston flip(&flipPiston);
 inline Piston park(&parkPiston);
 inline Piston matchLoader(&matchLoaderPiston);
 
-inline Roller roller(front, middle, back, flip, blocker);
+inline Roller roller(front, middle, intake, back, flip, blocker);
 
 inline Robot robot(roller, matchLoader, master);
 

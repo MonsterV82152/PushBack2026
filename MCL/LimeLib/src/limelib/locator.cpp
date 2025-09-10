@@ -2,7 +2,7 @@
 
 void limelib::Locator::setPose(real_t x, real_t y, real_t theta)
 {
-    setPose(limelib::Pose2D(x, y, theta));
+    this->setPose(limelib::Pose2D(x, y, theta));
 }
 
 limelib::Odometry::Odometry(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::IMU &imu, bool shouldTaskRun)
@@ -24,7 +24,13 @@ void limelib::Odometry::calibrate()
     headingOffset = -imu.get_heading() * M_PI / 180;
     pros::delay(1000);
     if (shouldTaskRun) {
-        pros::Task odomTask(Odometry::task);
+        pros::Task odomTask([this]() {
+            while (true)
+            {
+                update();
+                pros::delay(10);
+            }
+        });
     }
 }
 
@@ -72,7 +78,13 @@ void limelib::MCL::calibrate()
 {
     odomHelper.calibrate();
     if (shouldTaskRun) {
-        pros::Task mclTask(MCL::task);
+        pros::Task mclTask([this]() {
+            while (true)
+            {
+                update();
+                pros::delay(10);
+            }
+        });
     }
 }
 
@@ -106,14 +118,7 @@ limelib::Pose2D limelib::MCL::update()
         while (odomDelta.theta >= 2 * M_PI)
             odomDelta.theta -= 2 * M_PI;
     }
-}
-
-void limelib::Odometry::task(void *params) {
-    while (true)
-    {
-        update();
-        pros::delay(10);
-    }
+    return odomDelta;
 }
 
 void limelib::MCL::updateMCL()
@@ -305,14 +310,7 @@ void limelib::MCL::updateMCL()
     }
     odomDelta = Pose2D(0, 0, 0); // Reset odomDelta after update
 }
-void limelib::MCL::task(void *params)
-{
-    while (true)
-    {
-        update();
-        pros::delay(10);
-    }
-}
+
 
 limelib::Pose2D limelib::MCL::getPose() const
 {
@@ -365,6 +363,19 @@ limelib::Pose2D limelib::MCL::getPose() const
     while (blendedPose.theta >= 2 * M_PI) blendedPose.theta -= 2 * M_PI;
     
     return blendedPose.toDegrees();
+}
+
+// Add these implementations for the Locator base class
+limelib::Pose2D limelib::Locator::update() {
+    return Pose2D();  // Default implementation
+}
+
+void limelib::Locator::calibrate() {
+    // Default implementation
+}
+
+void limelib::Locator::setPose(Pose2D pose) {
+    // Default implementation
 }
 
 limelib::real_t limelib::getRayCastDistance(const std::vector<LineSegment2D> &edges, Ray2D ray)

@@ -48,7 +48,7 @@ const pros::motor_brake_mode_e_t hold = pros::E_MOTOR_BRAKE_HOLD;
 
 /*-------------Define all configurations-------------*/
 inline pros::MotorGroup leftDT({-1, -2, 3}); // Change these ports to match your left drivetrain motors
-inline pros::MotorGroup rightDT({-8, 9, 10}); // Change these ports to match your left drivetrain motors
+inline pros::MotorGroup rightDT({-8, 9, 10}); // Change these ports to match your right drivetrain motors
 inline pros::Imu inertial(4);
 
 namespace localization {
@@ -63,9 +63,16 @@ inline dist_sensor frontLoc({&localization::frontDS, lemlib::Pose(-4.13, 6, 0)})
 inline dist_sensor backLoc({&localization::backDS, lemlib::Pose(4, -4.1, 180)});
 inline pros::Rotation vertical(5);
 
+std::vector<limelib::MCLDistance> mclSensors = {
+    {localization::rightDS, limelib::Pose2D(3, -0.6, 90)},
+    {localization::leftDS, limelib::Pose2D(-3.4, -0.6, 270)},
+    {localization::frontDS, limelib::Pose2D(-4.13, 6, 0)},
+    {localization::backDS, limelib::Pose2D(4, -4.1, 180)}
+};
+limelib::MCLDistance verticalMCLDist(localization::rightDS, limelib::Pose2D(3, -0.6, 90));
 limelib::TrackingWheel verticalTW(vertical, 2.75, 0.0);
 limelib::Field2D field(144, 144, {limelib::Rectangle2D(10,10,10,10)});
-// limelib::MCL mcl(&verticalTW, nullptr, inertial, field, 100, 10, 10);
-// limelib::Chassis chassis(mcl, leftDT, rightDT);
+limelib::MCL mcl(&verticalTW, nullptr, inertial, mclSensors, field, 100, 10, 10);
+
 
 #endif

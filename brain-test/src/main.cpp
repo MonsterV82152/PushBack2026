@@ -61,7 +61,6 @@ void competition_initialize() {}
 void autonomous() {}
 void test(void *params) {
 	while (true) {
-		double a = sin(cos(tan(abs(0.5*120/atan2(2138,162)))));
 		pros::delay(20);
 	}
 }
@@ -83,7 +82,7 @@ void opcontrol() {
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 	pros::MotorGroup left_mg({1, -2, 3});    // Creates a motor group with forwards ports 1 & 3 and reversed port 2
 	pros::MotorGroup right_mg({-4, 5, -6});  // Creates a motor group with forwards port 5 and reversed ports 4 & 6
-
+	
 
 	while (true) {
 		if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)) {
