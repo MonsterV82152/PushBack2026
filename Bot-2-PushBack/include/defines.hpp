@@ -12,25 +12,25 @@
 
 inline AutonSelector autonSelect;
 
-inline pros::MotorGroup leftDT({-20, -2, -1}); 
-inline pros::MotorGroup rightDT({3, 12, 13}); 
-inline pros::Imu imu(11);
+inline pros::MotorGroup leftDT({-1, -2, -3}); 
+inline pros::MotorGroup rightDT({8, 9, 10}); 
+inline pros::Imu imu(13);
 
-inline pros::Motor front(18);
-inline pros::Motor back(-17);
-inline pros::Motor middle(16);
-inline pros::Motor intake(-19);
+inline pros::Motor front(16);
+inline pros::Motor back(-19);
+inline pros::Motor middle(6);
+inline pros::Motor intake(-18);
 
-inline pros::Distance frontDS(10);
-inline pros::Distance intakeDS(7);
-inline pros::Optical middleCS(9);
+inline pros::Distance frontDS(7);
+inline pros::Distance intakeDS(15);
+inline pros::Optical middleCS(14);
 
-inline pros::Rotation trackingVertical(-15);
+inline pros::Rotation trackingVertical(12);
 
-inline pros::ADIDigitalOut flipPiston('B');
-inline pros::ADIDigitalOut blockerPiston('A');
-inline pros::ADIDigitalOut matchLoaderPiston('C');
-inline pros::ADIDigitalOut parkPiston('D');
+inline pros::ADIDigitalOut flipPiston('D');
+inline pros::ADIDigitalOut blockerPiston('C');
+inline pros::ADIDigitalOut matchLoaderPiston('B');
+inline pros::ADIDigitalOut parkPiston('A');
 
 inline Piston blocker(&blockerPiston);
 inline Piston flip(&flipPiston);
