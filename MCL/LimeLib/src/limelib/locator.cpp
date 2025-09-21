@@ -23,14 +23,15 @@ void limelib::Odometry::calibrate()
     }
     headingOffset = -imu.get_heading() * M_PI / 180;
     pros::delay(1000);
-    if (shouldTaskRun) {
-        pros::Task odomTask([this]() {
+    if (shouldTaskRun)
+    {
+        pros::Task odomTask([this]()
+                            {
             while (true)
             {
                 update();
                 pros::delay(10);
-            }
-        });
+            } });
     }
 }
 
@@ -63,10 +64,10 @@ limelib::Pose2D limelib::Odometry::getPose() const
 }
 
 limelib::MCL::MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW,
-                  pros::Imu &imu, std::vector<MCLDistance> &sensors, Field2D &field, int num_particles, int rotationNoise, int translationNoise,
+                  pros::Imu &imu, std::vector<MCLDistance> &sensors, Field2D &field, int num_particles, int rotationNoise, int translationNoise, bool debug,
                   int intensity, bool shouldTaskRun)
     : odomHelper(verticalTW, horizontalTW, imu, false), sensors(sensors), field(field), NUM_PARTICLES(num_particles),
-      ROTATION_NOISE(rotationNoise), TRANSLATION_NOISE(translationNoise), INTENSITY(intensity), last_mcl_update(intensity), randomParticleCount(num_particles / 50), shouldTaskRun(shouldTaskRun)
+      ROTATION_NOISE(rotationNoise), TRANSLATION_NOISE(translationNoise), debug(debug), INTENSITY(intensity), last_mcl_update(intensity), randomParticleCount(num_particles / 50), shouldTaskRun(shouldTaskRun)
 {
     for (int i = 0; i < NUM_PARTICLES; i++)
     {
@@ -77,14 +78,16 @@ limelib::MCL::MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW,
 void limelib::MCL::calibrate()
 {
     odomHelper.calibrate();
-    if (shouldTaskRun) {
-        pros::Task mclTask([this]() {
+    std::cout << "Field Edges: " << field.getEdges().size() << std::endl;
+    if (shouldTaskRun)
+    {
+        pros::Task mclTask([this]()
+                           {
             while (true)
             {
                 update();
                 pros::delay(10);
-            }
-        });
+            } });
     }
 }
 
@@ -103,6 +106,8 @@ limelib::Pose2D limelib::MCL::update()
     if (last_mcl_update > INTENSITY)
     {
         updateMCL();
+        if (debug)
+            debugDisplay();
         last_mcl_update = 0;
     }
     else
@@ -311,70 +316,106 @@ void limelib::MCL::updateMCL()
     odomDelta = Pose2D(0, 0, 0); // Reset odomDelta after update
 }
 
-
 limelib::Pose2D limelib::MCL::getPose() const
 {
     // If we've never run MCL or have no valid estimate, fall back to pure odometry
-    if (estimatedPose.weight <= 0) {
+    if (estimatedPose.weight <= 0)
+    {
         return odomHelper.getPose();
     }
-    
+
     // Calculate age factor - confidence decreases with time since last MCL update
     real_t ageFactor = exp(-static_cast<real_t>(last_mcl_update) / (INTENSITY * 0.5));
     ageFactor = std::max(ageFactor, real_t(0.1)); // Don't let age factor go below 0.1
-    
+
     // Calculate effective confidence considering both MCL confidence and age
     real_t baseConfidence = std::clamp(estimatedPose.weight, real_t(0.1), real_t(0.9));
     real_t effectiveConfidence = baseConfidence * ageFactor;
     effectiveConfidence = std::clamp(effectiveConfidence, real_t(0.1), real_t(0.9));
-    
+
     // Calculate current odometry-based pose from last MCL estimate + accumulated delta
     Pose2D currentOdomPose;
     currentOdomPose.x = actualPose.x + odomDelta.x;
     currentOdomPose.y = actualPose.y + odomDelta.y;
     currentOdomPose.theta = actualPose.theta + odomDelta.theta;
-    
+
     // Normalize odometry theta
-    while (currentOdomPose.theta < 0) currentOdomPose.theta += 2 * M_PI;
-    while (currentOdomPose.theta >= 2 * M_PI) currentOdomPose.theta -= 2 * M_PI;
-    
+    while (currentOdomPose.theta < 0)
+        currentOdomPose.theta += 2 * M_PI;
+    while (currentOdomPose.theta >= 2 * M_PI)
+        currentOdomPose.theta -= 2 * M_PI;
+
     // If confidence is very low (old or unreliable MCL), use mostly odometry
-    if (effectiveConfidence < 0.2) {
+    if (effectiveConfidence < 0.2)
+    {
         return currentOdomPose;
     }
-    
+
     // Blend MCL estimate with current odometry interpolation
     Pose2D blendedPose;
     blendedPose.x = effectiveConfidence * estimatedPose.point.x + (1.0 - effectiveConfidence) * currentOdomPose.x;
     blendedPose.y = effectiveConfidence * estimatedPose.point.y + (1.0 - effectiveConfidence) * currentOdomPose.y;
-    
+
     // Handle angle blending with circular interpolation
     real_t mclSin = sin(estimatedPose.point.theta);
     real_t mclCos = cos(estimatedPose.point.theta);
     real_t odomSin = sin(currentOdomPose.theta);
     real_t odomCos = cos(currentOdomPose.theta);
-    
+
     real_t blendedSin = effectiveConfidence * mclSin + (1.0 - effectiveConfidence) * odomSin;
     real_t blendedCos = effectiveConfidence * mclCos + (1.0 - effectiveConfidence) * odomCos;
     blendedPose.theta = atan2(blendedSin, blendedCos);
-    
+
     // Normalize final theta
-    while (blendedPose.theta < 0) blendedPose.theta += 2 * M_PI;
-    while (blendedPose.theta >= 2 * M_PI) blendedPose.theta -= 2 * M_PI;
-    
+    while (blendedPose.theta < 0)
+        blendedPose.theta += 2 * M_PI;
+    while (blendedPose.theta >= 2 * M_PI)
+        blendedPose.theta -= 2 * M_PI;
+
     return blendedPose.toDegrees();
 }
 
-// Add these implementations for the Locator base class
-limelib::Pose2D limelib::Locator::update() {
-    return Pose2D();  // Default implementation
+void limelib::MCL::debugDisplay()
+{
+    pros::screen::erase();
+    pros::screen::set_pen(pros::Color::white);
+    int height = field.getHeight();
+    int width = field.getWidth();
+    pros::screen::draw_rect(10, 10, width + 10, height + 10);
+    for (const auto &edge : field.getEdges())
+    {
+        int x0 = static_cast<int>(edge.start.x) + 10 + width / 2;
+        int y0 = static_cast<int>(edge.start.y) + 10 + height / 2;
+        int x1 = static_cast<int>(edge.end.x) + 10 + width / 2;
+        int y1 = static_cast<int>(edge.end.y) + 10 + height / 2;
+        pros::screen::draw_line(x0, y0, x1, y1);
+    }
+    pros::screen::set_pen(pros::Color::blue);
+    for (const auto &particle : particles)
+    {
+        int px = static_cast<int>(particle.point.x) + 10 + width / 2;
+        int py = static_cast<int>(particle.point.y) + 10 + height / 2;
+        pros::screen::draw_circle(px, py, 1);
+    }
+    int ax = static_cast<int>(actualPose.x) + 10 + width / 2;
+    int ay = static_cast<int>(actualPose.y) + 10 + height / 2;
+    pros::screen::set_pen(pros::Color::red);
+    pros::screen::draw_circle(ax, ay, 2);
 }
 
-void limelib::Locator::calibrate() {
+// Add these implementations for the Locator base class
+limelib::Pose2D limelib::Locator::update()
+{
+    return Pose2D(); // Default implementation
+}
+
+void limelib::Locator::calibrate()
+{
     // Default implementation
 }
 
-void limelib::Locator::setPose(Pose2D pose) {
+void limelib::Locator::setPose(Pose2D pose)
+{
     // Default implementation
 }
 

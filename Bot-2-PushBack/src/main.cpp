@@ -1,6 +1,14 @@
 #include "includes.hpp"
 
 using namespace pros;
+bool intakeTask = false;
+bool colourSorting = false;
+
+struct timeouts
+{
+    int timestamp;
+    void (*function)();
+};
 
 void colourSort(void *params)
 {
@@ -9,27 +17,44 @@ void colourSort(void *params)
     double redMin = 350;
     double blueMax = 240;
     double blueMin = 170;
-    std::vector<rollerState> timeouts = {};
+    bool red = false;
+    bool blue = false;
+    int currentTime = 0;
+    std::vector<timeouts> timeouts = {};
     while (true)
     {
-        hue = middleCS.get_hue();
-        if (robot.getRollerState() == INTAKE && frontDS.get_distance() < 60)
+        currentTime = pros::millis();
+        for (int i = 0; i < timeouts.size(); i++)
         {
-            pros::delay(400);
-            robot.setState(INTAKE2);
+            if (timeouts[i].timestamp <= currentTime)
+            {
+                timeouts[i].function();
+                timeouts.erase(timeouts.begin() + i);
+                i--;
+            }
         }
-        else if (robot.getRollerState() == INTAKE2 && back.get_actual_velocity() < 100)
+        red = (hue > redMin || hue < redMax);
+        blue = (hue > blueMin && hue < blueMax);
+        hue = middleCS.get_hue();
+        if (!intakeTask && robot.getRollerState() == INTAKE && frontDS.get_distance() < 70 && front.get_actual_velocity() < 30)
+        {
+            intakeTask = true;
+            timeouts.push_back({currentTime + 300, []()
+                                { robot.setState(INTAKE2); intakeTask = false; }});
+            // robot.setState(INTAKE2);
+        }
+        else if (robot.getRollerState() == INTAKE2 && middle.get_actual_velocity() < 20)
         {
             robot.setState(INTAKE3);
         }
         if (colourSortOn)
         {
-            if ((!isRedTeam && (hue > redMin || hue < redMax)) || (isRedTeam && hue > blueMin && hue < blueMax))
+            if (!colourSorting && ((!isRedTeam && red) || (isRedTeam && blue)))
             {
+                colourSorting = true;
                 robot.addTempState(COLOURSORT, 10);
-                pros::delay(400);
-                robot.removeTempState(COLOURSORT);
-                pros::delay(200);
+                timeouts.push_back({currentTime + 400, []()
+                                    { robot.removeTempState(COLOURSORT); pros::delay(100); colourSorting = false; }});
             }
         }
         if (master.get_digital_new_press(buttons::LEFT))
@@ -48,6 +73,60 @@ void colourSort(void *params)
             robot.stop();
             park.setState(true);
         }
+        if (master.get_digital_new_press(buttons::L1))
+        {
+            master.rumble(".");
+            robot.addTempState(L2HELPER, 1);
+            timeouts.push_back({currentTime + 100, []()
+                                { if (robot.getRollerState() == L2HELPER) robot.removeTempState(L2HELPER); robot.addTempState(L2, 1); }});
+        }
+        if (master.get_digital_new_press(buttons::L2))
+        {
+            master.rumble("..");
+            robot.addTempState(L3HELPER, 1);
+            timeouts.push_back({currentTime + 200, []()
+                                { if (robot.getRollerState() == L3HELPER) robot.removeTempState(L3HELPER); robot.addTempState(L3, 1); }});
+        }
+        if (!master.get_digital(buttons::L2) && !master.get_digital_new_press(buttons::L2))
+        {
+
+            if (robot.getRollerState() == L3)
+            {
+                robot.removeTempState(L3);
+                if (robot.getDefaultState() == INTAKE2 || robot.getDefaultState() == INTAKE3)
+                {
+                    robot.setState(INTAKE);
+                }
+            }
+            else if (robot.getRollerState() == L3HELPER)
+            {
+                robot.removeTempState(L3HELPER);
+                if (robot.getDefaultState() == INTAKE2 || robot.getDefaultState() == INTAKE3)
+                {
+                    robot.setState(INTAKE);
+                }
+            }
+        }
+        if (!master.get_digital(buttons::L1) && !master.get_digital_new_press(buttons::L1))
+        {
+
+            if (robot.getRollerState() == L2)
+            {
+                robot.removeTempState(L2);
+                if (robot.getDefaultState() == INTAKE2 || robot.getDefaultState() == INTAKE3)
+                {
+                    robot.setState(INTAKE);
+                }
+            }
+            else if (robot.getRollerState() == L2HELPER)
+            {
+                robot.removeTempState(L2HELPER);
+                if (robot.getDefaultState() == INTAKE2 || robot.getDefaultState() == INTAKE3)
+                {
+                    robot.setState(INTAKE);
+                }
+            }
+        }
 
         pros::delay(5);
     }
@@ -57,19 +136,30 @@ void on_center_button() {}
 
 void initialize()
 {
-    autonSelect.setAutons(std::vector<autonomousRoute>{
-        autonomousRoute{"red", "Left", "Position: Left", left},
-        autonomousRoute{"red", "Right", "Position: Right", right},
-        autonomousRoute{"red", "Left2", "Position: Left", left2},
-        autonomousRoute{"red", "Right2", "Position: Right", right2},
-        autonomousRoute{"blue", "Left", "Position: Left", left},
-        autonomousRoute{"blue", "Right", "Position: Right", right},
-        autonomousRoute{"blue", "Left2", "Position: Left", left2},
-        autonomousRoute{"blue", "Right2", "Position: Right", right2}});
-    autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", skills});
+    pros::lcd::initialize();
+    pros::Task screen_task([&]()
+                           {
+        while (true) {
+            // print robot location to the brain screen
+            pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
+            pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
+            pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // theta
+            // delay to save resources
+            pros::delay(20);
+        } });
+    // autonSelect.setAutons(std::vector<autonomousRoute>{
+    //     autonomousRoute{"red", "Left", "Position: Left", left},
+    //     autonomousRoute{"red", "Right", "Position: Right", right},
+    //     autonomousRoute{"red", "Left2", "Position: Left", left2},
+    //     autonomousRoute{"red", "Right2", "Position: Right", right2},
+    //     autonomousRoute{"blue", "Left", "Position: Left", left},
+    //     autonomousRoute{"blue", "Right", "Position: Right", right},
+    //     autonomousRoute{"blue", "Left2", "Position: Left", left2},
+    //     autonomousRoute{"blue", "Right2", "Position: Right", right2}});
+    // autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", skills});
 
     pros::delay(500);
-    autonSelect.start();
+    // autonSelect.start();
     middleCS.set_integration_time(5);
 
     pros::Task colourSortTask(colourSort);
@@ -84,25 +174,89 @@ void competition_initialize() {}
 
 void autonomous()
 {
-    middleCS.set_led_pwm(100);
+    // middleCS.set_led_pwm(100);
 
-    isRedTeam = autonSelect.isRedTeam();
-    autonSelect.runAuton();
+    // isRedTeam = autonSelect.isRedTeam();
+    // autonSelect.runAuton();
+
     // test();
+    // angular awr
+    // double tot = 0;
+    // for (double i = 9.99; i <= 180; i += 10) {
+    // 	double target = chassis.getPose().theta + i;
+    // 	chassis.turnToHeading(target, 1500);
+    // 	delay(2000);
+    // 	tot += target - chassis.getPose().theta;
+    // }
+
+    // delay(500);
+    // master.print(1, 0, "%.5f", tot/18*1.5);
+    // lcd::print(6, 0, "%.5f", tot);
+    // delay(3000);
+
+    // int tar = 90;
+    // chassis.turnToHeading(tar, 3000);
+    // delay(2500);
+    // master.print(1, 0, "%.3f", tar - chassis.getPose().theta);
+    // delay(3000);
+
+    // lateral awr
+    // double tot = 0;
+    // chassis.setPose(0, 0, 0);
+    // for (double i = 32; i <= 48; i += 8) {
+    // 	double target = chassis.getPose().y + i;
+    // 	chassis.moveToPoint(0, target, 4000);
+    // 	pros::delay(4050);
+    // 	master.print(0, 0, "%f", target-chassis.getPose().y);
+    // 	tot += target-chassis.getPose().y;
+    // }
+    // pros::delay(1000);
+    // master.print(1, 0, "tot: %.2f", tot);
+    // pros::delay(5000);
+
+    // double tar = 48;
+    // int time = 4000;
+    // chassis.setPose(0, 0, 0);
+    // chassis.moveToPoint(0, tar, time);
+    // pros::delay(time+100);
+    // master.print(1, 0, "%.2f", tar-chassis.getPose().y);
+    // pros::delay(100);
+    // master.print(2, 0, "%.2f", chassis.getPose().y);
+
+    // chassis.turnToHeading(90, 1500);
+    // delay(2000);
+    // master.print(1, 0, "%.2f", chassis.getPose().theta);
+    // delay(1000);
+
+    // int tar = 48;
+    // chassis.moveToPoint(0, tar, 2000);
+    // delay(2000);
+    // master.print(1, 0, "%.2f", tar - chassis.getPose().y);
+    // delay(1000);
+
+    // chassis.setPose(0, 0, 0);
+    // chassis.moveToPoint(0, 48, 1500);
+    // chassis.turnToPoint(-48, 48, 1000);
+    // chassis.moveToPoint(-48, 48, 1500);
+    // chassis.turnToPoint(-48, 0, 1000);
+    // chassis.moveToPoint(-48, 0, 1500);
+    // chassis.turnToPoint(0, 0, 1000);
+    // chassis.moveToPoint(0, 0, 1500);
+    skills();
 }
 
 void opcontrol()
 {
     middleCS.set_led_pwm(100);
-    std::vector<int> teamColorQueue = {1, 2, 0};
+    std::vector<int> teamColorQueue = {0, 1, 2};
     short teamColorIndex = 0;
     isRedTeam = autonSelect.isRedTeam();
     robot.mapButtons({L1, buttons::R2, true});
-    robot.mapButtons({L2, buttons::L1, true});
     robot.mapButtons({L3, buttons::L2, true});
     robot.mapButtons({DESCORE, buttons::DOWN, true, false, buttons::A, 2});
-    // robot.mapButtons({BACKL2, buttons::L1, true});
-    // robot.mapButtons({BACKL3, buttons::L2, true});
+    robot.mapButtons({BACKL2, buttons::A, true});
+    robot.mapButtons({BACKL3, buttons::RIGHT, true});
+    robot.mapButtons({BACKINTAKE, buttons::X, true});
     while (true)
     {
         chassis.arcade(master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y), master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X), false, 0.54);
@@ -131,7 +285,7 @@ void opcontrol()
         }
         if (master.get_digital(buttons::B))
         {
-            robot.matchLoad(true);
+            robot.matchLoad(true, false);
         }
         else
         {

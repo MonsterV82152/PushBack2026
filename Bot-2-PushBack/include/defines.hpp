@@ -12,8 +12,8 @@
 
 inline AutonSelector autonSelect;
 
-inline pros::MotorGroup leftDT({-1, -2, -3}); 
-inline pros::MotorGroup rightDT({8, 9, 10}); 
+inline pros::MotorGroup leftDT({-1, -2, -3});
+inline pros::MotorGroup rightDT({8, 9, 10});
 inline pros::Imu imu(13);
 
 inline pros::Motor front(16);
@@ -23,12 +23,22 @@ inline pros::Motor intake(-18);
 
 inline pros::Distance frontDS(7);
 inline pros::Distance intakeDS(15);
-inline pros::Optical middleCS(14);
+inline pros::Optical middleCS(12);
 
-inline pros::Rotation trackingVertical(12);
+inline pros::Distance LOCF(17);
+inline pros::Distance LOCB(4);
+inline pros::Distance LOCR(20);
+inline pros::Distance LOCL(5);
 
-inline pros::ADIDigitalOut flipPiston('D');
-inline pros::ADIDigitalOut blockerPiston('C');
+inline dist_sensor LF(&LOCF, lemlib::Pose(4.5, 3, 0));
+inline dist_sensor LB(&LOCB, lemlib::Pose(-3.5, -5.5, 180));
+inline dist_sensor LR(&LOCL, lemlib::Pose(4.25, -2.25, 270));
+inline dist_sensor LL(&LOCR, lemlib::Pose(-4.25, -2.25, 90));
+
+inline pros::Rotation trackingVertical(14);
+
+inline pros::ADIDigitalOut flipPiston('C');
+inline pros::ADIDigitalOut blockerPiston('D');
 inline pros::ADIDigitalOut matchLoaderPiston('B');
 inline pros::ADIDigitalOut parkPiston('A');
 
@@ -47,14 +57,14 @@ inline lemlib::Drivetrain LEMLIB_drivetrain(&leftDT, &rightDT,
                                             450,
                                             2);
 
-inline lemlib::TrackingWheel LEMLIB_tracking_vertical(&trackingVertical, lemlib::Omniwheel::NEW_275, 0);
+inline lemlib::TrackingWheel LEMLIB_tracking_vertical(&trackingVertical, lemlib::Omniwheel::NEW_275, -0.25);
 
 inline lemlib::OdomSensors LEMLIB_sensors(&LEMLIB_tracking_vertical, nullptr, nullptr, nullptr, &imu);
 inline lemlib::ControllerSettings LEMLIB_lateral_controller(
-    6,    // proportional gain (kP)
-    0,     // integral gain (kI)
-    65,    // derivative gain (kD)
-    0.035, // anti windup
+    6,     // proportional gain (kP)
+    0.5,   // integral gain (kI)
+    71,    // derivative gain (kD)
+    1.285, // anti windup
 
     1,   // small error range, in inches
     100, // small error range timeout, in milliseconds
@@ -64,16 +74,16 @@ inline lemlib::ControllerSettings LEMLIB_lateral_controller(
 );
 
 inline lemlib::ControllerSettings LEMLIB_angular_controller(
-    2,  // proportional gain (kP)
-    0,  // integral gain (kI)
-    17, // derivative gain (kD)
-    2,  // anti windup
+    3,       // proportional gain (kP)
+    0.94,    // integral gain (kI)
+    25.1,    // derivative gain (kD)
+    1.38734, // anti windup
 
-    0, // small error range, in inches
-    0, // small error range timeout, in milliseconds
-    0, // large error range, in inches
-    0, // large error range timeout, in milliseconds
-    0  // maximum acceleration (slew)
+    1,   // small error range, in inches
+    100, // small error range timeout, in milliseconds
+    3,   // large error range, in inches
+    500, // large error range timeout, in milliseconds
+    0    // maximum acceleration (slew)
 );
 
 inline lemlib::Chassis chassis(LEMLIB_drivetrain,         // drivetrain settins

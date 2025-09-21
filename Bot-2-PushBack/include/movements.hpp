@@ -27,21 +27,23 @@ struct tempState
 };
 
 // Example operator== for rollerState
-bool operator==(const rollerState& lhs, const rollerState& rhs);
-inline const rollerState INTAKE = {127, 127, 127, 127, OFF, OFF};
-inline const rollerState INTAKE2 = {127, 127, 127, 0, OFF, OFF};
-inline const rollerState INTAKE3 = {0, 127, 127, 0, OFF, OFF};
-inline const rollerState L1 = {-127, -127, -127, -127, OFF, LEAVE};
-inline const rollerState L2 = {127, 127, 80, -80, OFF, LEAVE};
-inline const rollerState L3 = {127, 127, 127, 127, OFF, ON};
-inline const rollerState BACKL2 = {-127, 127, 127, 0, OFF, OFF};
-inline const rollerState BACKL3 = {127, 127, 127, 0, ON, OFF};
+bool operator==(const rollerState &lhs, const rollerState &rhs);
+inline const rollerState INTAKE = {200, 200, 200, 200, OFF, OFF};
+inline const rollerState INTAKE2 = {200, 200, 200, 0, OFF, OFF};
+inline const rollerState INTAKE3 = {0, 1, 200, 0, OFF, OFF};
+inline const rollerState L1 = {-100, -200, -200, -200, OFF, LEAVE};
+inline const rollerState L2 = {200, 200, 100, -100, OFF, LEAVE};
+inline const rollerState L2HELPER = {-200, -200, -200, -100, OFF, LEAVE};
+inline const rollerState L3 = {200, 200, 200, 200, OFF, ON};
+inline const rollerState L3HELPER = {0, 0, 0, 200, OFF, ON};
+inline const rollerState BACKL2 = {-200, 200, 200, 0, OFF, OFF};
+inline const rollerState BACKL3 = {200, 200, 200, 0, ON, OFF};
+inline const rollerState BACKINTAKE = {0, 200, 200, 0, ON, OFF};
 inline const rollerState DESCORE = {0, 0, 0, 0, LEAVE, ON};
 inline const rollerState STOP = {0, 0, 0, 0, OFF, OFF};
-inline const rollerState COLOURSORT = {-127, LEAVE, LEAVE, LEAVE, LEAVE, LEAVE};
+inline const rollerState COLOURSORT = {-200, LEAVE, LEAVE, LEAVE, LEAVE, LEAVE};
 inline const rollerState PARK = {-100, -100, -100, -100, OFF, OFF};
-inline const rollerState PARK2 = {-20, -20, -20, -20, OFF, OFF};
-
+inline const rollerState PARK2 = {-50, -50, -50, -50, OFF, OFF};
 
 class Roller
 {
@@ -49,6 +51,7 @@ public:
     Roller(pros::Motor &front, pros::Motor &middle, pros::Motor &intake, pros::Motor &back, Piston &flipPiston, Piston &blockerPiston);
     void setState(rollerState state);
     rollerState getState() const;
+
 private:
     pros::Motor &front;
     pros::Motor &middle;
@@ -69,7 +72,8 @@ struct StateControllerMapping
     short importance = 1;
 };
 
-class Robot {
+class Robot
+{
 public:
     /**
      * Constructs a new Robot object
@@ -137,7 +141,7 @@ public:
     /**
      * Runs the highest importance temporary state, or default state if no temporary states exist
      */
-    void runImportance();
+    void runImportance(std::string reason);
     /**
      * Clears all temporary states
      */
@@ -161,6 +165,12 @@ public:
      * @return the current rollerState
      */
     rollerState getRollerState() const;
+    /**
+     * Gets the default roller state
+     * @return the default rollerState
+     */
+    rollerState getDefaultState() const;
+
 private:
     Roller &roller;
     Piston &matchLoader;
@@ -169,7 +179,5 @@ private:
     std::vector<tempState> tempStates;
     rollerState defaultState;
 };
-
-
 
 #endif

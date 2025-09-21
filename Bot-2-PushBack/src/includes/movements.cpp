@@ -18,19 +18,19 @@ void Roller::setState(rollerState state)
 {
     if (state.front != LEAVE)
     {
-        front.move(state.front);
+        front.move_velocity(state.front);
     }
     if (state.middle != LEAVE)
     {
-        middle.move(state.middle);
+        middle.move_velocity(state.middle);
     }
     if (state.intake != LEAVE)
     {
-        intake.move(state.intake);
+        intake.move_velocity(state.intake);
     }
     if (state.back != LEAVE)
     {
-        back.move(state.back);
+        back.move_velocity(state.back);
     }
     if (state.flipPiston != LEAVE)
     {
@@ -56,13 +56,13 @@ Robot::Robot(Roller &roller, Piston &matchLoader, pros::Controller &master)
 void Robot::intake()
 {
     defaultState = INTAKE;
-    runImportance();
+    runImportance("Intake");
 }
 
 void Robot::stop()
 {
     defaultState = STOP;
-    runImportance();
+    runImportance("Stop");
 }
 
 void Robot::toggleIntake()
@@ -71,13 +71,13 @@ void Robot::toggleIntake()
         defaultState = STOP;
     else
         defaultState = INTAKE;
-    runImportance();
+    runImportance("Toggle Intake");
 }
 
 void Robot::scoreL1()
 {
     defaultState = L1;
-    runImportance();
+    runImportance("Score L1");
 }
 
 void Robot::scoreL2(bool front)
@@ -90,7 +90,7 @@ void Robot::scoreL2(bool front)
     {
         defaultState = BACKL2;
     }
-    runImportance();
+    runImportance("Score L2");
 }
 
 void Robot::scoreL3(bool front)
@@ -103,7 +103,7 @@ void Robot::scoreL3(bool front)
     {
         defaultState = BACKL3;
     }
-    runImportance();
+    runImportance("Score L3");
 }
 
 void Robot::matchLoad(bool value, bool intake)
@@ -115,8 +115,8 @@ void Robot::matchLoad(bool value, bool intake)
         {
             defaultState = INTAKE;
         }
+        runImportance("Match Load");
     }
-    runImportance();
 }
 
 void Robot::toggleMatchLoad()
@@ -126,7 +126,7 @@ void Robot::toggleMatchLoad()
     {
         defaultState = INTAKE;
     }
-    runImportance();
+    runImportance("Toggle Match Load");
 }
 
 void Robot::mapButtons(StateControllerMapping mapping)
@@ -134,7 +134,7 @@ void Robot::mapButtons(StateControllerMapping mapping)
     stateMappings.push_back(mapping);
 }
 
-void Robot::runImportance()
+void Robot::runImportance(std::string reason)
 {
     // run the temp state with highest importance -> if none, run default state
     tempState highest = {defaultState, -1};
@@ -146,28 +146,31 @@ void Robot::runImportance()
         }
     }
     roller.setState(highest.state);
+    std::cout << reason << ": Current State: " << highest.state.front << ", " << highest.state.middle << ", " << highest.state.back << ", " << highest.state.flipPiston << ", " << highest.state.blockerPiston << std::endl;
 }
 
 void Robot::setState(rollerState state)
 {
     defaultState = state;
-    runImportance();
+    runImportance("Manual Set State");
 }
 
 void Robot::addTempState(rollerState state, short importance)
 {
     tempStates.push_back({state, importance});
+    runImportance("Add Temp State");
 }
 
 void Robot::addTempState(tempState state)
 {
     tempStates.push_back(state);
+    runImportance("Add Temp State");
 }
 
 void Robot::clearTempStates()
 {
     tempStates.clear();
-    runImportance();
+    runImportance("Clear All Temp States");
 }
 
 void Robot::clearTempState(rollerState tempState)
@@ -177,7 +180,7 @@ void Robot::clearTempState(rollerState tempState)
         if (it->state == tempState)
         {
             it = tempStates.erase(it);
-            runImportance();
+            runImportance("Clear Temp State");
         }
         else
         {
@@ -193,7 +196,7 @@ void Robot::removeTempState(rollerState tempState)
         if (it->state == tempState)
         {
             it = tempStates.erase(it);
-            runImportance();
+            runImportance("Remove Temp State");
             break;
         }
         else
@@ -213,7 +216,7 @@ void Robot::driverControl()
             if (mapping.temp)
             {
                 tempStates.push_back({mapping.state, mapping.importance});
-                runImportance();
+                runImportance("Driver Control Temp State");
             }
             else
             {
@@ -225,25 +228,28 @@ void Robot::driverControl()
                 {
                     defaultState = mapping.state;
                 }
-                runImportance();
+                runImportance("Driver Control Set State");
             }
         }
         else if (mapping.temp && !(master.get_digital(mapping.button) && combinationPressed) && roller.getState() == mapping.state)
         {
-            for (auto it = tempStates.begin(); it != tempStates.end();)
+            if (roller.getState() == mapping.state)
             {
-                if (it->state == mapping.state)
+                for (auto it = tempStates.begin(); it != tempStates.end();)
                 {
-                    it = tempStates.erase(it);
-                    if (defaultState == INTAKE2 || defaultState == INTAKE3)
+                    if (it->state == mapping.state)
                     {
-                        defaultState = INTAKE;
+                        it = tempStates.erase(it);
+                        if (defaultState == INTAKE2 || defaultState == INTAKE3)
+                        {
+                            defaultState = INTAKE;
+                        }
+                        runImportance("Driver Control Remove Temp State");
                     }
-                    runImportance();
-                }
-                else
-                {
-                    ++it;
+                    else
+                    {
+                        ++it;
+                    }
                 }
             }
         }
@@ -253,4 +259,9 @@ void Robot::driverControl()
 rollerState Robot::getRollerState() const
 {
     return roller.getState();
+}
+
+rollerState Robot::getDefaultState() const
+{
+    return defaultState;
 }

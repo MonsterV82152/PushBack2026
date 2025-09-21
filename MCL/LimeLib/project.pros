@@ -1,7 +1,7 @@
 {
   "py/object": "pros.conductor.project.Project",
   "py/state": {
-    "project_name": "dont kill the bot",
+    "project_name": "LimeLib",
     "target": "v5",
     "templates": {
       "LemLib": {
@@ -299,8 +299,8 @@
     },
     "upload_options": {
       "icon": "X",
-      "slot": 1,
-      "description": "lesra"
+      "slot": 4,
+      "description": "LimeLIb"
     },
     "use_early_access": false
   }

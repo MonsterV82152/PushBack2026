@@ -3,11 +3,14 @@
 
 #include "main.h"
 
+#define elif else if
+
+
 // Constants
 constexpr double PI = 3.141592;
 
 inline bool isRedTeam = true;
-inline bool colourSortOn = true;
+inline bool colourSortOn = false;
 
 /*---Controller---*/
 inline pros::Controller master(pros::E_CONTROLLER_MASTER);

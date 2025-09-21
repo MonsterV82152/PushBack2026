@@ -9,6 +9,7 @@
 #include "limelib/mclDistance.hpp"
 #include "pros/imu.hpp"
 #include "pros/rtos.hpp"
+#include "pros/screen.hpp"
 
 namespace limelib
 {
@@ -26,7 +27,7 @@ namespace limelib
     public:
         // Add virtual destructor
         virtual ~Locator() = default;
-        
+
         virtual Pose2D update();
         virtual void calibrate();
         virtual Pose2D getPose() const = 0;
@@ -55,7 +56,7 @@ namespace limelib
     class MCL : public Locator
     {
     public:
-        MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::Imu &imu, std::vector<MCLDistance> &sensors, Field2D &field, int num_particles, int rotationNoise, int translationNoise, int intensitivity = 10, bool shouldTaskRun = true);
+        MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::Imu &imu, std::vector<MCLDistance> &sensors, Field2D &field, int num_particles, int rotationNoise, int translationNoise, bool debug = false, int intensitivity = 10, bool shouldTaskRun = true);
         void calibrate() override;
         Pose2D update() override;
         Pose2D getPose() const override;
@@ -76,8 +77,10 @@ namespace limelib
         int last_mcl_update;
         int randomParticleCount;
         bool shouldTaskRun;
+        bool debug;
         std::vector<MCLParticle> particles;
         void updateMCL();
+        void debugDisplay();
     };
 
 }

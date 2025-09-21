@@ -20,32 +20,32 @@ limelib::Point2D limelib::rotatePoint(Point2D point, Point2D origin, real_t angl
     return point;
 }
 
-bool limelib::Object2D::isContacting(Pose2D pose) const
-{
-    return isContacting(Point2D(pose.x, pose.y));
-}
+// bool limelib::Object2D::isContacting(Pose2D pose) const
+// {
+//     return isContacting(Point2D(pose.x, pose.y));
+// }
 
-bool limelib::Object2D::isContacting(real_t x, real_t y) const
-{
-    return isContacting(Point2D(x, y));
-}
+// bool limelib::Object2D::isContacting(real_t x, real_t y) const
+// {
+//     return isContacting(Point2D(x, y));
+// }
 
-bool limelib::Object2D::isContacting(Point2D point) const
-{
-    // Default implementation - should be overridden by derived classes
-    return false;
-}
+// bool limelib::Object2D::isContacting(Point2D point) const
+// {
+//     // Default implementation - should be overridden by derived classes
+//     return false;
+// }
 
-const std::vector<limelib::LineSegment2D> &limelib::Object2D::getEdges() const
-{
-    // Default implementation - should be overridden by derived classes
-    static const std::vector<LineSegment2D> empty_edges;
-    return empty_edges;
-}
+// const std::vector<limelib::LineSegment2D> &limelib::Object2D::getEdges() const
+// {
+//     // Default implementation - should be overridden by derived classes
+//     static const std::vector<LineSegment2D> empty_edges;
+//     std::cout << "Object2D getEdges called - returning empty edges" << std::endl;
+//     return empty_edges;
+// }
 
 // Rectangle2D Implementation
 limelib::Rectangle2D::Rectangle2D(Pose2D pose, real_t width, real_t height)
-    : width(width), height(height), pose(pose)
 {
     Rectangle2D(pose.x, pose.y, width, height, pose.theta);
 }
@@ -101,29 +101,31 @@ const std::vector<limelib::LineSegment2D> &limelib::Circle2D::getEdges() const
 {
     // For a circle, we approximate with line segments
     // Use 32 segments for a smooth approximation
-    const int num_segments = 32;
-
-    // Update corners and edges if not already populated (lazy initialization)
-    if (corners.empty())
+    if (edges.empty())
     {
-        const_cast<Circle2D *>(this)->corners.reserve(num_segments);
-        const_cast<Circle2D *>(this)->edges.reserve(num_segments);
+        initializeEdges();
+    }
+    return edges;
+}
 
-        for (int i = 0; i < num_segments; ++i)
-        {
-            real_t angle = (2.0 * M_PI * i) / num_segments;
-            Point2D corner(pose.x + radius * cos(angle), pose.y + radius * sin(angle));
-            const_cast<Circle2D *>(this)->corners.push_back(corner);
-        }
+void limelib::Circle2D::initializeEdges() const
+{
+    const int num_segments = 32;
+    corners.reserve(num_segments);
+    edges.reserve(num_segments);
 
-        for (int i = 0; i < num_segments; ++i)
-        {
-            int next_i = (i + 1) % num_segments;
-            const_cast<Circle2D *>(this)->edges.emplace_back(corners[i], corners[next_i]);
-        }
+    for (int i = 0; i < num_segments; ++i)
+    {
+        real_t angle = (2.0 * M_PI * i) / num_segments;
+        Point2D corner(pose.x + radius * cos(angle), pose.y + radius * sin(angle));
+        corners.push_back(corner);
     }
 
-    return edges;
+    for (int i = 0; i < num_segments; ++i)
+    {
+        int next_i = (i + 1) % num_segments;
+        edges.emplace_back(corners[i], corners[next_i]);
+    }
 }
 
 // Polygon2D Implementation
@@ -185,28 +187,23 @@ const std::vector<limelib::LineSegment2D> &limelib::Polygon2D::getEdges() const
     return edges;
 }
 
-
-
-
-
 // ObjectGroup2D Implementation
-limelib::ObjectGroup2D::ObjectGroup2D(const std::vector<std::shared_ptr<Object2D>> &objects)
-    : objects(objects)
+limelib::ObjectGroup2D::ObjectGroup2D(std::vector<std::shared_ptr<Object2D>> objects)
+    : objects(std::move(objects))
 {
     constructEdges();
-}
-
-bool limelib::operator==(const limelib::Object2D &a, const limelib::Object2D &b) {
-    return &a == &b; // Compare addresses for equality
 }
 
 void limelib::ObjectGroup2D::addObject(std::shared_ptr<Object2D> object)
 {
-    objects.push_back(object);
-    constructEdges();
+    if (object)
+    {
+        objects.push_back(std::move(object));
+        constructEdges();
+    }
 }
 
-void limelib::ObjectGroup2D::removeObject(std::shared_ptr<Object2D> object)
+void limelib::ObjectGroup2D::removeObject(const std::shared_ptr<Object2D> &object)
 {
     auto it = std::find(objects.begin(), objects.end(), object);
     if (it != objects.end())
@@ -216,26 +213,22 @@ void limelib::ObjectGroup2D::removeObject(std::shared_ptr<Object2D> object)
     }
 }
 
-void limelib::ObjectGroup2D::constructEdges()
+void limelib::ObjectGroup2D::constructEdges() const
 {
     edges.clear();
-    corners.clear();
 
     for (const auto &obj : objects)
     {
         if (obj)
         {
-            const std::vector<LineSegment2D> &obj_edges = obj->getEdges();
+            const auto &obj_edges = obj->getEdges();
             edges.insert(edges.end(), obj_edges.begin(), obj_edges.end());
-            const std::vector<Point2D> &obj_corners = corners;
-            corners.insert(corners.end(), obj_corners.begin(), obj_corners.end());
         }
     }
 }
 
 bool limelib::ObjectGroup2D::isContacting(Point2D point) const
 {
-    // Point is contacting the group if it's contacting any object in the group
     for (const auto &obj : objects)
     {
         if (obj && obj->isContacting(point))

@@ -20,6 +20,6 @@ struct dist_sensor {
  * @param correct_rate The rate at which to correct the position
  * @param forced If true, force the correction even if the distance is not valid
  */
-inline void correct_position(dist_sensor sensor, lemlib::Chassis *chassis, bool x, bool forced = true, double correct_rate = 5);
+void correct_position(dist_sensor sensor, lemlib::Chassis *chassis, bool x, bool forced = true, double correct_rate = 5);
 
 #endif
