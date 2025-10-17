@@ -5,7 +5,6 @@
 
 #define elif else if
 
-
 // Constants
 constexpr double PI = 3.141592;
 

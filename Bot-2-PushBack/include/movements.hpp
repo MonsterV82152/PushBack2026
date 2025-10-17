@@ -28,22 +28,28 @@ struct tempState
 
 // Example operator== for rollerState
 bool operator==(const rollerState &lhs, const rollerState &rhs);
+
 inline const rollerState INTAKE = {200, 200, 200, 200, OFF, OFF};
-inline const rollerState INTAKE2 = {200, 200, 200, 0, OFF, OFF};
-inline const rollerState INTAKE3 = {0, 1, 200, 0, OFF, OFF};
-inline const rollerState L1 = {-100, -200, -200, -200, OFF, LEAVE};
-inline const rollerState L2 = {200, 200, 100, -100, OFF, LEAVE};
+inline const rollerState INTAKE2 = {200, 200, 200, 50, OFF, OFF};
+inline const rollerState INTAKE3 = {0, 1, 200, 50, OFF, OFF};
+inline const rollerState BACKINTAKE = {200, 200, 200, 200, ON, OFF};
+inline const rollerState L1 = {-100, -200, -100, -200, OFF, LEAVE};
+inline const rollerState L2 = {200, 200, 60, -60, OFF, LEAVE};
+inline const rollerState L2AUTO = {200, 200, 100, -100, OFF, LEAVE};
 inline const rollerState L2HELPER = {-200, -200, -200, -100, OFF, LEAVE};
 inline const rollerState L3 = {200, 200, 200, 200, OFF, ON};
 inline const rollerState L3HELPER = {0, 0, 0, 200, OFF, ON};
+inline const rollerState L3AUTO = {200, 200, 200, 150, OFF, ON};
 inline const rollerState BACKL2 = {-200, 200, 200, 0, OFF, OFF};
-inline const rollerState BACKL3 = {200, 200, 200, 0, ON, OFF};
-inline const rollerState BACKINTAKE = {0, 200, 200, 0, ON, OFF};
+inline const rollerState BACKL3 = {200, 200, 200, 0, ON, ON};
+inline const rollerState BACKL3HELPER = {200, 0, 0, 0, ON, ON};
+// inline const rollerState BACKINTAKE = {0, 200, 200, 0, ON, OFF};
 inline const rollerState DESCORE = {0, 0, 0, 0, LEAVE, ON};
 inline const rollerState STOP = {0, 0, 0, 0, OFF, OFF};
 inline const rollerState COLOURSORT = {-200, LEAVE, LEAVE, LEAVE, LEAVE, LEAVE};
-inline const rollerState PARK = {-100, -100, -100, -100, OFF, OFF};
+inline const rollerState PARK = {-200, -200, -200, -200, OFF, OFF};
 inline const rollerState PARK2 = {-50, -50, -50, -50, OFF, OFF};
+inline const rollerState ONLYINTAKE = {0, 0, 200, 0, OFF, OFF};
 
 class Roller
 {

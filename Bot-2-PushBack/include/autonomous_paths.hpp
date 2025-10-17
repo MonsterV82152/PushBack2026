@@ -18,4 +18,6 @@ void skills();
 
 void test();
 
+void riskySkills();
+
 #endif
