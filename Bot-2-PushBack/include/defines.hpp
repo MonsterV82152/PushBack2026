@@ -25,15 +25,15 @@ inline pros::Distance frontDS(7);
 inline pros::Distance intakeDS(15);
 inline pros::Optical middleCS(12);
 
-inline pros::Distance LOCF(17);
+inline pros::Distance LOCF(21);
 inline pros::Distance LOCB(4);
 inline pros::Distance LOCR(20);
 inline pros::Distance LOCL(5);
 
-inline dist_sensor LF(&LOCF, lemlib::Pose(4.5, 3, 0));
+inline dist_sensor LF(&LOCF, lemlib::Pose(4.7, 4.5, 0));
 inline dist_sensor LB(&LOCB, lemlib::Pose(-3.5, -5.5, 180));
 inline dist_sensor LR(&LOCR, lemlib::Pose(4.25, -2.25, 90));
-inline dist_sensor LL(&LOCL, lemlib::Pose(-4.25, -2.25, 270));
+inline dist_sensor LL(&LOCL, lemlib::Pose(-4.25, -2, 270));
 
 inline pros::Rotation trackingVertical(14);
 
@@ -41,15 +41,15 @@ inline pros::ADIDigitalOut flipPiston('C');
 inline pros::ADIDigitalOut blockerPiston('D');
 inline pros::ADIDigitalOut matchLoaderPiston('B');
 inline pros::ADIDigitalOut parkPiston('A');
-inline pros::ADIDigitalOut backAlignerPiston('H');
+inline pros::ADIDigitalOut intakeLiftPiston('H');
 
 inline Piston blocker(&blockerPiston);
 inline Piston flip(&flipPiston);
 inline Piston park(&parkPiston);
 inline Piston matchLoader(&matchLoaderPiston);
-inline Piston backAligner(&backAlignerPiston);
+inline Piston intakeLift(&intakeLiftPiston);
 
-inline Roller roller(front, middle, intake, back, flip, blocker);
+inline Roller roller(front, middle, intake, back, flip, blocker, intakeLift);
 
 inline Robot robot(roller, matchLoader, master);
 

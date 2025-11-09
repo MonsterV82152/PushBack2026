@@ -332,4 +332,3 @@ void AutonSelector::autonSelectorF()
         pros::delay(20); // Prevents the task from running too fast
     }
 }
-

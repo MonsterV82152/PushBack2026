@@ -9,7 +9,13 @@
 constexpr double PI = 3.141592;
 
 inline bool isRedTeam = true;
-inline bool colourSortOn = false;
+inline bool colourSortOn = true;
+inline double hue = 0;
+inline bool programmerMode = false;
+inline double redMax = 40;
+inline double redMin = 350;
+inline double blueMax = 240;
+inline double blueMin = 170;
 
 /*---Controller---*/
 inline pros::Controller master(pros::E_CONTROLLER_MASTER);

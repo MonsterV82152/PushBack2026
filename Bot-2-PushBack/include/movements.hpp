@@ -18,6 +18,8 @@ struct rollerState
     short front = 0;
     short flipPiston = 0;
     short blockerPiston = 0;
+    short intakeL = 0;
+    bool voltage = false;
 };
 
 struct tempState
@@ -28,15 +30,16 @@ struct tempState
 
 // Example operator== for rollerState
 bool operator==(const rollerState &lhs, const rollerState &rhs);
-
+inline const pros::rtos::Clock isAuton = pros::rtos::Clock();
 inline const rollerState INTAKE = {200, 200, 200, 200, OFF, OFF};
-inline const rollerState INTAKE2 = {200, 200, 200, 50, OFF, OFF};
-inline const rollerState INTAKE3 = {0, 1, 200, 50, OFF, OFF};
+inline const rollerState INTAKE2 = {200, 200, 200, 0, OFF, OFF};
+inline const rollerState INTAKE3 = {0, 1, 127, 0, OFF, OFF, true};
 inline const rollerState BACKINTAKE = {200, 200, 200, 200, ON, OFF};
-inline const rollerState L1 = {-100, -200, -100, -200, OFF, LEAVE};
-inline const rollerState L2 = {200, 200, 60, -60, OFF, LEAVE};
+inline const rollerState L1 = {-50, -100, -50, -50, OFF, LEAVE, ON};
+inline const rollerState L2 = {200, 200, 200, -200, OFF, LEAVE};
+inline const rollerState L2SKILLS = {200, 150, 200, -40, OFF, LEAVE};
 inline const rollerState L2AUTO = {200, 200, 100, -100, OFF, LEAVE};
-inline const rollerState L2HELPER = {-200, -200, -200, -100, OFF, LEAVE};
+inline const rollerState L2HELPER = {-127, -127, -127, -60, OFF, LEAVE, OFF, true};
 inline const rollerState L3 = {200, 200, 200, 200, OFF, ON};
 inline const rollerState L3HELPER = {0, 0, 0, 200, OFF, ON};
 inline const rollerState L3AUTO = {200, 200, 200, 150, OFF, ON};
@@ -47,14 +50,14 @@ inline const rollerState BACKL3HELPER = {200, 0, 0, 0, ON, ON};
 inline const rollerState DESCORE = {0, 0, 0, 0, LEAVE, ON};
 inline const rollerState STOP = {0, 0, 0, 0, OFF, OFF};
 inline const rollerState COLOURSORT = {-200, LEAVE, LEAVE, LEAVE, LEAVE, LEAVE};
-inline const rollerState PARK = {-200, -200, -200, -200, OFF, OFF};
+inline const rollerState PARK = {-200, -200, -     200, -200, OFF, OFF};
 inline const rollerState PARK2 = {-50, -50, -50, -50, OFF, OFF};
 inline const rollerState ONLYINTAKE = {0, 0, 200, 0, OFF, OFF};
 
 class Roller
 {
 public:
-    Roller(pros::Motor &front, pros::Motor &middle, pros::Motor &intake, pros::Motor &back, Piston &flipPiston, Piston &blockerPiston);
+    Roller(pros::Motor &front, pros::Motor &middle, pros::Motor &intake, pros::Motor &back, Piston &flipPiston, Piston &blockerPiston, Piston &intakeLift);
     void setState(rollerState state);
     rollerState getState() const;
 
@@ -66,6 +69,7 @@ private:
 
     Piston &flipPiston;
     Piston &blockerPiston;
+    Piston &intakeLift;
     rollerState state;
 };
 struct StateControllerMapping

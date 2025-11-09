@@ -52,14 +52,13 @@ public:
 class AutonSelector
 {
 public:
-
     AutonSelector();
 
     void start();
     void runAuton();
     void setSkillsAuton(autonomousRoute auton);
     void setAutons(std::vector<autonomousRoute> autons);
-    bool isRedTeam () const;
+    bool isRedTeam() const;
     bool isSkills() const;
     void exit();
 
@@ -69,19 +68,18 @@ private:
     std::vector<page> pages;
     autonomousRoute autonSkills;
     page currentPage = page(
-        "home",
-        {true, false},
-        std::vector<screenElement>{
-            screenElement{"lineRect", pros::Color::white, 20, 15, 225, 220},
-            screenElement{"lineRect", pros::Color::white, 25, 20, 230, 225},
-            screenElement{"lineRect", pros::Color::white, 250, 15, 455, 220},
-            screenElement{"lineRect", pros::Color::white, 255, 20, 460, 225},
-            screenElement{"text", pros::Color::white, 70, 105, 0, 0, 0, pros::text_format_e_t::E_TEXT_LARGE_CENTER, "Skills"},
-            screenElement{"text", pros::Color::white, 312, 105, 0, 0, 0, pros::text_format_e_t::E_TEXT_LARGE_CENTER, "Match"}},
-        std::vector<button>{
-            button(20, 15, 225, 220, "skills"),
-            button(250, 15, 455, 220, "match")});
-
+            "home",
+            {true, true},
+            std::vector<screenElement>{
+                screenElement{"lineRect", pros::Color::white, 20, 15, 225, 220},
+                screenElement{"lineRect", pros::Color::white, 25, 20, 230, 225},
+                screenElement{"lineRect", pros::Color::white, 250, 15, 455, 220},
+                screenElement{"lineRect", pros::Color::white, 255, 20, 460, 225},
+                screenElement{"text", pros::Color::white, 70, 105, 0, 0, 0, pros::text_format_e_t::E_TEXT_LARGE_CENTER, "Skills"},
+                screenElement{"text", pros::Color::white, 312, 105, 0, 0, 0, pros::text_format_e_t::E_TEXT_LARGE_CENTER, "Match"}},
+            std::vector<button>{
+                button(20, 15, 225, 220, "skills"),
+                button(250, 15, 455, 220, "match")});
 
     void drawPage(std::string pageName);
     void handleTouch(pros::screen_touch_status_s_t touch);

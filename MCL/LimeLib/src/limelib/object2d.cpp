@@ -124,7 +124,8 @@ void limelib::Circle2D::initializeEdges() const
     for (int i = 0; i < num_segments; ++i)
     {
         int next_i = (i + 1) % num_segments;
-        edges.emplace_back(corners[i], corners[next_i]);
+
+        edges.push_back(LineSegment2D(corners[i], corners[next_i]));
     }
 }
 

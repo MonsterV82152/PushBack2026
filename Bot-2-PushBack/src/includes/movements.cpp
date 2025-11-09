@@ -9,28 +9,50 @@ bool operator==(const rollerState &lhs, const rollerState &rhs)
            lhs.blockerPiston == rhs.blockerPiston;
 }
 
-Roller::Roller(pros::Motor &front, pros::Motor &middle, pros::Motor &intake, pros::Motor &back, Piston &flipPiston, Piston &blockerPiston)
-    : front(front), middle(middle), intake(intake), back(back), flipPiston(flipPiston), blockerPiston(blockerPiston), state(STOP)
+Roller::Roller(pros::Motor &front, pros::Motor &middle, pros::Motor &intake, pros::Motor &back, Piston &flipPiston, Piston &blockerPiston, Piston &intakeLift)
+    : front(front), middle(middle), intake(intake), back(back), flipPiston(flipPiston), blockerPiston(blockerPiston), intakeLift(intakeLift), state(STOP)
 {
 }
 
 void Roller::setState(rollerState state)
 {
-    if (state.front != LEAVE)
+    if (state.voltage)
     {
-        front.move_velocity(state.front);
+        if (state.front != LEAVE)
+        {
+            front.move(state.front);
+        }
+        if (state.middle != LEAVE)
+        {
+            middle.move(state.middle);
+        }
+        if (state.intake != LEAVE)
+        {
+            intake.move(state.intake);
+        }
+        if (state.back != LEAVE)
+        {
+            back.move(state.back);
+        }
     }
-    if (state.middle != LEAVE)
+    else
     {
-        middle.move_velocity(state.middle);
-    }
-    if (state.intake != LEAVE)
-    {
-        intake.move_velocity(state.intake);
-    }
-    if (state.back != LEAVE)
-    {
-        back.move_velocity(state.back);
+        if (state.front != LEAVE)
+        {
+            front.move_velocity(state.front);
+        }
+        if (state.middle != LEAVE)
+        {
+            middle.move_velocity(state.middle);
+        }
+        if (state.intake != LEAVE)
+        {
+            intake.move_velocity(state.intake);
+        }
+        if (state.back != LEAVE)
+        {
+            back.move_velocity(state.back);
+        }
     }
     if (state.flipPiston != LEAVE)
     {
@@ -39,6 +61,10 @@ void Roller::setState(rollerState state)
     if (state.blockerPiston != LEAVE)
     {
         blockerPiston.setState(state.blockerPiston == 1);
+    }
+    if (state.intakeL != LEAVE)
+    {
+        intakeLift.setState(state.intakeL == 1);
     }
     this->state = state;
 }

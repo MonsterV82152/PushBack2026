@@ -67,7 +67,7 @@ std::vector<limelib::MCLDistance> mclSensors = {
     {localization::frontDS, limelib::Pose2D(4.5, 3, 0)},
     {localization::backDS, limelib::Pose2D(-3.5, -5.5, 180)}};
 TrackingWheel verticalTW(vertical, 2.75, -0.25);
-Field2D field(144, 144, {Circle2D(67.5, 48, 4.17), Circle2D(-67.5, 48, 4.17), Circle2D(67.5, -48, 4.17), Circle2D(-67.5, -48, 4.17)});
+Field2D field(144.0f, 144.0f, {std::make_shared<Circle2D>(67.5f, 48.0f, 4.17f), std::make_shared<Circle2D>(-67.5f, 48.0f, 4.17f), std::make_shared<Circle2D>(67.5f, -48.0f, 4.17f), std::make_shared<Circle2D>(-67.5f, -48.0f, 4.17f)});
 MCL mcl(&verticalTW, nullptr, inertial, mclSensors, field, 100, 0.1, 0.1, true);
 
 #endif

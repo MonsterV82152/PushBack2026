@@ -69,9 +69,11 @@ limelib::MCL::MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW,
     : odomHelper(verticalTW, horizontalTW, imu, false), sensors(sensors), field(field), NUM_PARTICLES(num_particles),
       ROTATION_NOISE(rotationNoise), TRANSLATION_NOISE(translationNoise), debug(debug), INTENSITY(intensity), last_mcl_update(intensity), randomParticleCount(num_particles / 50), shouldTaskRun(shouldTaskRun)
 {
+    // Initialize particles with random positions but heading will be set from odometry later
     for (int i = 0; i < NUM_PARTICLES; i++)
     {
-        particles.push_back(MCLParticle(Pose2D(getRandomReal_t(-field.getWidth(), field.getWidth()), getRandomReal_t(-field.getHeight(), field.getHeight()), getRandomReal_t(0, M_PI * 2)), 0));
+        // Start with 0 heading, will be updated to odometry heading in first update
+        particles.push_back(MCLParticle(Pose2D(getRandomReal_t(-field.getWidth() / 2, field.getWidth() / 2), getRandomReal_t(-field.getHeight() / 2, field.getHeight() / 2), 0), 0));
     }
 }
 
@@ -95,9 +97,11 @@ void limelib::MCL::setPose(limelib::Pose2D pose)
 {
     odomHelper.setPose(pose);
     particles.clear();
+    // Initialize particles with position spread but all using the same odometry heading
+    real_t odomHeading = pose.theta * M_PI / 180; // Convert to radians
     for (int i = 0; i < NUM_PARTICLES; i++)
     {
-        particles.push_back(MCLParticle(Pose2D(pose.x + getRandomReal_t(-5, 5), pose.y + getRandomReal_t(-5, 5), getRandomReal_t(0, M_PI * 2)), 0));
+        particles.push_back(MCLParticle(Pose2D(pose.x + getRandomReal_t(-5, 5), pose.y + getRandomReal_t(-5, 5), odomHeading), 0));
     }
 }
 
@@ -109,6 +113,8 @@ limelib::Pose2D limelib::MCL::update()
         if (debug)
             debugDisplay();
         last_mcl_update = 0;
+        Pose2D pose = getPose();
+        std::cout << "Estimated Pose: X=" << pose.x << ", Y=" << pose.y << ", Theta=" << pose.theta * 180 / M_PI << ", Confidence=" << estimatedPose.weight << std::endl;
     }
     else
     {
@@ -134,18 +140,16 @@ void limelib::MCL::updateMCL()
     odomDelta.y += currentDelta.y;
     odomDelta.theta += currentDelta.theta;
 
+    // Get current odometry heading for all particles
+    real_t odomHeading = odomHelper.getPose().theta * M_PI / 180; // Convert to radians
+
     for (MCLParticle &particle : particles)
     {
-        // Apply motion model with additive noise (not multiplicative)
+        // Apply only translation motion with noise, use odometry heading for all particles
         particle.point.x += odomDelta.x + getRandomReal_t(-TRANSLATION_NOISE, TRANSLATION_NOISE);
         particle.point.y += odomDelta.y + getRandomReal_t(-TRANSLATION_NOISE, TRANSLATION_NOISE);
-        particle.point.theta += odomDelta.theta + getRandomReal_t(-ROTATION_NOISE, ROTATION_NOISE);
-
-        // Normalize theta to [0, 2π)
-        while (particle.point.theta < 0)
-            particle.point.theta += 2 * M_PI;
-        while (particle.point.theta >= 2 * M_PI)
-            particle.point.theta -= 2 * M_PI;
+        // Set all particles to use the same odometry heading (no rotation correction)
+        particle.point.theta = odomHeading;
     }
     // 2. CORRECTION STEP - Update particle weights based on sensor observations
     real_t totalWeight = 0.0;
@@ -207,7 +211,7 @@ void limelib::MCL::updateMCL()
     newParticles.reserve(NUM_PARTICLES);
 
     // Calculate how many random particles to inject (for kidnapping resistance)
-    int numRandom = randomParticleCount;
+    int numRandom = 0;
     int numResampled = NUM_PARTICLES - numRandom;
 
     // Resample particles using systematic resampling
@@ -230,19 +234,19 @@ void limelib::MCL::updateMCL()
         newParticles.back().weight = 0.0;
     }
 
-    // Add random particles for kidnapping resistance
+    // Add random particles for kidnapping resistance (using current odometry heading)
     for (int i = 0; i < numRandom; i++)
     {
         real_t randomX = getRandomReal_t(-field.getWidth() / 2, field.getWidth() / 2);
         real_t randomY = getRandomReal_t(-field.getHeight() / 2, field.getHeight() / 2);
-        real_t randomTheta = getRandomReal_t(0, 2 * M_PI);
-        newParticles.push_back(MCLParticle(Pose2D(randomX, randomY, randomTheta), 0.0));
+        // Use current odometry heading instead of random rotation
+        newParticles.push_back(MCLParticle(Pose2D(randomX, randomY, odomHeading), 0.0));
     }
 
     particles = std::move(newParticles);
 
-    // 4. UPDATE POSE ESTIMATE - Calculate weighted average and confidence
-    real_t sumX = 0, sumY = 0, sumSinTheta = 0, sumCosTheta = 0, sumWeights = 0;
+    // 4. UPDATE POSE ESTIMATE - Calculate weighted average for position, use odometry for heading
+    real_t sumX = 0, sumY = 0, sumWeights = 0;
     real_t maxWeight = 0;
 
     for (const MCLParticle &particle : particles)
@@ -251,8 +255,6 @@ void limelib::MCL::updateMCL()
 
         sumX += particle.point.x * weight;
         sumY += particle.point.y * weight;
-        sumSinTheta += sin(particle.point.theta) * weight;
-        sumCosTheta += cos(particle.point.theta) * weight;
         sumWeights += weight;
         maxWeight = std::max(maxWeight, weight);
     }
@@ -260,13 +262,8 @@ void limelib::MCL::updateMCL()
     {
         estimatedPose.point.x = sumX / sumWeights;
         estimatedPose.point.y = sumY / sumWeights;
-        estimatedPose.point.theta = atan2(sumSinTheta / sumWeights, sumCosTheta / sumWeights);
-
-        // Normalize theta to [0, 2π) to match your convention
-        while (estimatedPose.point.theta < 0)
-            estimatedPose.point.theta += 2 * M_PI;
-        while (estimatedPose.point.theta >= 2 * M_PI)
-            estimatedPose.point.theta -= 2 * M_PI;
+        // Use odometry heading directly instead of particle-based rotation
+        estimatedPose.point.theta = odomHeading;
 
         // Calculate confidence based on particle concentration
         // Higher max weight = more particles agree = higher confidence
@@ -285,33 +282,13 @@ void limelib::MCL::updateMCL()
         Pose2D odomBasedPose;
         odomBasedPose.x = actualPose.x + odomDelta.x;
         odomBasedPose.y = actualPose.y + odomDelta.y;
-        odomBasedPose.theta = actualPose.theta + odomDelta.theta;
+        odomBasedPose.theta = odomHeading; // Use current odometry heading
 
-        // Normalize odometry theta
-        while (odomBasedPose.theta < 0)
-            odomBasedPose.theta += 2 * M_PI;
-        while (odomBasedPose.theta >= 2 * M_PI)
-            odomBasedPose.theta -= 2 * M_PI;
-
-        // Blend poses based on confidence
+        // Blend only X and Y positions based on confidence, use odometry heading directly
         actualPose.x = confidence * estimatedPose.point.x + (1.0 - confidence) * odomBasedPose.x;
         actualPose.y = confidence * estimatedPose.point.y + (1.0 - confidence) * odomBasedPose.y;
-
-        // Handle angle blending carefully (circular interpolation)
-        real_t mclSin = sin(estimatedPose.point.theta);
-        real_t mclCos = cos(estimatedPose.point.theta);
-        real_t odomSin = sin(odomBasedPose.theta);
-        real_t odomCos = cos(odomBasedPose.theta);
-
-        real_t blendedSin = confidence * mclSin + (1.0 - confidence) * odomSin;
-        real_t blendedCos = confidence * mclCos + (1.0 - confidence) * odomCos;
-        actualPose.theta = atan2(blendedSin, blendedCos);
-
-        // Normalize final theta
-        while (actualPose.theta < 0)
-            actualPose.theta += 2 * M_PI;
-        while (actualPose.theta >= 2 * M_PI)
-            actualPose.theta -= 2 * M_PI;
+        // Always use odometry heading (no rotation correction)
+        actualPose.theta = odomHeading;
     }
     odomDelta = Pose2D(0, 0, 0); // Reset odomDelta after update
 }
@@ -333,46 +310,29 @@ limelib::Pose2D limelib::MCL::getPose() const
     real_t effectiveConfidence = baseConfidence * ageFactor;
     effectiveConfidence = std::clamp(effectiveConfidence, real_t(0.1), real_t(0.9));
 
+    // Get current odometry heading
+    real_t currentOdomHeading = odomHelper.getPose().theta; // Already in degrees
+
     // Calculate current odometry-based pose from last MCL estimate + accumulated delta
     Pose2D currentOdomPose;
     currentOdomPose.x = actualPose.x + odomDelta.x;
     currentOdomPose.y = actualPose.y + odomDelta.y;
-    currentOdomPose.theta = actualPose.theta + odomDelta.theta;
+    currentOdomPose.theta = currentOdomHeading * M_PI / 180; // Convert to radians for internal calculations
 
-    // Normalize odometry theta
-    while (currentOdomPose.theta < 0)
-        currentOdomPose.theta += 2 * M_PI;
-    while (currentOdomPose.theta >= 2 * M_PI)
-        currentOdomPose.theta -= 2 * M_PI;
-
-    // If confidence is very low (old or unreliable MCL), use mostly odometry
+    // If confidence is very low (old or unreliable MCL), use odometry position with odometry heading
     if (effectiveConfidence < 0.2)
     {
-        return currentOdomPose;
+        return Pose2D(currentOdomPose.x, currentOdomPose.y, currentOdomHeading); // Return with heading in degrees
     }
 
-    // Blend MCL estimate with current odometry interpolation
+    // Blend only X and Y positions based on MCL confidence, always use odometry heading
     Pose2D blendedPose;
     blendedPose.x = effectiveConfidence * estimatedPose.point.x + (1.0 - effectiveConfidence) * currentOdomPose.x;
     blendedPose.y = effectiveConfidence * estimatedPose.point.y + (1.0 - effectiveConfidence) * currentOdomPose.y;
+    // Always use current odometry heading (no rotation correction from MCL)
+    blendedPose.theta = currentOdomHeading; // In degrees for return
 
-    // Handle angle blending with circular interpolation
-    real_t mclSin = sin(estimatedPose.point.theta);
-    real_t mclCos = cos(estimatedPose.point.theta);
-    real_t odomSin = sin(currentOdomPose.theta);
-    real_t odomCos = cos(currentOdomPose.theta);
-
-    real_t blendedSin = effectiveConfidence * mclSin + (1.0 - effectiveConfidence) * odomSin;
-    real_t blendedCos = effectiveConfidence * mclCos + (1.0 - effectiveConfidence) * odomCos;
-    blendedPose.theta = atan2(blendedSin, blendedCos);
-
-    // Normalize final theta
-    while (blendedPose.theta < 0)
-        blendedPose.theta += 2 * M_PI;
-    while (blendedPose.theta >= 2 * M_PI)
-        blendedPose.theta -= 2 * M_PI;
-
-    return blendedPose.toDegrees();
+    return blendedPose;
 }
 
 void limelib::MCL::debugDisplay()
