@@ -18,21 +18,21 @@
 
 #include "main.h"
 
-// ============================================================================
+// ==============================
 // Preprocessor Macros
-// ============================================================================
+// ==============================
 
 #define elif else if ///< Shorthand for else if statements
 
-// ============================================================================
+// ==============================
 // Mathematical Constants
-// ============================================================================
+// ==============================
 
 constexpr double PI = 3.141592; ///< Pi constant for geometric calculations
 
-// ============================================================================
+// ==============================
 // Robot Configuration Variables
-// ============================================================================
+// ==============================
 
 inline bool isRedTeam = true;       ///< Team alliance color (true = red, false = blue)
 inline bool colourSortOn = false;   ///< Enable/disable automatic color sorting of rings
@@ -40,25 +40,25 @@ inline bool brakeChassis = false;   ///< Enable/disable chassis brake mode durin
 inline double hue = 0;              ///< Current hue value for color detection
 inline bool programmerMode = false; ///< Enable programmer mode for debugging features
 
-// ============================================================================
+// ==============================
 // Color Sensor Thresholds
-// ============================================================================
+// ==============================
 
 inline double redMax = 20;   ///< Maximum hue value for red ring detection
 inline double redMin = 350;  ///< Minimum hue value for red ring detection
 inline double blueMax = 240; ///< Maximum hue value for blue ring detection
 inline double blueMin = 170; ///< Minimum hue value for blue ring detection
 
-// ============================================================================
+// ==============================
 // Controller Objects
-// ============================================================================
+// ==============================
 
 inline pros::Controller master(pros::E_CONTROLLER_MASTER); ///< Primary driver controller
 inline pros::Controller slave(pros::E_CONTROLLER_PARTNER); ///< Partner/secondary controller
 
-// ============================================================================
+// ==============================
 // Controller Button Aliases
-// ============================================================================
+// ==============================
 
 /**
  * @namespace buttons
@@ -83,9 +83,9 @@ namespace buttons
     constexpr auto RIGHT = pros::E_CONTROLLER_DIGITAL_RIGHT; ///< D-pad right
 }
 
-// ============================================================================
+// ==============================
 // Motor Brake Mode Constants
-// ============================================================================
+// ==============================
 
 const pros::motor_brake_mode_e_t brake = pros::E_MOTOR_BRAKE_BRAKE; ///< Active braking (fast stop)
 const pros::motor_brake_mode_e_t coast = pros::E_MOTOR_BRAKE_COAST; ///< Coast to stop (no resistance)

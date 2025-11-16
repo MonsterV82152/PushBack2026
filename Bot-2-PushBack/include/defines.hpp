@@ -26,40 +26,40 @@
 #include "movements.hpp"
 #include "piston.hpp"
 
-// ============================================================================
+// ==============================
 // Autonomous Selector
-// ============================================================================
+// ==============================
 
 inline AutonSelector autonSelect; ///< Autonomous selector for pre-match routine selection
 
-// ============================================================================
+// ==============================
 // Drivetrain Motors
-// ============================================================================
+// ==============================
 
 inline pros::MotorGroup leftDT({-1, -2, -3}); ///< Left drivetrain motor group (ports 1, 2, 3 - reversed)
 inline pros::MotorGroup rightDT({8, 9, 10});  ///< Right drivetrain motor group (ports 8, 9, 10)
 inline pros::Imu imu(13);                     ///< Inertial sensor for heading/orientation (port 13)
 
-// ============================================================================
+// ==============================
 // Roller System Motors
-// ============================================================================
+// ==============================
 
 inline pros::Motor front(16);   ///< Front roller motor (port 16)
 inline pros::Motor back(-19);   ///< Back roller motor (port 19 - reversed)
 inline pros::Motor middle(6);   ///< Middle roller motor (port 6)
 inline pros::Motor intake(-18); ///< Intake roller motor (port 18 - reversed)
 
-// ============================================================================
+// ==============================
 // Sensors - Distance and Optical
-// ============================================================================
+// ==============================
 
 inline pros::Distance frontDS(7);   ///< Front distance sensor for obstacle detection (port 7)
 inline pros::Distance intakeDS(15); ///< Intake distance sensor for ring detection (port 15)
 inline pros::Optical middleCS(12);  ///< Middle color/optical sensor for ring sorting (port 12)
 
-// ============================================================================
+// ==============================
 // Localization Distance Sensors
-// ============================================================================
+// ==============================
 
 inline pros::Distance LOCF(21); ///< Front localization distance sensor (port 21)
 inline pros::Distance LOCB(4);  ///< Back localization distance sensor (port 4)
@@ -72,15 +72,15 @@ inline dist_sensor LB(&LOCB, lemlib::Pose(-3.5, -5.5, 180));   ///< Back sensor 
 inline dist_sensor LR(&LOCR, lemlib::Pose(4.25, -2.25, 90));   ///< Right sensor at (4.25", -2.25") facing right
 inline dist_sensor LL(&LOCL, lemlib::Pose(-4.25, -2.25, 270)); ///< Left sensor at (-4.25", -2.25") facing left
 
-// ============================================================================
+// ==============================
 // Tracking Wheels
-// ============================================================================
+// ==============================
 
 inline pros::Rotation trackingVertical(14); ///< Vertical tracking wheel rotation sensor (port 14)  ///< Vertical tracking wheel rotation sensor (port 14)
 
-// ============================================================================
+// ==============================
 // Pneumatic Pistons (ADI Ports)
-// ============================================================================
+// ==============================
 
 inline pros::ADIDigitalOut flipPiston('C');        ///< Flip piston for ring redirection (ADI port C)
 inline pros::ADIDigitalOut blockerPiston('D');     ///< Blocker piston for ring flow control (ADI port D)
@@ -95,17 +95,17 @@ inline Piston park(&parkPiston);               ///< Park piston controller
 inline Piston matchLoader(&matchLoaderPiston); ///< Match loader piston controller
 inline Piston intakeLift(&intakeLiftPiston);   ///< Intake lift piston controller   ///< Intake lift piston controller
 
-// ============================================================================
+// ==============================
 // Robot Control Objects
-// ============================================================================
+// ==============================
 
 inline Roller roller(front, middle, intake, back, flip, blocker, intakeLift); ///< Roller system controller
 
 inline Robot robot(roller, matchLoader, master); ///< High-level robot controller with driver input  ///< High-level robot controller with driver input
 
-// ============================================================================
+// ==============================
 // LemLib Drivetrain Configuration
-// ============================================================================
+// ==============================
 
 /**
  * @brief LemLib drivetrain configuration
@@ -129,9 +129,9 @@ inline lemlib::Drivetrain LEMLIB_drivetrain(&leftDT, &rightDT,
  */
 inline lemlib::TrackingWheel LEMLIB_tracking_vertical(&trackingVertical, lemlib::Omniwheel::NEW_275, -0.25);
 
-// ============================================================================
+// ==============================
 // LemLib Odometry and PID Configuration
-// ============================================================================
+// ==============================
 
 /**
  * @brief Odometry sensor configuration
