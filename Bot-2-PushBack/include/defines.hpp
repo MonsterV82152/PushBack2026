@@ -10,8 +10,9 @@
 #include "movements.hpp"
 #include "piston.hpp"
 
-inline AutonSelector autonSelect;
+inline AutonSelector autonSelect; // Autonomous selector object
 
+// 
 inline pros::MotorGroup leftDT({-1, -2, -3});
 inline pros::MotorGroup rightDT({8, 9, 10});
 inline pros::Imu imu(13);
@@ -33,7 +34,7 @@ inline pros::Distance LOCL(5);
 inline dist_sensor LF(&LOCF, lemlib::Pose(4.7, 4.5, 0));
 inline dist_sensor LB(&LOCB, lemlib::Pose(-3.5, -5.5, 180));
 inline dist_sensor LR(&LOCR, lemlib::Pose(4.25, -2.25, 90));
-inline dist_sensor LL(&LOCL, lemlib::Pose(-4.25, -2, 270));
+inline dist_sensor LL(&LOCL, lemlib::Pose(-4.25, -2.25, 270));
 
 inline pros::Rotation trackingVertical(14);
 

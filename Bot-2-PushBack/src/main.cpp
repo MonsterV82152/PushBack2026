@@ -30,8 +30,9 @@ void colourSort(void *params)
             }
         }
         hue = middleCS.get_hue();
-        red = (hue > redMin || hue < redMax);
-        blue = (hue > blueMin && hue < blueMax);
+        int distance = middleCS.get_proximity();
+        red = (hue > redMin || hue < redMax) && distance < 100;
+        blue = (hue > blueMin && hue < blueMax) && distance < 100;
         if (!intakeTask && robot.getRollerState() == INTAKE && frontDS.get_distance() < 30 && front.get_actual_velocity() < 30)
         {
             intakeTask = true;
@@ -47,16 +48,17 @@ void colourSort(void *params)
         {
             if ((!isRedTeam && red) || (isRedTeam && blue))
             {
-
                 colourSorting = true;
                 robot.addTempState(COLOURSORT, 10);
                 pros::delay(300);
                 robot.removeTempState(COLOURSORT);
-                colourSorting = false;  
+                colourSorting = false;
             }
         }
         if (master.get_digital_new_press(buttons::LEFT))
         {
+            chassis.setBrakeMode(brake);
+            brakeChassis = true;
             robot.setState(PARK);
             park.setState(false);
             while (intakeDS.get_distance() > 50)
@@ -68,7 +70,7 @@ void colourSort(void *params)
             {
                 pros::delay(10);
             }
-            pros::delay(350);
+            pros::delay(400);
             robot.stop();
             park.setState(true);
         }
@@ -231,7 +233,17 @@ void autonomous()
 {
     middleCS.set_led_pwm(100);
     isRedTeam = autonSelect.isRedTeam();
-    // autonSelect.runAuton();
+    if (isRedTeam)
+    {
+
+        master.print(1, 1, "Red");
+    }
+    else
+    {
+        master.print(1, 1, "Blue");
+    }
+    autonSelect.runAuton();
+
     // chassis.setPose(0, 0, 0);
     // int tar = 90;
     // chassis.turnToHeading(tar, 3000);
@@ -306,15 +318,21 @@ void autonomous()
     // chassis.moveToPoint(-48, 0, 1500);
     // chassis.turnToPoint(0, 0, 1000);
     // chassis.moveToPoint(0, 0, 1500);
-    // left2();
+
+        // left2();
     // right();
-    riskySkills();
+    // riskySkillsV2();
+    // left();
+    // riskySkillsV2();
+    // skills();
+    // soloAWP();
+    // test();
 }
 
 void opcontrol()
 {
     double batteryLevel = pros::battery::get_capacity();
-    colourSortOn = !autonSelect.isSkills();
+    colourSortOn = false;
     robot.setState(STOP);
     if (!programmerMode)
     {
@@ -322,15 +340,33 @@ void opcontrol()
         std::vector<int> teamColorQueue = {0, 1, 2};
         short teamColorIndex = 0;
         isRedTeam = autonSelect.isRedTeam();
-        robot.mapButtons({L1, buttons::R2, true});
+        if (autonSelect.isSkills())
+        {
+            robot.mapButtons({L1SKILLS, buttons::R2, true});
+        }
+        else
+        {
+            robot.mapButtons({L1, buttons::R2, true});
+        }
         robot.mapButtons({L3, buttons::L2, true});
         robot.mapButtons({DESCORE, buttons::DOWN, true});
-        robot.mapButtons({BACKL2, buttons::A, true});
         robot.mapButtons({BACKINTAKE, buttons::X, false});
         while (true)
         {
             chassis.arcade(master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y), master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X), false, 0.54);
             robot.driverControl();
+            if (master.get_digital_new_press(buttons::A))
+            {
+                brakeChassis = !brakeChassis;
+                if (brakeChassis)
+                {
+                    chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+                }
+                else
+                {
+                    chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
+                }
+            }
             if (master.get_digital_new_press(buttons::Y))
             {
                 teamColorIndex++;
@@ -396,6 +432,7 @@ void opcontrol()
         while (true)
         {
             chassis.arcade(master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y), master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X), false, 0.54);
+
             if (master.get_digital_new_press(buttons::UP))
             {
                 correct_position(LF, &chassis, false);

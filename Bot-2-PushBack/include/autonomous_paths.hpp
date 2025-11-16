@@ -4,8 +4,6 @@
 #include "globals.hpp"
 #include "defines.hpp"
 
-
-
 void left();
 void left2();
 
@@ -19,5 +17,6 @@ void skills();
 void test();
 
 void riskySkills();
+void riskySkillsV2();
 
 #endif

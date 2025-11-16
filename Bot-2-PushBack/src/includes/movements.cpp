@@ -102,7 +102,7 @@ void Robot::toggleIntake()
 
 void Robot::scoreL1()
 {
-    defaultState = L1;
+    defaultState = L1SKILLS;
     runImportance("Score L1");
 }
 

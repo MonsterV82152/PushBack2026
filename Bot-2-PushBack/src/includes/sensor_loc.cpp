@@ -1,6 +1,7 @@
 #include "sensor_loc.hpp"
 
-void correct_position(dist_sensor sensor, lemlib::Chassis *chassis, bool x, bool forced, double correct_rate) {
+void correct_position(dist_sensor sensor, lemlib::Chassis *chassis, bool x, bool forced, double correct_rate)
+{
     double wall_dist = 71.5;
     lemlib::Pose currentPos = chassis->getPose(true);
     double distanceValue = sensor.sensor->get_distance();
@@ -33,9 +34,4 @@ void correct_position(dist_sensor sensor, lemlib::Chassis *chassis, bool x, bool
             chassis->setPose(currentPos.x, y_value, currentPos.theta, true);
         }
     }
-
-
-
-
-
 }
