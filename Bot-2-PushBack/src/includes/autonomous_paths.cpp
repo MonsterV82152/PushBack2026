@@ -61,7 +61,7 @@ void left2()
     chassis.turnToPoint(-48, 48, 700);
     chassis.moveToPoint(-48, 48, 1000);
     chassis.turnToPoint(-70, 48, 700);
-    chassis.moveToPoint(-70, 48, 1000);
+    chassis.moveToPoint(-70, 48, 1000, {.minSpeed = 80});
     // correct_position(LR, &chassis, false);
     chassis.waitUntilDone();
     pros::delay(300);
@@ -101,7 +101,7 @@ void soloAWP()
     chassis.waitUntilDone();
     printPose();
     // correct_position(LL, &chassis, false);
-    chassis.moveToPoint(-70, -48, 700, {.maxSpeed = 70});
+    chassis.moveToPoint(-70, -48, 700, {.maxSpeed = 80});
     chassis.waitUntilDone();
     chassis.arcade(5, 0);
     pros::delay(200);
@@ -156,13 +156,151 @@ void soloAWP()
     chassis.arcade(20, 0);
     pros::delay(600);
     // correct_position(LL, &chassis, false);
-    chassis.moveToPoint(-28, 48, 800, {.forwards = false, .maxSpeed = 90});
+    chassis.moveToPoint(-28, 49.5, 800, {.forwards = false, .maxSpeed = 90});
     robot.matchLoad(false);
     pros::delay(300);
     // correct_position(LL, &chassis, false);
     robot.scoreL3(false);
     chassis.waitUntilDone();
     chassis.arcade(-30, 0);
+}
+
+void halfSAWPRight()
+{
+    colourSortOn = false;
+    chassis.setPose(-46.733, -15.607, 180);
+    // correct_position(LR, &chassis, true);
+    chassis.moveToPoint(-46, -48, 900);
+    pros::delay(300);
+    // correct_position(LF, &chassis, false);
+    chassis.turnToPoint(-70, -48, 500);
+    printPose();
+    robot.matchLoad(true, false);
+    robot.setState(BACKINTAKE);
+    chassis.waitUntilDone();
+    printPose();
+    // correct_position(LL, &chassis, false);
+    chassis.moveToPoint(-70, -48, 700, {.maxSpeed = 70});
+    chassis.waitUntilDone();
+    chassis.arcade(5, 0);
+    pros::delay(700);
+    // for (int i = 0; i < 3; i++)
+    // {
+    //     chassis.arcade(-30, 0);
+    //     pros::delay(70);
+    //     chassis.arcade(40, 0);
+    //     pros::delay(100);
+    // }
+    // // chassis.waitUntilDone();
+    // pros::delay(200);
+    chassis.moveToPoint(-28, -48, 800, {.forwards = false, .maxSpeed = 80});
+    robot.matchLoad(false);
+
+    pros::delay(300);
+    // correct_position(LL, &chassis, false);
+    pros::delay(400);
+    robot.scoreL3(false);
+    chassis.waitUntilDone();
+    chassis.arcade(-30, 0);
+    pros::delay(700);
+    robot.intake();
+    pros::delay(200);
+    chassis.arcade(0, 0);
+    chassis.moveToPoint(-48, -48, 500);
+    chassis.turnToPoint(-24, -24, 500);
+    chassis.moveToPoint(-24, -24, 900);
+    pros::delay(700);
+    robot.matchLoad(true);
+    chassis.moveToPoint(-6, -6, 800, {.maxSpeed = 70});
+    pros::delay(200);
+    robot.matchLoad(false);
+    chassis.waitUntilDone();
+    robot.setState(L1AUTO);
+    pros::delay(1600);
+    robot.intake();
+    chassis.moveToPoint(-24, -24, 600, {false});
+    chassis.turnToPoint(-24, 24, 300);
+    chassis.moveToPoint(-24, 12, 1000, {.minSpeed = 70, .earlyExitRange = 5});
+    correct_position(LL, &chassis, true);
+    chassis.moveToPoint(-24, 24, 600, {.maxSpeed = 90});
+    robot.matchLoad(true);
+    // correct_position(LL, &chassis, true);
+    chassis.turnToPoint(0, 0, 600);
+    chassis.moveToPoint(-9, 9, 600, {.minSpeed = 100});
+    chassis.waitUntilDone();
+    robot.setState(L2HELPER);
+    pros::delay(100);
+    robot.setState(L2AUTO);
+    pros::delay(1200);
+}
+
+void halfSAWPLeft()
+{
+    colourSortOn = false;
+    chassis.setPose(-46.733, 15.607, 0);
+    // correct_position(LR, &chassis, true);
+    chassis.moveToPoint(-46, 48, 900);
+    pros::delay(300);
+    // correct_position(LF, &chassis, false);
+    chassis.turnToPoint(-70, 48, 500);
+    printPose();
+    robot.matchLoad(true, false);
+    robot.setState(BACKINTAKE);
+    chassis.waitUntilDone();
+    printPose();
+    // correct_position(LL, &chassis, false);
+    chassis.moveToPoint(-70, 48, 700, {.maxSpeed = 70});
+    chassis.waitUntilDone();
+    chassis.arcade(5, 0);
+    pros::delay(700);
+    // for (int i = 0; i < 3; i++)
+    // {
+    //     chassis.arcade(-30, 0);
+    //     pros::delay(70);
+    //     chassis.arcade(40, 0);
+    //     pros::delay(100);
+    // }
+    // // chassis.waitUntilDone();
+    // pros::delay(200);
+    chassis.moveToPoint(-28, 48, 800, {.forwards = false, .maxSpeed = 80});
+    robot.matchLoad(false);
+
+    pros::delay(300);
+    // correct_position(LL, &chassis, false);
+    pros::delay(400);
+    robot.scoreL3(false);
+    chassis.waitUntilDone();
+    chassis.arcade(-30, 0);
+    pros::delay(700);
+    robot.intake();
+    pros::delay(200);
+    chassis.arcade(0, 0);
+    chassis.moveToPoint(-48, 48, 500);
+    chassis.turnToPoint(-24, 24, 500);
+    chassis.moveToPoint(-24, 24, 900);
+    pros::delay(700);
+    robot.matchLoad(true);
+    chassis.moveToPoint(-6, 6, 800, {.maxSpeed = 70});
+    pros::delay(200);
+    robot.matchLoad(false);
+    chassis.waitUntilDone();
+    robot.setState(L2HELPER);
+    pros::delay(100);
+    robot.setState(L2AUTO);
+    pros::delay(1400);
+    robot.intake();
+    chassis.moveToPoint(-24, 24, 600, {false});
+    chassis.turnToPoint(-24, -24, 300);
+    chassis.moveToPoint(-24, -12, 1000, {.minSpeed = 70, .earlyExitRange = 5});
+    correct_position(LR, &chassis, true);
+    chassis.moveToPoint(-24, -24, 600, {.maxSpeed = 90});
+    robot.matchLoad(true);
+    // correct_position(LL, &chassis, true);
+    chassis.turnToPoint(0, 0, 600);
+    chassis.moveToPoint(-9, -9, 600, {.minSpeed = 100});
+    chassis.waitUntilDone();
+    robot.setState(L1AUTO);
+    pros::delay(1600);
 }
 
 void right()
@@ -226,7 +364,7 @@ void right2()
     chassis.turnToPoint(-48, -48, 700);
     chassis.moveToPoint(-48, -48, 1000);
     chassis.turnToPoint(-70, -48, 700);
-    chassis.moveToPoint(-70, -48, 1000);
+    chassis.moveToPoint(-70, -48, 1000, {.minSpeed = 80});
     // correct_position(LL, &chassis, false);
     chassis.waitUntilDone();
     pros::delay(200);
@@ -486,6 +624,7 @@ void riskySkills()
     chassis.moveToPoint(-25, -48, 700);
     correct_position(LR, &chassis, false);
     chassis.waitUntilDone();
+    chassis.arcade(20, 0);
     robot.setState(L3HELPER);
     pros::delay(200);
     robot.scoreL3();
@@ -510,6 +649,7 @@ void riskySkills()
     correct_position(LR, &chassis, false);
     chassis.waitUntilDone();
     robot.setState(L3HELPER);
+    chassis.arcade(20, 0);
     pros::delay(200);
     robot.scoreL3();
     pros::delay(2800);
@@ -531,58 +671,77 @@ void riskySkillsV2()
     robot.matchLoad(true);
     chassis.waitUntilDone();
     correct_position(LL, &chassis, false);
-    chassis.moveToPoint(-70, -48, 1000, {.maxSpeed = 70});
+    chassis.moveToPoint(-70, -48, 800, {.maxSpeed = 70});
     chassis.waitUntilDone();
-    chassis.arcade(10, 0);
+    // chassis.arcade(5, 0);
     correct_position(LF, &chassis, true);
-    pros::delay(1000);
+    // pros::delay(1000);
+    for (int i = 0; i < 8; i++)
+    {
+        chassis.arcade(-10, 0);
+        pros::delay(70);
+        chassis.arcade(30, 0);
+        pros::delay(100);
+    }
     chassis.moveToPoint(-48, -50, 700, {false});
     robot.matchLoad(false);
     chassis.moveToPoint(-31, -61, 700, {.forwards = false});
     pros::delay(400);
     correct_position(LL, &chassis, false);
     chassis.moveToPoint(30, -63, 1000, {.forwards = false});
-    chassis.moveToPoint(48, -47, 1000, {.forwards = false});
-    chassis.turnToPoint(25, -49, 800);
+    chassis.moveToPoint(48, -48.5, 1000, {.forwards = false});
+    chassis.turnToPoint(22, -48.5, 800);
     chassis.waitUntilDone();
     correct_position(LL, &chassis, false);
-    chassis.moveToPoint(25, -49, 1000);
+    chassis.moveToPoint(22, -48, 1000);
     chassis.waitUntilDone();
     robot.setState(L3HELPER);
+    chassis.arcade(20, 0);
     pros::delay(200);
     robot.scoreL3();
     correct_position(LL, &chassis, false);
-    pros::delay(2300);
-    chassis.moveToPoint(44, -47, 600, {false});
-    chassis.turnToPoint(70, -47, 700);
+    pros::delay(2200);
+    chassis.moveToPoint(44, -48, 600, {false});
+    chassis.turnToPoint(70, -48, 700);
     robot.matchLoad(true);
-    chassis.moveToPoint(70, -47, 1000, {.maxSpeed = 70});
+    chassis.moveToPoint(70, -48, 800, {.maxSpeed = 70});
     correct_position(LR, &chassis, false);
     chassis.waitUntilDone();
-    chassis.arcade(10, 0);
+    // chassis.arcade(5, 0);
     correct_position(LF, &chassis, true);
-    pros::delay(1000);
+    // pros::delay(1000);
+    for (int i = 0; i < 8; i++)
+    {
+        chassis.arcade(-10, 0);
+        pros::delay(70);
+        chassis.arcade(30, 0);
+        pros::delay(100);
+    }
     chassis.moveToPoint(48, -48, 600, {false});
     robot.matchLoad(false);
-    chassis.turnToPoint(25, -48, 800);
+    chassis.turnToPoint(24, -24, 700);
+    chassis.moveToPoint(24, -24, 900);
+    chassis.moveToPoint(48, -48, 900, {false});
+    chassis.turnToPoint(25, -48, 900);
     chassis.moveToPoint(25, -48, 1000);
     correct_position(LL, &chassis, false);
     chassis.waitUntilDone();
+    chassis.arcade(20, 0);
     robot.setState(L3HELPER);
-    pros::delay + (200);
+    pros::delay(200);
     robot.scoreL3();
     pros::delay(2400);
     robot.setState(INTAKE);
-    chassis.moveToPoint(40, -48, 700, {false});
-    chassis.turnToPoint(64, -28, 500);
-    chassis.moveToPoint(64, -26, 700);
-    chassis.turnToPoint(70, 28, 600);
+    chassis.moveToPoint(44, -48, 700, {false});
+    chassis.turnToPoint(63, -28, 500);
+    chassis.moveToPoint(63, -28, 700);
+    chassis.turnToPoint(71, 28, 600);
     chassis.waitUntilDone();
     correct_position(LR, &chassis, true, true);
-    chassis.moveToPoint(70, 28, 1000, {.maxSpeed = 100});
+    chassis.moveToPoint(70, 28, 1000, {.maxSpeed = 105});
     pros::delay(400);
     correct_position(LR, &chassis, true, true);
-    chassis.moveToPoint(70, 28, 1500, {.maxSpeed = 100});
+    chassis.moveToPoint(70, 28, 1500, {.maxSpeed = 105});
     chassis.turnToHeading(330, 500);
     chassis.waitUntilDone();
     correct_position(LF, &chassis, false, true);
@@ -593,19 +752,31 @@ void riskySkillsV2()
     // chassis.moveToPoint(48, -48, 1000);
     chassis.moveToPoint(48, 48, 800);
     chassis.turnToPoint(0, 0, 600);
-    chassis.moveToPoint(0, 7, 1500, {.maxSpeed = 60});
+    chassis.moveToPoint(24, 24, 900, {.maxSpeed = 60});
     chassis.waitUntilDone();
+    chassis.turnToHeading(45, 700, {.direction = lemlib::AngularDirection::CW_CLOCKWISE});
+    chassis.turnToPoint(0, 0, 700, {.direction = lemlib::AngularDirection::CW_CLOCKWISE});
+    chassis.moveToPoint(0, 0, 900, {.maxSpeed = 60});
+    chassis.waitUntilDone();
+    chassis.arcade(30, 0);
     robot.setState(L1SKILLS);
     pros::delay(3500);
     chassis.moveToPoint(44, 48, 1000, {false});
     chassis.turnToPoint(70, 48, 700);
     robot.matchLoad(true);
-    chassis.moveToPoint(70, 48, 1000, {.maxSpeed = 70});
+    chassis.moveToPoint(70, 48, 800, {.maxSpeed = 70});
     correct_position(LL, &chassis, false);
     chassis.waitUntilDone();
-    chassis.arcade(10, 0);
+    // chassis.arcade(5, 0);
     correct_position(LF, &chassis, true);
-    pros::delay(1000);
+    // pros::delay(1000);
+    for (int i = 0; i < 8; i++)
+    {
+        chassis.arcade(-10, 0);
+        pros::delay(70);
+        chassis.arcade(30, 0);
+        pros::delay(100);
+    }
     chassis.moveToPoint(48, 48, 700, {false});
     robot.matchLoad(false);
     chassis.moveToPoint(31, 63, 700, {.forwards = false});
@@ -619,6 +790,7 @@ void riskySkillsV2()
     chassis.moveToPoint(-25, 48, 800);
     correct_position(LL, &chassis, false);
     chassis.waitUntilDone();
+    chassis.arcade(20, 0);
     robot.setState(L3HELPER);
     pros::delay(200);
     robot.scoreL3();
@@ -627,12 +799,19 @@ void riskySkillsV2()
     chassis.moveToPoint(-44, 48, 700, {false});
     chassis.turnToPoint(-70, 48, 900);
     robot.matchLoad(true);
-    chassis.moveToPoint(-70, 48, 1000, {.maxSpeed = 70});
+    chassis.moveToPoint(-70, 48, 800, {.maxSpeed = 70});
     correct_position(LR, &chassis, false);
     chassis.waitUntilDone();
-    chassis.arcade(10, 0);
+    // chassis.arcade(5, 0);
     correct_position(LF, &chassis, true);
-    pros::delay(1000);
+    // pros::delay(1000);
+    for (int i = 0; i < 8; i++)
+    {
+        chassis.arcade(-10, 0);
+        pros::delay(70);
+        chassis.arcade(30, 0);
+        pros::delay(100);
+    }
     chassis.moveToPoint(-48, 48, 700, {false});
     correct_position(LR, &chassis, false);
     robot.matchLoad(false);
@@ -640,17 +819,17 @@ void riskySkillsV2()
     chassis.moveToPoint(-26, 48, 700);
     correct_position(LL, &chassis, false);
     chassis.waitUntilDone();
+    chassis.arcade(20, 0);
     robot.setState(L3HELPER);
     pros::delay(200);
     robot.scoreL3();
-    chassis.arcade(20, 0);
-    pros::delay(2600);
+    pros::delay(2500);
     chassis.moveToPoint(-48, 48, 700, {false});
-    chassis.turnToPoint(-63, 26, 700);
-    chassis.moveToPoint(-63, 26, 800);
-    chassis.moveToPoint(-70, 5, 3000, {.maxSpeed = 90, .minSpeed = 90});
+    chassis.turnToPoint(-61.5, 27.5, 700);
+    chassis.moveToPoint(-61.5, 27.5, 800);
+    chassis.moveToPoint(-70, 5, 3000, {.maxSpeed = 105, .minSpeed = 105});
+    robot.setState(L1AUTO2);
     chassis.waitUntilDone();
-    park.setState(true);
     // robot.matchLoad(true);
 }
 

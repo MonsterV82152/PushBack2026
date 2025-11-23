@@ -1,11 +1,11 @@
 /**
  * @file main.cpp
  * @brief Main control file for the PushBack2026 robot
- * 
+ *
  * This file contains the core control logic for the VEX robotics competition bot,
  * including initialization, autonomous mode, driver control, and color sorting
  * functionality for ring management.
- * 
+ *
  * @details The robot features:
  * - Arcade drive control with variable brake modes
  * - Color sorting system to reject enemy rings
@@ -28,28 +28,28 @@ bool colourSorting = false;
 /**
  * @struct timeouts
  * @brief Structure for scheduling delayed function execution
- * 
+ *
  * Used to queue functions that should execute at a specific timestamp,
  * enabling precise timing for complex multi-step mechanical sequences.
  */
 struct timeouts
 {
-    int timestamp;           ///< The timestamp (ms since program start) when the function should execute
-    void (*function)();      ///< Function pointer to the callback to execute
+    int timestamp;      ///< The timestamp (ms since program start) when the function should execute
+    void (*function)(); ///< Function pointer to the callback to execute
 };
 
 /**
  * @brief Background task handling color sorting and intake automation
- * 
+ *
  * This task runs continuously during driver control and manages:
  * - Color sorting logic to detect and eject enemy-colored rings
  * - Intake state machine transitions (INTAKE -> INTAKE2 -> INTAKE3)
  * - Button press handling for lift controls (L1/L2/L3 and back lift)
  * - Parking mechanism activation
  * - Delayed function execution via timeout queue
- * 
+ *
  * @param params Unused parameter (required by PROS task signature)
- * 
+ *
  * @details Color sorting works by:
  * 1. Reading hue and proximity from the middle color sensor
  * 2. Checking if ring color matches the opposing team
@@ -76,15 +76,15 @@ void colourSort(void *params)
                 i--;
             }
         }
-        
+
         // Read color sensor values
         hue = middleCS.get_hue();
         int distance = middleCS.get_proximity();
-        
+
         // Determine if sensed ring is red or blue
         red = (hue > redMin || hue < redMax) && distance < 100;
         blue = (hue > blueMin && hue < blueMax) && distance < 100;
-        
+
         // Automated intake state progression
         // Transition from INTAKE to INTAKE2 when ring is secured
         if (!intakeTask && robot.getRollerState() == INTAKE && frontDS.get_distance() < 30 && front.get_actual_velocity() < 30)
@@ -98,7 +98,7 @@ void colourSort(void *params)
         {
             robot.setState(INTAKE3);
         }
-        
+
         // Color sorting - eject enemy-colored rings
         if (colourSortOn)
         {
@@ -111,7 +111,7 @@ void colourSort(void *params)
                 colourSorting = false;
             }
         }
-        
+
         // LEFT BUTTON: Activate parking mechanism
         if (master.get_digital_new_press(buttons::LEFT))
         {
@@ -134,7 +134,7 @@ void colourSort(void *params)
             robot.stop();
             park.setState(true);
         }
-        
+
         // L1 BUTTON: Activate L2 lift (with helper state for smooth motion)
         if (master.get_digital_new_press(buttons::L1))
         {
@@ -151,13 +151,20 @@ void colourSort(void *params)
                                     { if (robot.getRollerState() == L2HELPER) robot.removeTempState(L2HELPER); robot.addTempState(L2, 1); }});
             }
         }
-        
+
         // L2 BUTTON: Activate L3 lift
         if (master.get_digital_new_press(buttons::L2))
         {
-            robot.addTempState(L3, 1);
+            if (autonSelect.isSkills())
+            {
+                robot.addTempState(L3SKILLS, 1);
+            }
+            else
+            {
+                robot.addTempState(L3, 1);
+            }
         }
-        
+
         // RIGHT BUTTON: Activate back L3 lift (with helper state)
         if (master.get_digital_new_press(buttons::RIGHT))
         {
@@ -165,7 +172,7 @@ void colourSort(void *params)
             timeouts.push_back({currentTime + 200, []()
                                 { if (robot.getRollerState() == BACKL3HELPER) robot.removeTempState(BACKL3HELPER); robot.addTempState(BACKL3, 1); }});
         }
-        
+
         // RIGHT BUTTON RELEASE: Deactivate back L3 and return to intake if applicable
         if (!master.get_digital(buttons::RIGHT) && !master.get_digital_new_press(buttons::RIGHT))
         {
@@ -186,7 +193,7 @@ void colourSort(void *params)
                 }
             }
         }
-        
+
         // L2 BUTTON RELEASE: Deactivate L3 and return to intake if applicable
         if (!master.get_digital(buttons::L2) && !master.get_digital_new_press(buttons::L2))
         {
@@ -198,16 +205,16 @@ void colourSort(void *params)
                     robot.setState(INTAKE);
                 }
             }
-            else if (robot.getRollerState() == L3HELPER)
+            else if (robot.getRollerState() == L3SKILLS)
             {
-                robot.removeTempState(L3HELPER);
+                robot.removeTempState(L3SKILLS);
                 if (robot.getDefaultState() == INTAKE2 || robot.getDefaultState() == INTAKE3)
                 {
                     robot.setState(INTAKE);
                 }
             }
         }
-        
+
         // L1 BUTTON RELEASE: Deactivate L2/L2SKILLS and return to intake if applicable
         if (!master.get_digital(buttons::L1) && !master.get_digital_new_press(buttons::L1))
         {
@@ -246,7 +253,7 @@ void on_center_button() {}
 
 /**
  * @brief Initialize robot systems and configure autonomous mode
- * 
+ *
  * Sets up the robot for competition by:
  * - Registering all autonomous route options (red/blue, left/right positions)
  * - Configuring the skills-only autonomous routine
@@ -254,7 +261,7 @@ void on_center_button() {}
  * - Starting the color sorting background task
  * - Initializing the chassis odometry and pose
  * - Setting initial robot state to DESCORE
- * 
+ *
  * @details In programmer mode, displays real-time chassis pose (X, Y, Theta)
  * on the brain screen for debugging and calibration purposes.
  */
@@ -262,18 +269,24 @@ void initialize()
 {
 
     autonSelect.setAutons(std::vector<autonomousRoute>{
-        autonomousRoute{"red", "Left", "Position: Left", left},
-        autonomousRoute{"red", "Right", "Position: Right", right},
-        autonomousRoute{"red", "Left2", "Position: Left", left2},
-        autonomousRoute{"red", "Right2", "Position: Right", right2},
-        autonomousRoute{"blue", "Left", "Position: Left", left},
-        autonomousRoute{"blue", "Right", "Position: Right", right},
-        autonomousRoute{"blue", "Left2", "Position: Left", left2},
-        autonomousRoute{"blue", "Right2", "Position: Right", right2},
-        autonomousRoute{"blue", "SolowAWP", "Position: Right", soloAWP},
-        autonomousRoute{"red", "SolowAWP", "Position: Right", soloAWP},
+        autonomousRoute{"red", "Left2G", "Position: Left, facing up", left},
+        autonomousRoute{"red", "Right2G", "Position: Right, facing up", right},
+        autonomousRoute{"red", "Left1G", "Position: Left, facing up", left2},
+        autonomousRoute{"red", "Right1G", "Position: Right, facing up", right2},
+        autonomousRoute{"blue", "Left2G", "Position: Left, facing up", left},
+        autonomousRoute{"blue", "Right2G", "Position: Right, facing up", right},
+        autonomousRoute{"blue", "Left1G", "Position: Left, facing up", left2},
+        autonomousRoute{"blue", "Right1G", "Position: Right, facing up", right2},
+        autonomousRoute{"blue", "SoloAWP", "Position: Right, facing right", soloAWP},
+        autonomousRoute{"red", "SoloAWP", "Position: Right, facing right", soloAWP},
+        autonomousRoute{"blue", "HalfSolo", "Position: Right, facing right", halfSAWPRight},
+        autonomousRoute{"red", "HalfSolo", "Position: Right, facing right", halfSAWPRight},
+        autonomousRoute{"blue", "HalfSolo", "Position: Left, facing right", halfSAWPLeft},
+        autonomousRoute{"red", "HalfSolo", "Position: Left, facing right", halfSAWPLeft},
+        autonomousRoute{"blue", "DriveOff", "Position: literally anywhere 😭", test},
+        autonomousRoute{"red", "DriveOff", "Position: literally anywhere 😭", test},
     });
-    autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", skills});
+    autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", riskySkillsV2});
 
     pros::delay(500);
     intake.set_brake_mode(brake);
@@ -288,14 +301,13 @@ void initialize()
         pros::lcd::initialize();
         // Display live odometry data for debugging
         pros::Task screen_task([&]()
-        {
+                               {
             while (true) {
                 pros::lcd::print(0, "X: %f", chassis.getPose().x);
                 pros::lcd::print(1, "Y: %f", chassis.getPose().y);
                 pros::lcd::print(2, "Theta: %f", chassis.getPose().theta);
                 pros::delay(20);
-            }
-        });
+            } });
     }
 
     chassis.calibrate();
@@ -312,16 +324,16 @@ void competition_initialize() {}
 
 /**
  * @brief Autonomous mode execution
- * 
+ *
  * Determines the team color from the selected autonomous routine and
  * executes the pre-programmed autonomous path. The selected routine was
  * chosen during the initialize() phase via the autonomous selector menu.
- * 
+ *
  * @details Team color (red/blue) determines:
  * - Color sorting preferences during autonomous
  * - Which rings are considered "ally" vs "enemy"
  * - Display on brain screen
- * 
+ *
  * The remainder of the function contains commented-out calibration code
  * for tuning drivetrain movement and odometry accuracy (angular/lateral).
  */
@@ -338,6 +350,8 @@ void autonomous()
         master.print(1, 1, "Blue");
     }
     autonSelect.runAuton();
+    // riskySkillsV2();
+    // soloAWP2();
 
     // [CALIBRATION CODE - COMMENTED OUT]
     // The following sections were used to tune:
@@ -349,12 +363,12 @@ void autonomous()
 
 /**
  * @brief Operator control mode (driver control period)
- * 
+ *
  * Handles all driver input and robot control during the operator control phase.
  * Supports two modes:
  * - **Normal Mode**: Full competition control with color sorting and autonomous state selection
  * - **Programmer Mode**: Development mode with odometry position correction tools
- * 
+ *
  * @details **Normal Mode Controls**:
  * - Left Stick Y: Forward/backward movement (arcade drive)
  * - Right Stick X: Rotational movement (arcade drive)
@@ -364,7 +378,7 @@ void autonomous()
  * - Button R1 (pressed): Toggle intake on/off
  * - Button UP (pressed): Toggle parking mechanism
  * - Buttons L1/L2/R2: Automatic lift control (mapped to robot states)
- * 
+ *
  * **Programmer Mode Controls** (for wheel calibration):
  * - Arcade drive with same stick controls
  * - Direction buttons activate position correction for individual wheels:
@@ -404,7 +418,7 @@ void opcontrol()
             // Arcade drive control with 54% power scaling
             chassis.arcade(master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y), master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X), false, 0.54);
             robot.driverControl();
-            
+
             // Toggle brake mode
             if (master.get_digital_new_press(buttons::A))
             {
@@ -418,7 +432,7 @@ void opcontrol()
                     chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
                 }
             }
-            
+
             // Cycle team color and color sorting (Off → Red → Blue)
             if (master.get_digital_new_press(buttons::Y))
             {
@@ -442,7 +456,7 @@ void opcontrol()
                     master.print(1, 1, "Blue%f", batteryLevel);
                 }
             }
-            
+
             // Match load mechanism (held)
             if (master.get_digital(buttons::B))
             {
@@ -452,13 +466,13 @@ void opcontrol()
             {
                 robot.matchLoad(false);
             }
-            
+
             // Toggle intake on/off
             if (master.get_digital_new_press(buttons::R1))
             {
                 robot.toggleIntake();
             }
-            
+
             // Toggle parking mechanism
             if (master.get_digital_new_press(buttons::UP))
             {

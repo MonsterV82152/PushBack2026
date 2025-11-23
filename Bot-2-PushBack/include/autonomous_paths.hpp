@@ -23,6 +23,18 @@ void soloAWP();
 
 /**
  * @brief Autonomous path for right side starting position
+ * Scores in long and top middle goal - 4 + 6 + 3 blocks
+ */
+void halfSAWPRight();
+
+/**
+ * @brief Autonomous path for right side starting position
+ * Scores in long and top middle goal - 4 + 6 + 3 blocks
+ */
+void halfSAWPLeft();
+
+/**
+ * @brief Autonomous path for right side starting position
  * Scores in long and bottom middle goal - 4 + 3 blocks
  */
 void right();

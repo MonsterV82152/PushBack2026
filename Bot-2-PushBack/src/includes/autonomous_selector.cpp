@@ -119,53 +119,79 @@ AutonSelector::AutonSelector()
             "redAutonPage",
             {true, false},
             std::vector<screenElement>{
-                screenElement{"lineRect", pros::Color::white, 10, 10, 235, 77},
-                screenElement{"lineRect", pros::Color::white, 10, 87, 235, 153},
-                screenElement{"lineRect", pros::Color::white, 10, 163, 235, 230},
-                screenElement{"lineRect", pros::Color::white, 245, 10, 470, 77},
-                screenElement{"lineRect", pros::Color::white, 245, 87, 470, 153},
-                // screenElement{"lineRect", pros::Color::white, 245, 163, 480, 230},
-                screenElement{"lineRect", pros::Color::white, 245, 163, 394, 230},
+                // Column 1 (left)
+                screenElement{"lineRect", pros::Color::white, 10, 10, 155, 77},
+                screenElement{"lineRect", pros::Color::white, 10, 87, 155, 153},
+                screenElement{"lineRect", pros::Color::white, 10, 163, 155, 230},
+                // Column 2 (middle)
+                screenElement{"lineRect", pros::Color::white, 165, 10, 310, 77},
+                screenElement{"lineRect", pros::Color::white, 165, 87, 310, 153},
+                screenElement{"lineRect", pros::Color::white, 165, 163, 310, 230},
+                // Column 3 (right)
+                screenElement{"lineRect", pros::Color::white, 320, 10, 465, 77},
+                screenElement{"lineRect", pros::Color::white, 320, 87, 465, 153},
+                screenElement{"lineRect", pros::Color::white, 320, 163, 465, 230},
+                // Red indicator circle
                 screenElement{"fillCircle", pros::Color::red, 434, 196, 0, 0, 33},
-                screenElement{"text", pros::Color::white, 37, 37, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
-                screenElement{"text", pros::Color::white, 37, 114, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
-                screenElement{"text", pros::Color::white, 37, 190, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
-                screenElement{"text", pros::Color::white, 272, 37, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
-                screenElement{"text", pros::Color::white, 272, 114, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
-                screenElement{"text", pros::Color::white, 272, 190, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, "Back"}},
+                // Text labels for each slot (empty initially, filled by setAutons)
+                screenElement{"text", pros::Color::white, 27, 37, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
+                screenElement{"text", pros::Color::white, 27, 114, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
+                screenElement{"text", pros::Color::white, 27, 190, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
+                screenElement{"text", pros::Color::white, 182, 37, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
+                screenElement{"text", pros::Color::white, 182, 114, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
+                screenElement{"text", pros::Color::white, 182, 190, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
+                screenElement{"text", pros::Color::white, 337, 37, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
+                screenElement{"text", pros::Color::white, 337, 114, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
+                screenElement{"text", pros::Color::white, 337, 190, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, "Back"}},
             std::vector<button>{
-                button(245, 163, 394, 230, "match"),
-                button(10, 10, 235, 77, ""),
-                button(10, 87, 235, 153, ""),
-                button(10, 163, 235, 230, ""),
-                button(245, 10, 470, 77, ""),
-                button(245, 87, 470, 153, ""),
+                button(10, 10, 155, 77, ""),
+                button(10, 87, 155, 153, ""),
+                button(10, 163, 155, 230, ""),
+                button(165, 10, 310, 77, ""),
+                button(165, 87, 310, 153, ""),
+                button(165, 163, 310, 230, ""),
+                button(320, 10, 465, 77, ""),
+                button(320, 87, 465, 153, ""),
+                button(320, 163, 465, 230, "match"),
             }),
         page(
             "blueAutonPage",
             {false, false},
             std::vector<screenElement>{
-                screenElement{"lineRect", pros::Color::white, 10, 10, 235, 77},
-                screenElement{"lineRect", pros::Color::white, 10, 87, 235, 153},
-                screenElement{"lineRect", pros::Color::white, 10, 163, 235, 230},
-                screenElement{"lineRect", pros::Color::white, 245, 10, 470, 77},
-                screenElement{"lineRect", pros::Color::white, 245, 87, 470, 153},
-                // screenElement{"lineRect", pros::Color::white, 245, 163, 480, 230},
-                screenElement{"lineRect", pros::Color::white, 245, 163, 394, 230},
+                // Column 1 (left)
+                screenElement{"lineRect", pros::Color::white, 10, 10, 155, 77},
+                screenElement{"lineRect", pros::Color::white, 10, 87, 155, 153},
+                screenElement{"lineRect", pros::Color::white, 10, 163, 155, 230},
+                // Column 2 (middle)
+                screenElement{"lineRect", pros::Color::white, 165, 10, 310, 77},
+                screenElement{"lineRect", pros::Color::white, 165, 87, 310, 153},
+                screenElement{"lineRect", pros::Color::white, 165, 163, 310, 230},
+                // Column 3 (right)
+                screenElement{"lineRect", pros::Color::white, 320, 10, 465, 77},
+                screenElement{"lineRect", pros::Color::white, 320, 87, 465, 153},
+                screenElement{"lineRect", pros::Color::white, 320, 163, 465, 230},
+                // Blue indicator circle
                 screenElement{"fillCircle", pros::Color::blue, 434, 196, 0, 0, 33},
-                screenElement{"text", pros::Color::white, 37, 37, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
-                screenElement{"text", pros::Color::white, 37, 114, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
-                screenElement{"text", pros::Color::white, 37, 190, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
-                screenElement{"text", pros::Color::white, 272, 37, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
-                screenElement{"text", pros::Color::white, 272, 114, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
-                screenElement{"text", pros::Color::white, 272, 190, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, "Back"}},
+                // Text labels for each slot (empty initially, filled by setAutons)
+                screenElement{"text", pros::Color::white, 27, 37, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
+                screenElement{"text", pros::Color::white, 27, 114, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
+                screenElement{"text", pros::Color::white, 27, 190, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
+                screenElement{"text", pros::Color::white, 182, 37, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
+                screenElement{"text", pros::Color::white, 182, 114, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
+                screenElement{"text", pros::Color::white, 182, 190, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
+                screenElement{"text", pros::Color::white, 337, 37, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
+                screenElement{"text", pros::Color::white, 337, 114, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, ""},
+                screenElement{"text", pros::Color::white, 337, 190, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, "Back"}},
             std::vector<button>{
-                button(245, 163, 394, 230, "match"),
-                button(10, 10, 235, 77, ""),
-                button(10, 87, 235, 153, ""),
-                button(10, 163, 235, 230, ""),
-                button(245, 10, 470, 77, ""),
-                button(245, 87, 470, 153, ""),
+                button(10, 10, 155, 77, ""),
+                button(10, 87, 155, 153, ""),
+                button(10, 163, 155, 230, ""),
+                button(165, 10, 310, 77, ""),
+                button(165, 87, 310, 153, ""),
+                button(165, 163, 310, 230, ""),
+                button(320, 10, 465, 77, ""),
+                button(320, 87, 465, 153, ""),
+                button(320, 163, 465, 230, "match"),
             }),
         page(
             "driverSkills",
@@ -227,8 +253,8 @@ void AutonSelector::setAutons(std::vector<autonomousRoute> autons)
     {
         if (auton.teamColor == "red")
         {
-            pages[3].elements[7 + reds].text = auton.name;
-            pages[3].buttons[reds + 1].nextPage = auton.name + "red";
+            pages[3].elements[10 + reds].text = auton.name;
+            pages[3].buttons[reds].nextPage = auton.name + "red";
             reds++;
             pages.push_back(
                 page(
@@ -245,8 +271,8 @@ void AutonSelector::setAutons(std::vector<autonomousRoute> autons)
         }
         else if (auton.teamColor == "blue")
         {
-            pages[4].elements[7 + blues].text = auton.name;
-            pages[4].buttons[blues + 1].nextPage = auton.name + "blue";
+            pages[4].elements[10 + blues].text = auton.name;
+            pages[4].buttons[blues].nextPage = auton.name + "blue";
             blues++;
             pages.push_back(
                 page(

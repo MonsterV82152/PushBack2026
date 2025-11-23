@@ -75,30 +75,32 @@ bool operator==(const rollerState &lhs, const rollerState &rhs);
 inline const pros::rtos::Clock isAuton = pros::rtos::Clock(); ///< Clock for autonomous timing
 
 // Basic intake and movement states
-inline const rollerState INTAKE = {200, 200, 200, 200, OFF, OFF};    ///< Standard intake from ground
-inline const rollerState INTAKE2 = {200, 200, 200, 0, OFF, OFF};     ///< Intake variant without front roller
-inline const rollerState INTAKE3 = {0, 1, 127, 0, OFF, OFF, true};   ///< Low-power intake (voltage mode)
-inline const rollerState BACKINTAKE = {200, 200, 200, 200, ON, OFF}; ///< Intake with flip piston extended
-inline const rollerState ONLYINTAKE = {0, 0, 200, 0, OFF, OFF};      ///< Only intake roller active
+inline const rollerState INTAKE = {200, 200, 200, 200, OFF, OFF};       ///< Standard intake from ground
+inline const rollerState INTAKE2 = {200, 200, 200, 0, OFF, OFF};        ///< Intake variant without front roller
+inline const rollerState INTAKE3 = {0, 1, 127, 0, OFF, OFF, OFF, true}; ///< Low-power intake (voltage mode)
+inline const rollerState BACKINTAKE = {200, 200, 200, 200, ON, OFF};    ///<   Intake with flip piston extended
+inline const rollerState ONLYINTAKE = {0, 0, 200, 0, OFF, OFF};         ///< Only intake roller active
 
 // L1 (Low Goal) scoring states
-inline const rollerState L1SKILLS = {-50, -100, -50, -50, OFF, LEAVE, ON}; ///< L1 scoring optimized for skills
-inline const rollerState L1 = {-150, -150, -150, -150, OFF, LEAVE, ON};    ///< Standard L1 scoring (match)
-inline const rollerState L1AUTO = {-50, -100, -50, -50, OFF, LEAVE, OFF};  ///< L1 scoring for autonomous
+inline const rollerState L1SKILLS = {-90, -110, -40, -90, OFF, LEAVE, ON};    ///< L1 scoring optimized for skills
+inline const rollerState L1 = {-150, -150, -150, -150, OFF, LEAVE, ON};       ///< Standard L1 scoring (match)
+inline const rollerState L1AUTO = {-100, -100, -100, -100, OFF, LEAVE, ON};   ///< L1 scoring for autonomous
+inline const rollerState L1AUTO2 = {-100, -100, -100, -100, OFF, LEAVE, OFF}; ///< L1 scoring (without piston) for autonomous
 
 // L2 (Medium Goal) scoring states
 inline const rollerState L2 = {200, 200, 200, -200, OFF, LEAVE};                    ///< Standard L2 front scoring
-inline const rollerState L2SKILLS = {200, 150, 200, -40, OFF, LEAVE};               ///< L2 scoring optimized for skills
+inline const rollerState L2SKILLS = {200, 150, 200, -100, OFF, LEAVE};              ///< L2 scoring optimized for skills
 inline const rollerState L2AUTO = {200, 200, 100, -100, OFF, LEAVE};                ///< L2 scoring for autonomous
 inline const rollerState L2HELPER = {-127, -127, -127, -60, OFF, LEAVE, OFF, true}; ///< L2 assist (voltage mode)
-inline const rollerState BACKL2 = {-200, 200, 200, 0, OFF, OFF};                    ///< L2 back scoring
+inline const rollerState BACKL2 = {-200, 200, 200, 0, OFF, OFF};                    ///< L2 back scoring    
 
 // L3 (High Goal) scoring states
-inline const rollerState L3 = {200, 200, 200, 200, OFF, ON};     ///< Standard L3 front scoring
-inline const rollerState L3HELPER = {0, 0, 0, 200, OFF, ON};     ///< L3 assist with front roller only
-inline const rollerState L3AUTO = {200, 200, 200, 150, OFF, ON}; ///< L3 scoring for autonomous
-inline const rollerState BACKL3 = {200, 200, 200, 0, ON, ON};    ///< L3 back scoring
-inline const rollerState BACKL3HELPER = {200, 0, 0, 0, ON, ON};  ///< L3 back assist
+inline const rollerState L3 = {200, 200, 200, 200, OFF, ON};       ///< Standard L3 front scoring
+inline const rollerState L3SKILLS = {200, 180, 200, 160, OFF, ON}; ///< Standard L3 front scoring (SKILLS)
+inline const rollerState L3HELPER = {0, 0, 0, 200, OFF, ON};       ///< L3 assist with front roller only
+inline const rollerState L3AUTO = {200, 200, 200, 150, OFF, ON};   ///< L3 scoring for autonomous
+inline const rollerState BACKL3 = {200, 200, 200, 0, ON, ON};      ///< L3 back scoring
+inline const rollerState BACKL3HELPER = {200, 0, 0, 0, ON, ON};    ///< L3 back assist
 
 // Special operation states
 inline const rollerState DESCORE = {0, 0, 0, 0, LEAVE, ON};                      ///< Descore opponent rings

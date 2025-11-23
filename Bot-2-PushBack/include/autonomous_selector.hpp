@@ -1,7 +1,6 @@
 /**
  * @file autonomous_selector.hpp
  * @brief Header file for the VEX robotics autonomous routine selector
- *
  * This file defines the classes and structures used to create a touchscreen-based
  * autonomous selector interface for VEX V5 Brain. The selector allows drivers to
  * choose autonomous routines before a match or skills run through an intuitive
