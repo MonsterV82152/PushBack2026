@@ -67,7 +67,7 @@ limelib::MCL::MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW,
                   pros::Imu &imu, std::vector<MCLDistance> &sensors, Field2D &field, int num_particles, int rotationNoise, int translationNoise, bool debug,
                   int intensity, bool shouldTaskRun)
     : odomHelper(verticalTW, horizontalTW, imu, false), sensors(sensors), field(field), NUM_PARTICLES(num_particles),
-      ROTATION_NOISE(rotationNoise), TRANSLATION_NOISE(translationNoise), debug(debug), INTENSITY(intensity), last_mcl_update(intensity), randomParticleCount(num_particles / 50), shouldTaskRun(shouldTaskRun)
+      ROTATION_NOISE(rotationNoise), TRANSLATION_NOISE(translationNoise), debug(debug), INTENSITY(intensity), last_mcl_update(intensity), randomParticleCount(0), shouldTaskRun(shouldTaskRun)
 {
     // Initialize particles with random positions but heading will be set from odometry later
     for (int i = 0; i < NUM_PARTICLES; i++)
@@ -211,7 +211,7 @@ void limelib::MCL::updateMCL()
     newParticles.reserve(NUM_PARTICLES);
 
     // Calculate how many random particles to inject (for kidnapping resistance)
-    int numRandom = 0;
+    int numRandom = randomParticleCount;
     int numResampled = NUM_PARTICLES - numRandom;
 
     // Resample particles using systematic resampling

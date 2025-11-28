@@ -56,6 +56,27 @@ namespace limelib
     class MCL : public Locator
     {
     public:
+        /**
+         * MCL Localization Constructor
+         * @param verticalTW Pointer to the vertical tracking wheel
+         * @param horizontalTW Pointer to the horizontal tracking wheel
+         * @param imu Reference to the IMU sensor
+         * @param sensors Vector of MCLDistance sensors for distance measurements
+         * @param field Reference to the Field2D object representing the environment
+         * @param num_particles Number of particles to use in the MCL algorithm
+         * @param rotationNoise Amount of rotation noise to add during prediction step
+         * @param translationNoise Amount of translation noise to add during prediction step
+         * @param debug Whether to enable debug display on the screen
+         * @param intensitivity How often to update MCL (lower is more frequent)
+         * @param shouldTaskRun Whether to run the MCL update in a separate task
+         * @return MCL object
+         *
+         * @example
+         * limelib::MCL mcl(&verticalTW, &horizontalTW, imu, sensors, field, 100, 0.1, 0.1, true, 10, true);
+         *
+         * This creates an MCL localization object using the specified tracking wheels, IMU, distance sensors, and field.
+         * It uses 100 particles with 0.1 rotation and translation noise, enables debug display, updates every 10 cycles, and runs in a separate task.
+         */
         MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::Imu &imu, std::vector<MCLDistance> &sensors, Field2D &field, int num_particles, int rotationNoise, int translationNoise, bool debug = false, int intensitivity = 10, bool shouldTaskRun = true);
         void calibrate() override;
         Pose2D update() override;

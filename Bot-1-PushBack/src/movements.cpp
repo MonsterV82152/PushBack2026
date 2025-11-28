@@ -6,6 +6,10 @@
 
 namespace rollers
 {
+	/**
+	 * @brief A namespace for controlling the roller motors
+	 * A set of speeds for the roller motors to achieve different functions
+	 */
 	struct rollerState
 	{
 		std::string name;
@@ -14,6 +18,10 @@ namespace rollers
 		double topSpeed;
 		double bucketSpeed;
 	};
+	/**
+	 * @brief A temporary roller state that can override the main roller state
+	 * with a set importance level
+	 */
 	struct temporaryRollerState
 	{
 		std::string name;
@@ -21,11 +29,12 @@ namespace rollers
 		double middleSpeed;
 		double topSpeed;
 		double bucketSpeed;
-		int importance; // 0 for high importance, 10 for low importance
+		int importance; /// Importance level of the temporary state
 	};
-	inline rollerState state = {"none", 0, 0, 0, 0};
-	inline rollerState currentState = {"none", 0, 0, 0, 0};
+	inline rollerState state = {"none", 0, 0, 0, 0};		///< Current main roller state
+	inline rollerState currentState = {"none", 0, 0, 0, 0}; ///< Currently active roller state (could be temporary)
 
+	/// A list of predefined roller states
 	inline std::vector<rollerState> rollerStates = {
 		//
 		{"intake", 127, 127, 127, 0},
@@ -65,13 +74,19 @@ namespace rollers
 			state.bucketSpeed,
 			importance};
 	}
-
+	/**
+	 * @brief Sets the roller state based on the provided state name
+	 * @param newState The name of the roller state to set
+	 */
 	inline void setState(std::string newState)
 	{
+		// Searches for the roller state by name
 		for (const auto &rollerState : rollerStates)
 		{
+			// Checks if the current roller state matches the new state
 			if (rollerState.name == newState)
 			{
+				// If no temporary states are active, it sets the motor speeds
 				if (temporaryRollerStates.empty())
 				{
 					bottom.move(rollerState.bottomSpeed);
@@ -79,12 +94,13 @@ namespace rollers
 					top.move(rollerState.topSpeed);
 					bucket.move(rollerState.bucketSpeed);
 				}
+				// Updates the current and main roller states
 				currentState = rollerState;
 				state = rollerState;
 				return;
 			}
 		}
-
+		// If the state is not found, it logs an error
 		std::cerr << "Invalid roller state: " << newState << std::endl;
 	}
 	inline void setState(rollerState newState)
@@ -140,23 +156,40 @@ namespace rollers
 		top.move(lowest.topSpeed);
 		bucket.move(lowest.bucketSpeed);
 	}
+	/**
+	 * @brief Adds a temporary roller state that overrides the main state
+	 * @param newState The name of the temporary roller state to add
+	 * @param importance The importance level of the temporary state
+	 */
 	inline void addTemporaryState(std::string newState, int importance)
 	{
+		// Searches for the roller state by name
 		for (const auto &rollerState : rollerStates)
 		{
+			// Checks if the current roller state matches the new state
 			if (rollerState.name == newState)
 			{
+				// Adds the temporary state to the list
 				temporaryRollerStates.push_back(_stateToTemp(rollerState, importance));
 				break;
 			}
 		}
+		// Runs the temporary state with the highest importance
 		_runLowestTemporaryState();
 	}
 
+	/**
+	 * @brief Adds a temporary roller state that overrides the main state
+	 * @param newState The temporary roller state to add
+	 * @param importance The importance level of the temporary state
+	 */
 	inline void addTemporaryState(rollerState newState, int importance)
 	{
+		// Adds the temporary state to the list
 		temporaryRollerStates.push_back(_stateToTemp(newState, importance));
+		// Runs the temporary state with the highest importance
 		_runLowestTemporaryState();
+		// Ensures the roller state exists in the main roller states list
 		for (const auto &rollerState : rollerStates)
 		{
 			if (rollerState.name == newState.name)
@@ -164,6 +197,7 @@ namespace rollers
 				return;
 			}
 		}
+		// If not found, it adds the new state to the main list
 		rollerStates.push_back(newState);
 	}
 	inline void removeTemporaryState(std::string stateName)
@@ -305,7 +339,7 @@ namespace colourSort
 			{
 				double middleColor = bottomColor.get_hue();
 				double topColor = topColour.get_hue();
-				if (((topColor > redMin || topColor < redMax) && !redTeam.load()) || ((topColor > blueMin && topColor < blueMax) && redTeam.load())) 
+				if (((topColor > redMin || topColor < redMax) && !redTeam.load()) || ((topColor > blueMin && topColor < blueMax) && redTeam.load()))
 				{
 					if (currentState == 0)
 					{

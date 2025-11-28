@@ -12,8 +12,6 @@
 #include <deque>
 #include <atomic>
 #include "main.h"
-#include "lemlib/api.hpp"
-#include "sensor_loc.cpp"
 
 using namespace limelib;
 /*----------------------Defines----------------------*/
