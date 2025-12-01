@@ -3,21 +3,16 @@
 #ifndef LIMELIB_LIMELIB_HPP
 #define LIMELIB_LIMELIB_HPP
 
-
-#include "limelib/chassis.hpp"
-#include "limelib/field2d.hpp"
-#include "limelib/lineSegment2d.hpp"
+#include "limelib/motion/chassis.hpp"
+#include "limelib/geometry/field2d.hpp"
+#include "limelib/geometry/lineSegment2d.hpp"
 #include "limelib/locator.hpp"
 #include "limelib/mclDistance.hpp"
-#include "limelib/object2d.hpp"
-#include "limelib/point2d.hpp"
-#include "limelib/pose2d.hpp"
+#include "limelib/geometry/object2d.hpp"
+#include "limelib/geometry/point2d.hpp"
+#include "limelib/geometry/pose2d.hpp"
 #include "limelib/trackingWheel.hpp"
-#include "limelib/trapezoidalMotionProfiler.hpp"
-#include "limelib/pid.hpp"
-
-
-
-
+#include "limelib/motion/trapezoidalMotionProfiler.hpp"
+#include "limelib/motion/pid.hpp"
 
 #endif

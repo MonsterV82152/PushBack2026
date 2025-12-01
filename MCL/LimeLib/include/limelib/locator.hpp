@@ -2,10 +2,10 @@
 #define LOCALIZATION_HPP
 
 #include "limelib/types.hpp"
-#include "limelib/pose2d.hpp"
+#include "limelib/geometry/pose2d.hpp"
 #include "limelib/trackingWheel.hpp"
-#include "limelib/field2d.hpp"
-#include "limelib/ray2d.hpp"
+#include "limelib/geometry/field2d.hpp"
+#include "limelib/geometry/ray2d.hpp"
 #include "limelib/mclDistance.hpp"
 #include "pros/imu.hpp"
 #include "pros/rtos.hpp"
@@ -30,7 +30,7 @@ namespace limelib
 
         virtual Pose2D update();
         virtual void calibrate();
-        virtual Pose2D getPose() const = 0;
+        virtual Pose2D getPose(bool radians = false) const = 0;
         virtual void setPose(Pose2D pose);
         void setPose(real_t x, real_t y, real_t theta);
     };
@@ -41,7 +41,7 @@ namespace limelib
         Odometry(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::IMU &imu, bool shouldTaskRun = true);
         Pose2D update() override;
         void calibrate() override;
-        Pose2D getPose() const override;
+        Pose2D getPose(bool radians = false) const override;
         void setPose(Pose2D pose) override;
 
     private:
@@ -80,7 +80,7 @@ namespace limelib
         MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::Imu &imu, std::vector<MCLDistance> &sensors, Field2D &field, int num_particles, int rotationNoise, int translationNoise, bool debug = false, int intensitivity = 10, bool shouldTaskRun = true);
         void calibrate() override;
         Pose2D update() override;
-        Pose2D getPose() const override;
+        Pose2D getPose(bool radians = false) const override;
         void setPose(Pose2D pose) override;
 
     private:

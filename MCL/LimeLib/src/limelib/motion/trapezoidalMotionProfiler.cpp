@@ -1,4 +1,4 @@
-#include "limelib/trapezoidalMotionProfiler.hpp"
+#include "limelib/motion/trapezoidalMotionProfiler.hpp"
 
 limelib::TrapezoidalMotionProfile::TrapezoidalMotionProfile(real_t maxSpeed, real_t maxAccel)
     : maxSpeed(maxSpeed), maxAccel(maxAccel), maxDecel(maxAccel),

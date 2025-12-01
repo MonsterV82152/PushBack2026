@@ -1,4 +1,4 @@
-#include "limelib/pid.hpp"
+#include "limelib/motion/pid.hpp"
 #include <cmath>
 
 limelib::PID::PID(real_t kP, real_t kI, real_t kD, real_t windupRange, bool signFlipReset)

@@ -4,7 +4,7 @@
 #define MCLDISTANCE_HPP
 
 #include "limelib/types.hpp"
-#include "limelib/pose2d.hpp"
+#include "limelib/geometry/pose2d.hpp"
 #include "pros/distance.hpp"
 
 namespace limelib

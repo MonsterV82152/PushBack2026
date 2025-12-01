@@ -1,4 +1,4 @@
-#include "limelib/field2d.hpp"
+#include "limelib/util/field2d.hpp"
 
 limelib::Field2D::Field2D(real_t width, real_t height, const std::vector<std::shared_ptr<Object2D>> &objects)
     : width(width), height(height), objects(objects)

@@ -59,11 +59,11 @@ namespace localization
 }
 inline pros::Rotation vertical(14);
 
-std::vector<limelib::MCLDistance> mclSensors = {
-    {localization::rightDS, limelib::Pose2D(-4.25, -2.25, 90)},
-    {localization::leftDS, limelib::Pose2D(4.25, -2.25, 270)},
-    {localization::frontDS, limelib::Pose2D(4.5, 3, 0)},
-    {localization::backDS, limelib::Pose2D(-3.5, -5.5, 180)}};
+std::vector<MCLDistance> mclSensors = {
+    {localization::rightDS, Pose2D(-4.25, -2.25, 90)},
+    {localization::leftDS, Pose2D(4.25, -2.25, 270)},
+    {localization::frontDS, Pose2D(4.5, 3, 0)},
+    {localization::backDS, Pose2D(-3.5, -5.5, 180)}};
 TrackingWheel verticalTW(vertical, 2.75, -0.25);
 Field2D field(144.0f, 144.0f, {std::make_shared<Circle2D>(67.5f, 48.0f, 4.17f), std::make_shared<Circle2D>(-67.5f, 48.0f, 4.17f), std::make_shared<Circle2D>(67.5f, -48.0f, 4.17f), std::make_shared<Circle2D>(-67.5f, -48.0f, 4.17f)});
 MCL mcl(&verticalTW, nullptr, inertial, mclSensors, field, 100, 0.1, 0.1, true);

@@ -58,9 +58,9 @@ limelib::Pose2D limelib::Odometry::update()
     return Pose2D(xChange, yChange, headingDiff);
 }
 
-limelib::Pose2D limelib::Odometry::getPose() const
+limelib::Pose2D limelib::Odometry::getPose(bool radians) const
 {
-    return currentPose.toDegrees();
+    return radians ? currentPose : currentPose.toDegrees();
 }
 
 limelib::MCL::MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW,
@@ -141,7 +141,7 @@ void limelib::MCL::updateMCL()
     odomDelta.theta += currentDelta.theta;
 
     // Get current odometry heading for all particles
-    real_t odomHeading = odomHelper.getPose().theta * M_PI / 180; // Convert to radians
+    real_t odomHeading = odomHelper.getPose(true).theta;
 
     for (MCLParticle &particle : particles)
     {
@@ -293,12 +293,12 @@ void limelib::MCL::updateMCL()
     odomDelta = Pose2D(0, 0, 0); // Reset odomDelta after update
 }
 
-limelib::Pose2D limelib::MCL::getPose() const
+limelib::Pose2D limelib::MCL::getPose(bool radians) const
 {
     // If we've never run MCL or have no valid estimate, fall back to pure odometry
     if (estimatedPose.weight <= 0)
     {
-        return odomHelper.getPose();
+        return odomHelper.getPose(radians);
     }
 
     // Calculate age factor - confidence decreases with time since last MCL update
@@ -311,18 +311,18 @@ limelib::Pose2D limelib::MCL::getPose() const
     effectiveConfidence = std::clamp(effectiveConfidence, real_t(0.1), real_t(0.9));
 
     // Get current odometry heading
-    real_t currentOdomHeading = odomHelper.getPose().theta; // Already in degrees
+    real_t currentOdomHeading = odomHelper.getPose(true).theta; // Already in radians
 
     // Calculate current odometry-based pose from last MCL estimate + accumulated delta
     Pose2D currentOdomPose;
     currentOdomPose.x = actualPose.x + odomDelta.x;
     currentOdomPose.y = actualPose.y + odomDelta.y;
-    currentOdomPose.theta = currentOdomHeading * M_PI / 180; // Convert to radians for internal calculations
+    currentOdomPose.theta = currentOdomHeading; // Convert to radians for internal calculations
 
     // If confidence is very low (old or unreliable MCL), use odometry position with odometry heading
     if (effectiveConfidence < 0.2)
     {
-        return Pose2D(currentOdomPose.x, currentOdomPose.y, currentOdomHeading); // Return with heading in degrees
+        return Pose2D(currentOdomPose.x, currentOdomPose.y, radians ? currentOdomHeading : currentOdomHeading * 180 / M_PI); // Return with heading in degrees
     }
 
     // Blend only X and Y positions based on MCL confidence, always use odometry heading
@@ -330,7 +330,7 @@ limelib::Pose2D limelib::MCL::getPose() const
     blendedPose.x = effectiveConfidence * estimatedPose.point.x + (1.0 - effectiveConfidence) * currentOdomPose.x;
     blendedPose.y = effectiveConfidence * estimatedPose.point.y + (1.0 - effectiveConfidence) * currentOdomPose.y;
     // Always use current odometry heading (no rotation correction from MCL)
-    blendedPose.theta = currentOdomHeading; // In degrees for return
+    blendedPose.theta = radians ? currentOdomHeading : currentOdomHeading * 180 / M_PI; // In degrees for return
 
     return blendedPose;
 }
