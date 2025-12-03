@@ -27,12 +27,11 @@ namespace limelib
     public:
         // Add virtual destructor
         virtual ~Locator() = default;
-
         virtual Pose2D update();
         virtual void calibrate();
         virtual Pose2D getPose(bool radians = false) const = 0;
         virtual void setPose(Pose2D pose);
-        void setPose(real_t x, real_t y, real_t theta);
+        virtual void setPose(real_t x, real_t y, real_t theta);
     };
 
     class Odometry : public Locator
@@ -43,6 +42,7 @@ namespace limelib
         void calibrate() override;
         Pose2D getPose(bool radians = false) const override;
         void setPose(Pose2D pose) override;
+        void setPose(real_t x, real_t y, real_t theta) override;
 
     private:
         TrackingWheel *verticalTW;
@@ -82,6 +82,7 @@ namespace limelib
         Pose2D update() override;
         Pose2D getPose(bool radians = false) const override;
         void setPose(Pose2D pose) override;
+        void setPose(real_t x, real_t y, real_t theta) override;
 
     private:
         Odometry odomHelper;

@@ -41,6 +41,11 @@ void limelib::Odometry::setPose(limelib::Pose2D pose)
     currentPose = pose;
 }
 
+void limelib::Odometry::setPose(real_t x, real_t y, real_t theta)
+{
+    setPose(limelib::Pose2D(x, y, theta));
+}
+
 limelib::Pose2D limelib::Odometry::update()
 {
     real_t heading = imu.get_heading() * M_PI / 180 + headingOffset;
@@ -103,6 +108,11 @@ void limelib::MCL::setPose(limelib::Pose2D pose)
     {
         particles.push_back(MCLParticle(Pose2D(pose.x + getRandomReal_t(-5, 5), pose.y + getRandomReal_t(-5, 5), odomHeading), 0));
     }
+}
+
+void limelib::MCL::setPose(real_t x, real_t y, real_t theta)
+{
+    setPose(limelib::Pose2D(x, y, theta));
 }
 
 limelib::Pose2D limelib::MCL::update()

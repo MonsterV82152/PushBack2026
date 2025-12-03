@@ -1,4 +1,4 @@
-#include "limelib/util/object2d.hpp"
+#include "limelib/geometry/object2d.hpp"
 
 limelib::Point2D limelib::rotatePoint(Point2D point, Point2D origin, real_t angle)
 {
