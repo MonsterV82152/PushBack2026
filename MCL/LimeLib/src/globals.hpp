@@ -11,6 +11,7 @@
 #include <cmath>
 #include <deque>
 #include <atomic>
+#include <memory>
 #include "main.h"
 
 using namespace limelib;
@@ -65,8 +66,27 @@ std::vector<MCLDistance> mclSensors = {
     {localization::frontDS, Pose2D(4.5, 3, 0)},
     {localization::backDS, Pose2D(-3.5, -5.5, 180)}};
 TrackingWheel verticalTW(vertical, 2.75, -0.25);
-Field2D field(144.0f, 144.0f, {std::make_shared<Circle2D>(67.5f, 48.0f, 4.17f), std::make_shared<Circle2D>(-67.5f, 48.0f, 4.17f), std::make_shared<Circle2D>(67.5f, -48.0f, 4.17f), std::make_shared<Circle2D>(-67.5f, -48.0f, 4.17f)});
-;
-Locator *locator = odometry ? static_cast<Locator *>(new Odometry(&verticalTW, nullptr, inertial)) : static_cast<Locator *>(new MCL(&verticalTW, nullptr, inertial, mclSensors, field, 100, 0.1, 0.1, true));
-
+std::vector<std::shared_ptr<Object2D>> obstacles = {
+    std::make_shared<Circle2D>(67.5f, 48.0f, 4.17f),
+    std::make_shared<Circle2D>(-67.5f, 48.0f, 4.17f),
+    std::make_shared<Circle2D>(67.5f, -48.0f, 4.17f),
+    std::make_shared<Circle2D>(-67.5f, -48.0f, 4.17f),
+    std::make_shared<Line2D>(Point2D(22.25f, 45.6f), Point2D(20.8f, 47.1f)),
+    std::make_shared<Line2D>(Point2D(22.25f, 48.6f), Point2D(20.8f, 47.1f)),
+    std::make_shared<Line2D>(Point2D(-22.25f, 45.6f), Point2D(-20.8f, 47.1f)),
+    std::make_shared<Line2D>(Point2D(-22.25f, 48.6f), Point2D(-20.8f, 47.1f)),
+    std::make_shared<Line2D>(Point2D(22.25f, -45.6f), Point2D(20.8f, -47.1f)),
+    std::make_shared<Line2D>(Point2D(22.25f, -48.6f), Point2D(20.8f, -47.1f)),
+    std::make_shared<Line2D>(Point2D(-22.25f, -45.6f), Point2D(-20.8f, -47.1f)),
+    std::make_shared<Line2D>(Point2D(-22.25f, -48.6f), Point2D(-20.8f, -47.1f)),
+    std::make_shared<Line2D>(Point2D(-2.9f, 0.5f), Point2D(0.5f, 2.9f)),
+    std::make_shared<Line2D>(Point2D(-0.5f, -2.9f), Point2D(2.9f, -0.5f)),
+};
+Field2D field(144.0f, 144.0f, obstacles);
+MCL mcl(&verticalTW, nullptr, inertial, mclSensors, field, 100, 0.1, 0.1);   
+PID lateralPID(5, 0.0, 0.1);
+PID velocityPID(0.2, 0.0, 0.05);
+PID angularPID(1.0, 0.0, 0.2);
+TrapezoidalMotionProfile motionProfile(12.0, 24.0);
+Chassis chassis(mcl, leftDT, rightDT, lateralPID, velocityPID, angularPID, motionProfile);
 #endif

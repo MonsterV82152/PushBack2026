@@ -67,6 +67,7 @@ struct tempState
  * @return true if states are identical, false otherwise
  */
 bool operator==(const rollerState &lhs, const rollerState &rhs);
+rollerState operator*(const rollerState &lhs, double scalar);
 
 // ============================================================================
 // Pre-defined Roller States for Common Game Actions
@@ -92,7 +93,7 @@ inline const rollerState L2 = {200, 200, 200, -200, OFF, LEAVE};                
 inline const rollerState L2SKILLS = {200, 150, 200, -100, OFF, LEAVE};              ///< L2 scoring optimized for skills
 inline const rollerState L2AUTO = {200, 200, 100, -100, OFF, LEAVE};                ///< L2 scoring for autonomous
 inline const rollerState L2HELPER = {-127, -127, -127, -60, OFF, LEAVE, OFF, true}; ///< L2 assist (voltage mode)
-inline const rollerState BACKL2 = {-200, 200, 200, 0, OFF, OFF};                    ///< L2 back scoring    
+inline const rollerState BACKL2 = {-200, 200, 200, 0, OFF, OFF};                    ///< L2 back scoring
 
 // L3 (High Goal) scoring states
 inline const rollerState L3 = {200, 200, 200, 200, OFF, ON};       ///< Standard L3 front scoring
@@ -130,10 +131,17 @@ public:
      * @param intake Intake roller motor
      * @param back Back roller motor
      * @param flipPiston Flip piston for redirecting rings
-     * @param blockerPiston Blocker piston for controlling ring flow
+     * @param blockerPiston Blocker piston for controlling block flow
      * @param intakeLift Intake lift piston for raising/lowering intake
      */
-    Roller(pros::Motor &front, pros::Motor &middle, pros::Motor &intake, pros::Motor &back, Piston &flipPiston, Piston &blockerPiston, Piston &intakeLift);
+    Roller(
+        pros::Motor &front,
+        pros::Motor &middle,
+        pros::Motor &intake,
+        pros::Motor &back,
+        Piston &flipPiston,
+        Piston &blockerPiston,
+        Piston &intakeLift);
 
     /**
      * @brief Sets the roller system to a specific state
@@ -179,6 +187,7 @@ struct StateControllerMapping
     pros::controller_digital_e_t button2 = pros::E_CONTROLLER_DIGITAL_A; ///< Secondary button for combinations
     short importance = 1;                                                ///< Priority level for temporary states
 };
+
 
 /**
  * @class Robot

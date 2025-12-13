@@ -1,4 +1,14 @@
 #include "sensor_loc.hpp"
+#include <string>
+
+void sum(int *a, int b) {
+    *a += b;
+}
+
+
+int x = 9;
+int y = 1;
+sum(&x, y); // x is now 10
 
 void correct_position(dist_sensor sensor, lemlib::Chassis *chassis, bool x, bool forced, double correct_rate)
 {
@@ -13,7 +23,7 @@ void correct_position(dist_sensor sensor, lemlib::Chassis *chassis, bool x, bool
     else
     {
         distanceValue = distanceValue * 0.0393701;
-        pros::lcd::print(3, "Distance: %f", distanceValue);
+        // pros::lcd::print(3, "Distance: %f", distanceValue);
     }
     /*double offset_x = offset.x * cos(theta_rad) - offset.y * sin(theta_rad);
         double offset_y = offset.x * sin(theta_rad) + offset.y * cos(theta_rad);*/

@@ -13,6 +13,7 @@ struct dist_sensor
     pros::Distance *sensor;
     lemlib::Pose offset;
 };
+
 /**
  * @brief A function to correct the position of the robot using a distance sensor
  * @param sensor The distance sensor to use

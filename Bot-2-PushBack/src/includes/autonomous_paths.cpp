@@ -1,9 +1,9 @@
 #include "autonomous_paths.hpp"
 
-void left()
+void left(int b)
 {
     chassis.setPose(-47.5, 18, 90);
-    // correct_position(LB, &chassis, true);
+    correct_position(LF, &chassis, false);
     robot.intake();
     chassis.moveToPoint(-24, 24, 1000, {.maxSpeed = 70});
     pros::delay(600);

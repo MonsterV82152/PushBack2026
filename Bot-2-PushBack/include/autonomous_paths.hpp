@@ -8,7 +8,7 @@
  * @brief Autonomous path for left side starting position
  * Scores in long and top middle goal - 4 + 6 + 3 blocks
  */
-void left();
+void left(int b);
 /**
  * @brief Autonomous path for left side starting position
  * Scores in long goal only - 7 blocks

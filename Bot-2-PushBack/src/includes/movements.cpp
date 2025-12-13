@@ -9,6 +9,17 @@ bool operator==(const rollerState &lhs, const rollerState &rhs)
            lhs.blockerPiston == rhs.blockerPiston;
 }
 
+rollerState operator*(const rollerState &lhs, double scalar)
+{
+    rollerState result;
+    result.front = static_cast<short>(lhs.front * scalar);
+    result.middle = static_cast<short>(lhs.middle * scalar);
+    result.back = static_cast<short>(lhs.back * scalar);
+    result.flipPiston = lhs.flipPiston;       // Piston states remain unchanged
+    result.blockerPiston = lhs.blockerPiston; // Piston states remain unchanged
+    return result;
+}
+
 Roller::Roller(pros::Motor &front, pros::Motor &middle, pros::Motor &intake, pros::Motor &back, Piston &flipPiston, Piston &blockerPiston, Piston &intakeLift)
     : front(front), middle(middle), intake(intake), back(back), flipPiston(flipPiston), blockerPiston(blockerPiston), intakeLift(intakeLift), state(STOP)
 {

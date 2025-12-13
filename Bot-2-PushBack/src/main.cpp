@@ -267,13 +267,12 @@ void on_center_button() {}
  */
 void initialize()
 {
-
     autonSelect.setAutons(std::vector<autonomousRoute>{
-        autonomousRoute{"red", "Left2G", "Position: Left, facing up", left},
+        autonomousRoute{"red", "Left2G", "Position: Left, facing up", left(2)},
         autonomousRoute{"red", "Right2G", "Position: Right, facing up", right},
         autonomousRoute{"red", "Left1G", "Position: Left, facing up", left2},
         autonomousRoute{"red", "Right1G", "Position: Right, facing up", right2},
-        autonomousRoute{"blue", "Left2G", "Position: Left, facing up", left},
+        autonomousRoute{"blue", "Left2G", "Position: Left, facing up", left(2)},
         autonomousRoute{"blue", "Right2G", "Position: Right, facing up", right},
         autonomousRoute{"blue", "Left1G", "Position: Left, facing up", left2},
         autonomousRoute{"blue", "Right1G", "Position: Right, facing up", right2},
