@@ -1,5 +1,4 @@
 #include "includes.hpp"
-#include "opControl.cpp"
 /**
  * A callback function for LLEMU's center button.
  *
@@ -16,6 +15,7 @@ void on_center_button() {}
  */
 void initialize()
 {
+	robot.init();
 }
 
 /**
@@ -64,49 +64,9 @@ void autonomous() {}
  */
 void opcontrol()
 {
-	bool intake = false;
-	bool outake = false;
-	pros::Task swi([]() {});
 	while (true)
 	{
-		if (master.get_digital_new_press(buttons::R1))
-		{
-			intake = !intake;
-		}
-		// Arcade control scheme
-		int dir = master.get_analog(ANALOG_LEFT_Y);	  // Gets amount forward/backward from left joystick
-		int turn = master.get_analog(ANALOG_RIGHT_X); // Gets the turn left/right from right joystick
-		leftDT.move(dir + turn);					  // Sets left drivetrain motors
-		rightDT.move(dir - turn);					  // Sets right drivetrain motors
-		leftFishMotor.move(-dir - turn);
-		rightFishMotor.move(-dir + turn);
-
-		if (master.get_digital(buttons::R2))
-		{
-			intakePTO.setState(true);
-			swi.create([&]()
-					   {
-				pros::delay(100);
-			leftRollerMotor.move(-127);
-			rightRollerMotor.move(-127); });
-		}
-		else if (intake)
-		{
-			intakePTO.setState(true);
-			swi.create([&]()
-					   {
-				pros::delay(100);
-			leftRollerMotor.move(127);
-			rightRollerMotor.move(127); });
-		}
-		else
-		{
-			intakePTO.setState(false);
-
-			leftRollerMotor.move(-dir - turn);
-			rightRollerMotor.move(-dir + turn);
-		}
-
+		robot.teleopControl();
 		pros::delay(20); // Run for 20 ms then update
 	}
 }

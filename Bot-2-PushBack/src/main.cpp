@@ -143,12 +143,18 @@ void colourSort(void *params)
             if (autonSelect.isSkills())
             {
                 timeouts.push_back({currentTime + 200, []()
-                                    { if (robot.getRollerState() == L2HELPER) robot.removeTempState(L2HELPER); robot.addTempState(L2SKILLS, 1); }});
+                                    { 
+                                        if (robot.getRollerState() == L2HELPER) robot.removeTempState(L2HELPER); 
+                                        robot.addTempState(L2SKILLS, 1); 
+                                    }});
             }
             else
             {
                 timeouts.push_back({currentTime + 200, []()
-                                    { if (robot.getRollerState() == L2HELPER) robot.removeTempState(L2HELPER); robot.addTempState(L2, 1); }});
+                                    { 
+                                        if (robot.getRollerState() == L2HELPER) robot.removeTempState(L2HELPER); 
+                                        robot.addTempState(L2, 1); 
+                                    }});
             }
         }
 
@@ -163,14 +169,17 @@ void colourSort(void *params)
             {
                 robot.addTempState(L3, 1);
             }
-        }
+        }`
 
         // RIGHT BUTTON: Activate back L3 lift (with helper state)
         if (master.get_digital_new_press(buttons::RIGHT))
         {
             robot.addTempState(BACKL3HELPER, 1);
             timeouts.push_back({currentTime + 200, []()
-                                { if (robot.getRollerState() == BACKL3HELPER) robot.removeTempState(BACKL3HELPER); robot.addTempState(BACKL3, 1); }});
+                                { 
+                                    if (robot.getRollerState() == BACKL3HELPER) robot.removeTempState(BACKL3HELPER); 
+                                    robot.addTempState(BACKL3, 1); 
+                                }});
         }
 
         // RIGHT BUTTON RELEASE: Deactivate back L3 and return to intake if applicable
@@ -401,6 +410,7 @@ void opcontrol()
         std::vector<int> teamColorQueue = {0, 1, 2};
         short teamColorIndex = 0;
         isRedTeam = autonSelect.isRedTeam();
+
         if (autonSelect.isSkills())
         {
             robot.mapButtons({L1SKILLS, buttons::R2, true});
@@ -409,9 +419,13 @@ void opcontrol()
         {
             robot.mapButtons({L1, buttons::R2, true});
         }
+
         robot.mapButtons({L3, buttons::L2, true});
+
         robot.mapButtons({DESCORE, buttons::DOWN, true});
+
         robot.mapButtons({BACKINTAKE, buttons::X, false});
+
         while (true)
         {
             // Arcade drive control with 54% power scaling

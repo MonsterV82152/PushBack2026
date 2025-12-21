@@ -1,53 +1,171 @@
-int leftLoc = 0;
-int chassis = 0;
-int rightLoc = 0;
+#include "includes.hpp"
 
-
-/**
- * @brief Autonomous routine for left side 2 goals
- */
-void Left2Goals()
+void colourSort(void *params)
 {
-    chassis.setPose(-60.3, 18.5, 0);   // Starting position
-    chassis.moveToPoint(-48, 45, 700); // Move to matchloader
-    // Correct position with left distance sensor
-    correct_position(leftLoc, &chassis, true);
-    chassis.turnToPoint(-70, 46, 700); // Turn towards matchloader
-    matchLoader.setState(true); // Activate matchloader piston
-    chassis.moveToPoint(-70, 46, 700); // Move into matchloader
-    rollers::setState("intake"); // Start intake
-    chassis.waitUntilDone();
-    for (int i = 0; i < 3; i++) // Shake to ensure blocks are secured
+    bool red = false;
+    bool blue = false;
+    int currentTime = 0;
+    std::vector<timeouts> timeouts = {};
+    while (true)
     {
-        chassis.arcade(-20, 0);
-        pros::delay(100);
-        chassis.arcade(60, 0);
-        pros::delay(200);
+        currentTime = pros::millis(); // Current time in milliseconds
+        for (int i = 0; i < timeouts.size(); i++)
+        {
+            if (timeouts[i].timestamp <= currentTime) // Check if timeout has expired
+            {
+                timeouts[i].function();               // Execute scheduled function
+                timeouts.erase(timeouts.begin() + i); // Remove executed timeout
+                i--;                                  // Adjust index after removal
+            }
+        }
+        hue = middleCS.get_hue();                // Get current hue from color sensor
+        int distance = middleCS.get_proximity(); // Get proximity distance
+        red = (hue > redMin || hue < redMax) && distance < 100;
+        blue = (hue > blueMin && hue < blueMax) && distance < 100;
+        // Detect if block is stalling motors
+        if (
+            !intakeTask && robot.getRollerState() == INTAKE &&
+            frontDS.get_distance() < 30 && front.get_actual_velocity() < 30)
+        {
+            intakeTask = true;
+            // Schedule transition to INTAKE2
+            timeouts.push_back({currentTime + 300, []()
+                                { robot.setState(INTAKE2); intakeTask = false; }});
+        }
+        // Transition to INTAKE3 when velocity stabilizes
+        else if (robot.getRollerState() == INTAKE2 && middle.get_actual_velocity() < 20)
+        {
+            robot.setState(INTAKE3); // Set roller state to INTAKE3
+        }
+        if (colourSortOn) // Color sorting logic
+        {
+            if ((!isRedTeam && red) || (isRedTeam && blue)) // Opponent color detected
+            {
+                colourSorting = true;               // Flag that color sorting is active
+                robot.addTempState(COLOURSORT, 10); // Eject opponent ring
+                pros::delay(300);
+                robot.removeTempState(COLOURSORT); // Resume normal operation
+                colourSorting = false;             // Clear sorting flag
+            }
+        }
+        if (master.get_digital_new_press(buttons::LEFT))
+        {
+            chassis.setBrakeMode(brake);
+            brakeChassis = true;
+            robot.setState(PARK);
+            park.setState(false);
+            while (intakeDS.get_distance() > 50)
+            {
+                pros::delay(10);
+            }
+            robot.setState(PARK2);
+            while (intakeDS.get_distance() < 50)
+            {
+                pros::delay(10);
+            }
+            pros::delay(400);
+            robot.stop();
+            park.setState(true);
+        }
+        if (master.get_digital_new_press(buttons::L1))
+        {
+            master.rumble(".");
+
+            robot.addTempState(L2HELPER, 1);
+            if (autonSelect.isSkills())
+            {
+                timeouts.push_back({currentTime + 200, []()
+                                    { if (robot.getRollerState() == L2HELPER) robot.removeTempState(L2HELPER); robot.addTempState(L2SKILLS, 1); }});
+            }
+            else
+            {
+                timeouts.push_back({currentTime + 200, []()
+                                    { if (robot.getRollerState() == L2HELPER) robot.removeTempState(L2HELPER); robot.addTempState(L2, 1); }});
+            }
+        }
+        if (master.get_digital_new_press(buttons::L2))
+        {
+            // master.rumble("..");
+            // robot.addTempState(L3HELPER, 1);
+            // timeouts.push_back({currentTime + 200, []()
+            //                     { if (robot.getRollerState() == L3HELPER) robot.removeTempState(L3HELPER); robot.addTempState(L3, 1); }});
+            robot.addTempState(L3, 1);
+        }
+        if (master.get_digital_new_press(buttons::RIGHT))
+        {
+            robot.addTempState(BACKL3HELPER, 1);
+            timeouts.push_back({currentTime + 200, []()
+                                { if (robot.getRollerState() == BACKL3HELPER) robot.removeTempState(BACKL3HELPER); robot.addTempState(BACKL3, 1); }});
+        }
+        if (!master.get_digital(buttons::RIGHT) && !master.get_digital_new_press(buttons::RIGHT))
+        {
+
+            if (robot.getRollerState() == BACKL3)
+            {
+                robot.removeTempState(BACKL3);
+                if (robot.getDefaultState() == INTAKE2 || robot.getDefaultState() == INTAKE3)
+                {
+                    robot.setState(INTAKE);
+                }
+            }
+            else if (robot.getRollerState() == BACKL3HELPER)
+            {
+                robot.removeTempState(BACKL3HELPER);
+                if (robot.getDefaultState() == INTAKE2 || robot.getDefaultState() == INTAKE3)
+                {
+                    robot.setState(INTAKE);
+                }
+            }
+        }
+        if (!master.get_digital(buttons::L2) && !master.get_digital_new_press(buttons::L2))
+        {
+
+            if (robot.getRollerState() == L3)
+            {
+                robot.removeTempState(L3);
+                if (robot.getDefaultState() == INTAKE2 || robot.getDefaultState() == INTAKE3)
+                {
+                    robot.setState(INTAKE);
+                }
+            }
+            else if (robot.getRollerState() == L3HELPER)
+            {
+                robot.removeTempState(L3HELPER);
+                if (robot.getDefaultState() == INTAKE2 || robot.getDefaultState() == INTAKE3)
+                {
+                    robot.setState(INTAKE);
+                }
+            }
+        }
+        if (!master.get_digital(buttons::L1) && !master.get_digital_new_press(buttons::L1))
+        {
+
+            if (robot.getRollerState() == L2)
+            {
+                robot.removeTempState(L2);
+                if (robot.getDefaultState() == INTAKE2 || robot.getDefaultState() == INTAKE3)
+                {
+                    robot.setState(INTAKE);
+                }
+            }
+            else if (robot.getRollerState() == L2HELPER)
+            {
+                robot.removeTempState(L2HELPER);
+                if (robot.getDefaultState() == INTAKE2 || robot.getDefaultState() == INTAKE3)
+                {
+                    robot.setState(INTAKE);
+                }
+            }
+            else if (robot.getRollerState() == L2SKILLS)
+            {
+                robot.removeTempState(L2SKILLS);
+                if (robot.getDefaultState() == INTAKE2 || robot.getDefaultState() == INTAKE3)
+                {
+                    robot.setState(INTAKE);
+                }
+            }
+        }
+
+        pros::delay(5);
     }
-    chassis.moveToPoint(-48, 47, 700, {false}); // Move out of matchloader
-    matchLoader.setState(false);                // Deactivate matchloader piston
-    chassis.waitUntilDone();
-    correct_position(rightLoc, &chassis, false); // Correct position with right distance sensor
-    // Drive to intake the group of 3 blocks
-    chassis.turnToPoint(-48, 24, 400);
-    chassis.moveToPoint(-48, 24, 700);
-    chassis.turnToPoint(-24, 24, 400);
-    rollers::setState("intake"); // Start intake
-    chassis.moveToPoint(-16, 24, 1400, {.maxSpeed = 40}); // Intake blocks
-    chassis.turnToPoint(-24, 22, 700, {false}); // Move to scoring position
-    chassis.moveToPoint(-24, 22, 700, {false});
-    chassis.turnToPoint(-7, 5, 700); // Turn towards scoring zone
-    chassis.moveToPoint(-7, 5, 400, {.maxSpeed = 40}); // Move into scoring zone
-    chassis.waitUntilDone();
-    rollers::setState("scoreMiddleAuton"); // Score middle block
-    pros::delay(1000); // Wait for scoring to complete
-    rollers::setState("intake"); // Start intake for next blocks
-    chassis.turnToPoint(-48, 48, 700, {false}); // Back to high goal position
-    chassis.moveToPoint(-48, 48, 1000, {false}); // Move to high goal position
-    chassis.turnToPoint(-24, 47.5, 700); // Turn towards high goal
-    chassis.moveToPoint(-38, 47.5, 1000); // Move into high goal position
-    correct_position(leftLoc, &chassis, false); // Correct position with left distance sensor
-    chassis.turnToHeading(90, 700); // Face high goal
-    chassis.waitUntilDone();
-    rollers::setState("scoreTop"); // Score high goals
 }

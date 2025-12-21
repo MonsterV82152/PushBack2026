@@ -185,6 +185,7 @@ void opcontrol()
             {
                 park.toggle();
             }
+            
             if (master.get_digital_new_press(buttons::R1))
             {
                 if (rollers::state.name == "intake")
@@ -204,6 +205,7 @@ void opcontrol()
             {
                 rollers::removeTemporaryState("cycle");
             }
+
             if (master.get_digital_new_press(buttons::X))
             {
                 rollers::addTemporaryState("clearIntake", 7);
@@ -212,22 +214,27 @@ void opcontrol()
             {
                 rollers::removeTemporaryState("clearIntake");
             }
+
             if (master.get_digital_new_press(buttons::R2))
             {
                 rollers::addTemporaryState("scoreBottom", 7);
             }
+
             else if (rollers::currentTemporaryState.name == "scoreBottom" && !master.get_digital(buttons::R2))
             {
                 rollers::removeTemporaryState("scoreBottom");
             }
+
             if (master.get_digital_new_press(buttons::L2))
             {
                 rollers::addTemporaryState("scoreTop", 7);
             }
             else if (rollers::currentTemporaryState.name == "scoreTop" && !master.get_digital(buttons::L2))
             {
+                // Not holding L2 anymore, remove the temporary state
                 rollers::removeTemporaryState("scoreTop");
             }
+
             if (master.get_digital_new_press(buttons::L1))
             {
                 rollers::rollerStates[5].middleSpeed = -90; // Adjust middle speed for scoreMiddle
@@ -248,6 +255,7 @@ void opcontrol()
             {
                 rollers::removeTemporaryState("scoreMiddle");
             }
+
         }
         else
         {

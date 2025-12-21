@@ -6,7 +6,7 @@ void limelib::Locator::setPose(real_t x, real_t y, real_t theta)
 }
 
 limelib::Odometry::Odometry(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::IMU &imu, bool shouldTaskRun)
-    : verticalTW(verticalTW), horizontalTW(horizontalTW), imu(imu), currentPose(0, 0, 0), prevPose(0, 0, 0), headingOffset(0), shouldTaskRun(shouldTaskRun), lastUpdateTime(pros::millis()), currentVelocity()
+    : verticalTW(verticalTW), horizontalTW(horizontalTW), imu(imu), currentPose(0, 0, 0), prevPose(0, 0, 0), headingOffset(0), shouldTaskRun(shouldTaskRun), lastUpdateTime(pros::millis()), currentVelocity(), odomTask(nullptr)
 {
 }
 
@@ -21,12 +21,12 @@ void limelib::Odometry::calibrate()
     {
         pros::delay(20);
     }
+
     headingOffset = -imu.get_heading() * M_PI / 180;
-    pros::delay(1000);
     if (shouldTaskRun)
     {
-        pros::Task odomTask([this]()
-                            {
+        odomTask = std::make_unique<pros::Task>([this]()
+                                                {
             while (true)
             {
                 update();
@@ -88,16 +88,17 @@ limelib::Velocity limelib::Odometry::getVelocity() const
 }
 
 limelib::MCL::MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW,
-                  pros::Imu &imu, std::vector<MCLDistance> &sensors, Field2D &field, int num_particles, int rotationNoise, int translationNoise, bool debug,
+                  pros::Imu &imu, std::vector<MCLDistance> &sensors, Field2D &field, int num_particles, real_t rotationNoise, real_t translationNoise, bool debug,
                   int intensity, bool shouldTaskRun)
     : odomHelper(verticalTW, horizontalTW, imu, false), sensors(sensors), field(field), NUM_PARTICLES(num_particles),
-      ROTATION_NOISE(rotationNoise), TRANSLATION_NOISE(translationNoise), debug(debug), INTENSITY(intensity), last_mcl_update(intensity), randomParticleCount(0), shouldTaskRun(shouldTaskRun), prevPose(0, 0, 0), lastUpdateTime(pros::millis()), currentVelocity()
+      ROTATION_NOISE(rotationNoise), TRANSLATION_NOISE(translationNoise), debug(debug), INTENSITY(intensity), last_mcl_update(intensity), randomParticleCount(0), shouldTaskRun(shouldTaskRun), prevPose(0, 0, 0), lastUpdateTime(pros::millis()), currentVelocity(), debugCounter(0), master(pros::E_CONTROLLER_MASTER)
 {
     // Initialize particles with random positions but heading will be set from odometry later
     for (int i = 0; i < NUM_PARTICLES; i++)
     {
         // Start with 0 heading, will be updated to odometry heading in first update
-        particles.push_back(MCLParticle(Pose2D(getRandomReal_t(-field.getWidth() / 2, field.getWidth() / 2), getRandomReal_t(-field.getHeight() / 2, field.getHeight() / 2), 0), 0));
+        // Initialize with uniform weight
+        particles.push_back(MCLParticle(Pose2D(getRandomReal_t(-field.getWidth() / 2, field.getWidth() / 2), getRandomReal_t(-field.getHeight() / 2, field.getHeight() / 2), 0), 1.0 / NUM_PARTICLES));
     }
 }
 
@@ -105,27 +106,49 @@ void limelib::MCL::calibrate()
 {
     odomHelper.calibrate();
     std::cout << "Field Edges: " << field.getEdges().size() << std::endl;
+    std::cout << "MCL::calibrate - shouldTaskRun=" << shouldTaskRun << std::endl;
     if (shouldTaskRun)
     {
-        pros::Task mclTask([this]()
-                           {
+        std::cout << "MCL::calibrate - Creating MCL task..." << std::endl;
+        // Create task and store in member variable so it persists
+        mclTask = std::make_unique<pros::Task>([this]()
+                                               {
+            std::cout << "MCL task started!" << std::endl;
             while (true)
             {
                 update();
                 pros::delay(10);
             } });
+        std::cout << "MCL::calibrate - MCL task created, ptr=" << mclTask.get() << std::endl;
+    }
+    else
+    {
+        std::cout << "MCL::calibrate - Task NOT created (shouldTaskRun=false)" << std::endl;
     }
 }
 
 void limelib::MCL::setPose(limelib::Pose2D pose)
 {
     odomHelper.setPose(pose);
+
+    // Update actualPose to match the set pose
+    real_t odomHeading = pose.theta * M_PI / 180; // Convert to radians
+    actualPose.x = pose.x;
+    actualPose.y = pose.y;
+    actualPose.theta = odomHeading;
+
+    // Reset odomDelta since we're setting a new pose
+    odomDelta = Pose2D(0, 0, 0);
+
+    // Initialize estimated pose
+    estimatedPose.point = actualPose;
+    estimatedPose.weight = 1.0; // Full confidence initially
+
     particles.clear();
     // Initialize particles with position spread but all using the same odometry heading
-    real_t odomHeading = pose.theta * M_PI / 180; // Convert to radians
     for (int i = 0; i < NUM_PARTICLES; i++)
     {
-        particles.push_back(MCLParticle(Pose2D(pose.x + getRandomReal_t(-5, 5), pose.y + getRandomReal_t(-5, 5), odomHeading), 0));
+        particles.push_back(MCLParticle(Pose2D(pose.x + getRandomReal_t(-5, 5), pose.y + getRandomReal_t(-5, 5), odomHeading), 1.0 / NUM_PARTICLES));
     }
 }
 
@@ -136,60 +159,40 @@ void limelib::MCL::setPose(real_t x, real_t y, real_t theta)
 
 limelib::Pose2D limelib::MCL::update()
 {
+    Pose2D currentDelta = odomHelper.update();
+    odomDelta.x += currentDelta.x;
+    odomDelta.y += currentDelta.y;
+    odomDelta.theta += currentDelta.theta;
+    // Normalize theta to [0, 2π)
+    while (odomDelta.theta < 0)
+        odomDelta.theta += 2 * M_PI;
+    while (odomDelta.theta >= 2 * M_PI)
+        odomDelta.theta -= 2 * M_PI;
     if (last_mcl_update > INTENSITY)
     {
+        debugCounter++;
         updateMCL();
         if (debug)
             debugDisplay();
+        // if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B))
+        // {
+        //     Pose2D pose = getPose();
+        //     std::cout << "MCL Pose: (" << pose.x << ", " << pose.y << ", " << pose.theta << "deg)" << std::endl;
+        // }
         last_mcl_update = 0;
-        Pose2D pose = getPose();
     }
     else
     {
         last_mcl_update++;
-        Pose2D currentDelta = odomHelper.update();
-        odomDelta.x += currentDelta.x;
-        odomDelta.y += currentDelta.y;
-        odomDelta.theta += currentDelta.theta;
-        // Normalize theta to [0, 2π)
-        while (odomDelta.theta < 0)
-            odomDelta.theta += 2 * M_PI;
-        while (odomDelta.theta >= 2 * M_PI)
-            odomDelta.theta -= 2 * M_PI;
     }
-    // Calculate time delta for velocity
-    uint32_t currentTime = pros::millis();
-    real_t dt = (currentTime - lastUpdateTime) / 1000.0f;
-    lastUpdateTime = currentTime;
 
-    // Get current pose for velocity calculation
-    Pose2D currentPose = getPose(true); // Get pose in radians
-
-    // Calculate velocity (inches per second)
-    if (dt > 0.001f) // Avoid division by zero
-    {
-        real_t dx = currentPose.x - prevPose.x;
-        real_t dy = currentPose.y - prevPose.y;
-        real_t dtheta = currentPose.theta - prevPose.theta;
-
-        currentVelocity.x = dx / dt;
-        currentVelocity.y = dy / dt;
-        currentVelocity.linear = std::sqrt(dx * dx + dy * dy) / dt;
-        currentVelocity.angular = dtheta / dt;
-    }
-    prevPose = currentPose;
+    currentVelocity = odomHelper.getVelocity();
 
     return odomDelta;
 }
 
 void limelib::MCL::updateMCL()
 {
-    // 1. PREDICTION STEP - Apply odometry motion to all particles
-    Pose2D currentDelta = odomHelper.update();
-    odomDelta.x += currentDelta.x;
-    odomDelta.y += currentDelta.y;
-    odomDelta.theta += currentDelta.theta;
-
     // Get current odometry heading for all particles
     real_t odomHeading = odomHelper.getPose(true).theta;
 
@@ -203,35 +206,115 @@ void limelib::MCL::updateMCL()
     }
     // 2. CORRECTION STEP - Update particle weights based on sensor observations
     real_t totalWeight = 0.0;
+    int validSensorCount = 0;
+    if (debug && debugCounter >= 50)
+    {
+        std::cout << std::endl
+                  << std::endl
+                  << "---- MCL Update ----" << std::endl;
+        std::cout << "Valid sensor readings: " << std::endl;
+    }
     for (MCLDistance &sensor : sensors)
     {
-        sensor.reading = sensor.sensor.get_distance();
+        // Get raw int32_t value first to check for errors
+        int32_t raw = sensor.sensor.get_distance();
+        if (debug && debugCounter >= 50)
+        {
+            std::cout << "Sensor at angle " << sensor.pose.theta << "deg: ";
+            std::cout << raw << " ";
+        }
+        // Valid readings are positive and less than 9999 (no object detected)
+        // PROS_ERR is typically negative, which becomes huge positive when cast to float
+        if (raw > 0 && raw < 2000)
+        {
+            if (debug && debugCounter >= 50)
+                std::cout << "(valid) " << std::endl;
+            sensor.reading = static_cast<real_t>(raw);
+            validSensorCount++;
+        }
+        else
+        {
+            sensor.reading = -1; // Mark as invalid
+        }
     }
+    if (debug && debugCounter >= 50)
+        std::cout << std::endl;
+
+    // Debug: Print sensor readings
+    if ((debug && debugCounter >= 50)/* || master.get_digital(pros::E_CONTROLLER_DIGITAL_A)*/)
+    {
+        std::cout << "Valid sensors: " << validSensorCount << "/" << sensors.size() << " - Readings: ";
+        for (const MCLDistance &sensor : sensors)
+        {
+            std::cout << sensor.reading << "mm ";
+        }
+        std::cout << std::endl;
+    }
+
+    // If no valid sensors, skip correction step - just apply odometry
+    if (validSensorCount == 0)
+    {
+        // Still update actualPose with odometry delta
+        actualPose.x += odomDelta.x;
+        actualPose.y += odomDelta.y;
+        actualPose.theta = odomHelper.getPose(true).theta;
+        odomDelta = Pose2D(0, 0, 0);
+        return;
+    }
+
     for (MCLParticle &particle : particles)
     {
         real_t likelihood = 1.0;
+        bool isFirstParticle = (&particle == &particles[0]); // Debug only first particle
 
         // For each sensor, compare actual vs expected readings
         for (const MCLDistance &sensor : sensors)
         {
-            // Get actual sensor reading
+            // Skip invalid readings (marked as -1 during preprocessing)
+            if (sensor.reading <= 0)
+                continue;
+
             real_t actualDistance = sensor.reading * MM_TO_IN;
-            if (sensor.reading < 0 || sensor.reading >= 9999)
-                continue; // Skip invalid readings
 
             // Calculate expected sensor reading from this particle's position
-            // Transform sensor position to global coordinates
-            real_t sensorGlobalX = particle.point.x + sensor.pose.x * cos(particle.point.theta) + sensor.pose.y * sin(particle.point.theta);
-            real_t sensorGlobalY = particle.point.y - sensor.pose.x * sin(particle.point.theta) + sensor.pose.y * cos(particle.point.theta);
+            // Transform sensor LOCAL position to GLOBAL position
+            // The sensor position is relative to robot center, rotated by ROBOT heading only
+            // (sensor.pose.theta only affects ray direction, not sensor physical position)
+            real_t cosTheta = cos(particle.point.theta);
+            real_t sinTheta = sin(particle.point.theta);
+
+            // For 0°=+Y, 90°=+X coordinate system:
+            // global_x = robot_x + local_x * cos(θ) + local_y * sin(θ)
+            // global_y = robot_y + local_y * cos(θ) - local_x * sin(θ)
+            real_t sensorGlobalX = particle.point.x + sensor.pose.x * cosTheta + sensor.pose.y * sinTheta;
+            real_t sensorGlobalY = particle.point.y + sensor.pose.y * cosTheta - sensor.pose.x * sinTheta;
+
+            // Ray direction = robot heading + sensor facing angle
             real_t sensorGlobalTheta = particle.point.theta + sensor.pose.theta * M_PI / 180;
 
             // Cast ray from sensor position in sensor direction
             Ray2D ray(Point2D(sensorGlobalX, sensorGlobalY), sensorGlobalTheta);
             real_t expectedDistance = getRayCastDistance(field.getEdges(), ray);
 
+            // Debug output for first particle
+            if (debug && isFirstParticle && debugCounter >= 50)
+            {
+                debugCounter = 0;
+                std::cout << "Particle at (" << particle.point.x << ", " << particle.point.y << ", " << particle.point.theta * 180 / M_PI << "deg)" << std::endl;
+                std::cout << "Sensor at angle " << sensor.pose.theta << "deg, globalX: " << sensorGlobalX << ", globalY: " << sensorGlobalY
+                          << ", actual=" << actualDistance << "in, expected=" << expectedDistance << "in" << std::endl;
+            }
+
             // Calculate likelihood based on how well actual matches expected
             real_t error = std::abs(actualDistance - expectedDistance);
-            real_t sensorLikelihood = exp(-error * error / (2.0 * 100.0)); // Gaussian with σ=10
+            // Gaussian likelihood with σ=5 inches (variance=25)
+            // This means 1 inch error → likelihood ≈ 0.98
+            //           3 inch error → likelihood ≈ 0.84
+            //           5 inch error → likelihood ≈ 0.61
+            //          10 inch error → likelihood ≈ 0.14
+            real_t sensorLikelihood = exp(-error * error / (2.0 * 25.0));
+            // Apply minimum likelihood floor to prevent complete particle starvation
+            sensorLikelihood = std::max(sensorLikelihood, real_t(0.001));
 
             likelihood *= sensorLikelihood;
         }
@@ -256,58 +339,21 @@ void limelib::MCL::updateMCL()
         }
     }
 
-    // 3. RESAMPLING STEP - Resample particles based on weights
-    std::vector<MCLParticle> newParticles;
-    newParticles.reserve(NUM_PARTICLES);
-
-    // Calculate how many random particles to inject (for kidnapping resistance)
-    int numRandom = randomParticleCount;
-    int numResampled = NUM_PARTICLES - numRandom;
-
-    // Resample particles using systematic resampling
-    real_t step = 1.0 / numResampled;
-    real_t r = getRandomReal_t(0, step);
-    real_t c = particles[0].weight;
-    int i = 0;
-
-    for (int m = 0; m < numResampled; m++)
-    {
-        real_t u = r + m * step;
-        while (u > c && i < NUM_PARTICLES - 1)
-        {
-            i++;
-            c += particles[i].weight;
-        }
-        newParticles.push_back(particles[i]);
-
-        // Reset weight for next iteration
-        newParticles.back().weight = 0.0;
-    }
-
-    // Add random particles for kidnapping resistance (using current odometry heading)
-    for (int i = 0; i < numRandom; i++)
-    {
-        real_t randomX = getRandomReal_t(-field.getWidth() / 2, field.getWidth() / 2);
-        real_t randomY = getRandomReal_t(-field.getHeight() / 2, field.getHeight() / 2);
-        // Use current odometry heading instead of random rotation
-        newParticles.push_back(MCLParticle(Pose2D(randomX, randomY, odomHeading), 0.0));
-    }
-
-    particles = std::move(newParticles);
-
-    // 4. UPDATE POSE ESTIMATE - Calculate weighted average for position, use odometry for heading
+    // 3. UPDATE POSE ESTIMATE - Calculate weighted average for position, use odometry for heading
+    // (Must happen BEFORE resampling to use meaningful weights from correction step)
     real_t sumX = 0, sumY = 0, sumWeights = 0;
     real_t maxWeight = 0;
 
     for (const MCLParticle &particle : particles)
     {
-        real_t weight = (particle.weight > 0) ? particle.weight : 1.0 / NUM_PARTICLES;
+        real_t weight = particle.weight;
 
         sumX += particle.point.x * weight;
         sumY += particle.point.y * weight;
         sumWeights += weight;
         maxWeight = std::max(maxWeight, weight);
     }
+    // std::cout << "Max Particle Weight: " << maxWeight << std::endl;
     if (sumWeights > 0)
     {
         estimatedPose.point.x = sumX / sumWeights;
@@ -318,6 +364,10 @@ void limelib::MCL::updateMCL()
         // Calculate confidence based on particle concentration
         // Higher max weight = more particles agree = higher confidence
         estimatedPose.weight = maxWeight * NUM_PARTICLES; // Normalized confidence [0, 1]
+        // if (master.get_digital(pros::E_CONTROLLER_DIGITAL_UP))
+        // {
+        //     std::cout << "Estimated Pose before blending: (" << estimatedPose.point.x << ", " << estimatedPose.point.y << ", " << estimatedPose.point.theta * 180 / M_PI << "deg), Confidence: " << estimatedPose.weight << std::endl;
+        // }
 
         // Alternative confidence calculation based on effective sample size
         // real_t ess = 1.0 / std::accumulate(particles.begin(), particles.end(), 0.0,
@@ -340,6 +390,61 @@ void limelib::MCL::updateMCL()
         // Always use odometry heading (no rotation correction)
         actualPose.theta = odomHeading;
     }
+    else
+    {
+        // If sumWeights is 0, just apply odometry
+        actualPose.x += odomDelta.x;
+        actualPose.y += odomDelta.y;
+        actualPose.theta = odomHeading;
+    }
+
+    // 4. RESAMPLING STEP - Resample particles based on weights
+    std::vector<MCLParticle> newParticles;
+    newParticles.reserve(NUM_PARTICLES);
+
+    // Calculate how many random particles to inject (for kidnapping resistance)
+    int numRandom = randomParticleCount;
+    int numResampled = NUM_PARTICLES - numRandom;
+
+    // Guard against edge cases
+    if (numResampled < 0)
+        numResampled = 0;
+    if (numRandom > NUM_PARTICLES)
+        numRandom = NUM_PARTICLES;
+
+    // Only do systematic resampling if we have particles to resample
+    if (numResampled > 0)
+    {
+        // Resample particles using systematic resampling
+        real_t step = 1.0 / numResampled;
+        real_t r = getRandomReal_t(0, step);
+        real_t c = particles[0].weight;
+        int i = 0;
+
+        for (int m = 0; m < numResampled; m++)
+        {
+            real_t u = r + m * step;
+            while (u > c && i < NUM_PARTICLES - 1)
+            {
+                i++;
+                c += particles[i].weight;
+            }
+            MCLParticle resampled = particles[i];
+            resampled.weight = 1.0 / NUM_PARTICLES; // Reset weight after resampling
+            newParticles.push_back(resampled);
+        }
+    }
+
+    // Add random particles for kidnapping resistance (using current odometry heading)
+    for (int j = 0; j < numRandom; j++)
+    {
+        real_t randomX = getRandomReal_t(-field.getWidth() / 2, field.getWidth() / 2);
+        real_t randomY = getRandomReal_t(-field.getHeight() / 2, field.getHeight() / 2);
+        // Use current odometry heading instead of random rotation
+        newParticles.push_back(MCLParticle(Pose2D(randomX, randomY, odomHeading), 1.0 / NUM_PARTICLES));
+    }
+
+    particles = std::move(newParticles);
     odomDelta = Pose2D(0, 0, 0); // Reset odomDelta after update
 }
 
@@ -350,39 +455,11 @@ limelib::Pose2D limelib::MCL::getPose(bool radians) const
     {
         return odomHelper.getPose(radians);
     }
-    std::cout << "Estimated Pose: (" << estimatedPose.point.x << ", " << estimatedPose.point.y << ", " << estimatedPose.point.theta << "), Weight: " << estimatedPose.weight << std::endl;
 
-    // Calculate age factor - confidence decreases with time since last MCL update
-    real_t ageFactor = exp(-static_cast<real_t>(last_mcl_update) / (INTENSITY * 0.5));
-    ageFactor = std::max(ageFactor, real_t(0.1)); // Don't let age factor go below 0.1
-
-    // Calculate effective confidence considering both MCL confidence and age
-    real_t baseConfidence = std::clamp(estimatedPose.weight, real_t(0.1), real_t(0.9));
-    real_t effectiveConfidence = baseConfidence * ageFactor;
-    effectiveConfidence = std::clamp(effectiveConfidence, real_t(0.1), real_t(0.9));
-
-    // Get current odometry heading
-    real_t currentOdomHeading = odomHelper.getPose(true).theta; // Already in radians
-
-    // Calculate current odometry-based pose from last MCL estimate + accumulated delta
-    Pose2D currentOdomPose;
-    currentOdomPose.x = actualPose.x + odomDelta.x;
-    currentOdomPose.y = actualPose.y + odomDelta.y;
-    currentOdomPose.theta = currentOdomHeading; // Convert to radians for internal calculations
-
-    // If confidence is very low (old or unreliable MCL), use odometry position with odometry heading
-    if (effectiveConfidence < 0.2)
-    {
-        return Pose2D(currentOdomPose.x, currentOdomPose.y, radians ? currentOdomHeading : currentOdomHeading * 180 / M_PI); // Return with heading in degrees
-    }
-
-    // Blend only X and Y positions based on MCL confidence, always use odometry heading
     Pose2D blendedPose;
-    blendedPose.x = effectiveConfidence * estimatedPose.point.x + (1.0 - effectiveConfidence) * currentOdomPose.x;
-    blendedPose.y = effectiveConfidence * estimatedPose.point.y + (1.0 - effectiveConfidence) * currentOdomPose.y;
-    // Always use current odometry heading (no rotation correction from MCL)
-    blendedPose.theta = radians ? currentOdomHeading : currentOdomHeading * 180 / M_PI; // In degrees for return
-
+    blendedPose.x = actualPose.x + odomDelta.x;
+    blendedPose.y = actualPose.y + odomDelta.y;
+    blendedPose.theta = odomHelper.getPose(radians).theta;
     return blendedPose;
 }
 
@@ -439,9 +516,10 @@ limelib::real_t limelib::getRayCastDistance(const std::vector<LineSegment2D> &ed
 {
     real_t min_distance = 1000;
 
-    // Pre-calculate ray direction for efficiency
-    real_t ray_cos = std::sin(ray.radians);
-    real_t ray_sin = std::cos(ray.radians);
+    // Pre-calculate ray direction for 0°=+Y, 90°=+X coordinate system
+    // direction = (sin(θ), cos(θ))
+    real_t ray_dx = std::sin(ray.radians); // X component of direction
+    real_t ray_dy = std::cos(ray.radians); // Y component of direction
 
     for (const auto &edge : edges)
     {
@@ -454,7 +532,7 @@ limelib::real_t limelib::getRayCastDistance(const std::vector<LineSegment2D> &ed
         real_t py = edge.start.y - ray.start.y;
 
         // Calculate determinant for intersection
-        real_t det = ray_cos * dy - ray_sin * dx;
+        real_t det = ray_dx * dy - ray_dy * dx;
 
         // Skip if ray is parallel to line segment (det ≈ 0)
         if (std::abs(det) < 1e-9)
@@ -463,8 +541,8 @@ limelib::real_t limelib::getRayCastDistance(const std::vector<LineSegment2D> &ed
         }
 
         // Calculate intersection parameters
-        real_t u = (ray_sin * px - ray_cos * py) / det; // Parameter along line segment
-        real_t t = (dy * px - dx * py) / det;           // Parameter along ray
+        real_t u = (ray_dy * px - ray_dx * py) / det; // Parameter along line segment
+        real_t t = (dy * px - dx * py) / det;         // Parameter along ray
 
         // Check if intersection is valid:
         // - t > 0: intersection is in front of ray (not behind)

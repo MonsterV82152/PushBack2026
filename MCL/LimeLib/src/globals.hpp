@@ -55,18 +55,18 @@ namespace localization
 {
     inline pros::Distance rightDS(20);
     inline pros::Distance leftDS(5);
-    inline pros::Distance frontDS(17);
+    inline pros::Distance frontDS(21);
     inline pros::Distance backDS(4);
 }
 inline pros::Rotation vertical(14);
 inline const bool odometry = true; // Set to true to use odometry, false to use MCL
-std::vector<MCLDistance> mclSensors = {
-    {localization::rightDS, Pose2D(-4.25, -2.25, 90)},
-    {localization::leftDS, Pose2D(4.25, -2.25, 270)},
+inline std::vector<MCLDistance> mclSensors = {
+    {localization::rightDS, Pose2D(4.25, -2.25, 90)},
+    {localization::leftDS, Pose2D(-4.25, -2.25, 270)},
     {localization::frontDS, Pose2D(4.5, 3, 0)},
     {localization::backDS, Pose2D(-3.5, -5.5, 180)}};
-TrackingWheel verticalTW(vertical, 2.75, -0.25);
-std::vector<std::shared_ptr<Object2D>> obstacles = {
+inline TrackingWheel verticalTW(vertical, 2.75, -0.25);
+inline std::vector<std::shared_ptr<Object2D>> obstacles = {
     std::make_shared<Circle2D>(67.5f, 48.0f, 4.17f),
     std::make_shared<Circle2D>(-67.5f, 48.0f, 4.17f),
     std::make_shared<Circle2D>(67.5f, -48.0f, 4.17f),
@@ -82,11 +82,10 @@ std::vector<std::shared_ptr<Object2D>> obstacles = {
     std::make_shared<Line2D>(Point2D(-2.9f, 0.5f), Point2D(0.5f, 2.9f)),
     std::make_shared<Line2D>(Point2D(-0.5f, -2.9f), Point2D(2.9f, -0.5f)),
 };
-Field2D field(144.0f, 144.0f, obstacles);
-MCL mcl(&verticalTW, nullptr, inertial, mclSensors, field, 100, 0.1, 0.1);   
-PID lateralPID(5, 0.0, 0.1);
-PID velocityPID(0.2, 0.0, 0.05);
-PID angularPID(1.0, 0.0, 0.2);
-TrapezoidalMotionProfile motionProfile(12.0, 24.0);
-Chassis chassis(mcl, leftDT, rightDT, lateralPID, velocityPID, angularPID, motionProfile);
+inline Field2D field(144.0f, 144.0f, obstacles);
+// inline MCL mcl(&verticalTW, nullptr, inertial, mclSensors, field, 200, 0.1, 0.1, false, 5);
+inline Odometry odom(&verticalTW, nullptr, inertial);
+inline PID lateralPID(3, 0.0, 2);
+inline PID angularPID(0.9, 0.0, 1);
+inline Chassis chassis(odom, leftDT, rightDT, lateralPID, angularPID);
 #endif

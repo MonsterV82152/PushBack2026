@@ -1,15 +1,6 @@
 #include "sensor_loc.hpp"
 #include <string>
 
-void sum(int *a, int b) {
-    *a += b;
-}
-
-
-int x = 9;
-int y = 1;
-sum(&x, y); // x is now 10
-
 void correct_position(dist_sensor sensor, lemlib::Chassis *chassis, bool x, bool forced, double correct_rate)
 {
     double wall_dist = 71.5;

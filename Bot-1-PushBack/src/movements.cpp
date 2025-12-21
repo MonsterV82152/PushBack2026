@@ -299,23 +299,21 @@ namespace colourSort
 		{
 			if (master.get_digital_new_press(buttons::RIGHT))
 			{
-				rollers::setState("scorePark");
+				rollers::setState("scorePark"); // Move rollers to scorePark position
 				pros::delay(500);
-				while (bottomDS.get_distance() >= 60)
+				while (bottomDS.get_distance() >= 60) // Wait until close to the intake
 				{
 					pros::delay(10);
 				}
-				rollers::setState("scorePark2");
-				while (bottomDS.get_distance() <= 60)
+				rollers::setState("scorePark2"); // Slower outtake to avoid overshooting
+				while (bottomDS.get_distance() <= 60) // Wait until sensor can read it (inside the intake)
 				{
 					pros::delay(10);
 				}
-				// pros::delay(100);
-				// rollers::setState("intakeC");
-				// pros::delay(50);
-				rollers::setState("none");
-				park.setState(true);
+				rollers::setState("none"); // Stop rollers
+				park.setState(true); // Engage park piston
 			}
+			
 			std::string currentRollerState = rollers::findLowestState(2).name;
 			cycleCount++;
 			for (int i = 0; i < timeouts.size(); i++)

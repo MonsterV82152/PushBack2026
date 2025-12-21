@@ -10,6 +10,8 @@
 #include "pros/imu.hpp"
 #include "pros/rtos.hpp"
 #include "pros/screen.hpp"
+#include "pros/misc.hpp"
+#include <memory>
 
 namespace limelib
 {
@@ -66,6 +68,7 @@ namespace limelib
         Pose2D prevPose;
         real_t headingOffset;
         bool shouldTaskRun;
+        std::unique_ptr<pros::Task> odomTask; // Task must persist!
         uint32_t lastUpdateTime;
         Velocity currentVelocity;
     };
@@ -94,7 +97,7 @@ namespace limelib
          * This creates an MCL localization object using the specified tracking wheels, IMU, distance sensors, and field.
          * It uses 100 particles with 0.1 rotation and translation noise, enables debug display, updates every 10 cycles, and runs in a separate task.
          */
-        MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::Imu &imu, std::vector<MCLDistance> &sensors, Field2D &field, int num_particles, int rotationNoise, int translationNoise, bool debug = false, int intensitivity = 10, bool shouldTaskRun = true);
+        MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::Imu &imu, std::vector<MCLDistance> &sensors, Field2D &field, int num_particles, real_t rotationNoise, real_t translationNoise, bool debug = false, int intensitivity = 10, bool shouldTaskRun = true);
         void calibrate() override;
         Pose2D update() override;
         Pose2D getPose(bool radians = false) const override;
@@ -104,6 +107,7 @@ namespace limelib
 
     private:
         Odometry odomHelper;
+        pros::Controller master;
         std::vector<MCLDistance> &sensors;
         Field2D &field;
         Pose2D odomDelta;
@@ -111,17 +115,19 @@ namespace limelib
         Pose2D actualPose;
         MCLParticle estimatedPose;
         int NUM_PARTICLES;
-        int ROTATION_NOISE;
-        int TRANSLATION_NOISE;
+        real_t ROTATION_NOISE;
+        real_t TRANSLATION_NOISE;
         int INTENSITY;
         int last_mcl_update;
         int randomParticleCount;
         bool shouldTaskRun;
         bool debug;
+        int debugCounter;
         std::vector<MCLParticle> particles;
         Pose2D prevPose;
         uint32_t lastUpdateTime;
         Velocity currentVelocity;
+        std::unique_ptr<pros::Task> mclTask; // Task must persist!
         void updateMCL();
         void debugDisplay();
     };

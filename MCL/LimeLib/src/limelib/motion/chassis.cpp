@@ -1,7 +1,7 @@
 #include "limelib/motion/chassis.hpp"
 
-limelib::Chassis::Chassis(Locator &locator, pros::MotorGroup &leftDr, pros::MotorGroup &rightDr, PID &lateralController, PID &velocityController, PID &angularController, TrapezoidalMotionProfile &motionProfile)
-    : locator(locator), leftDr(leftDr), rightDr(rightDr), lateralController(lateralController), velocityController(velocityController), angularController(angularController), motionProfile(motionProfile), movementTask([]() {}, "LIMELIB_MOVEMENT"), movementHelper()
+limelib::Chassis::Chassis(Locator &locator, pros::MotorGroup &leftDr, pros::MotorGroup &rightDr, PID &lateralController, PID &angularController)
+    : locator(locator), leftDr(leftDr), rightDr(rightDr), lateralController(lateralController), angularController(angularController), movementTask(nullptr), movementHelper()
 {
 }
 
@@ -10,10 +10,8 @@ void limelib::Chassis::calibrate()
     locator.calibrate();
     angularController.reset();
     lateralController.reset();
-    velocityController.reset();
-    motionProfile.reset();
     movementHelper.cancel();
-    movementTask.suspend();
+    movementTask = std::make_unique<pros::Task>([]() {}, "LIMELIB_CHASSIS_IDLE_TASK");
 }
 
 void limelib::Chassis::cancelAllMovement()
@@ -33,59 +31,45 @@ void limelib::Chassis::setPose(real_t x, real_t y, real_t theta)
 
 void limelib::Chassis::moveToPoint(Point2D point, int timeout, moveToPointParams params)
 {
-    while (!movementHelper.isDone())
-    {
-        pros::delay(10);
-    }
-    movementTask.remove();
-    movementTask.create([this, point, timeout, params]()
-                        { moveToPointTask(point, timeout, params); }, "LIMELIB_MOVE_TO_POINT");
+    movementHelper.waitUntilDone();
+    pros::delay(20); // Small delay to ensure previous movement has fully stopped
+    std::cout << "Starting moveToPoint to (" << point.x << ", " << point.y << ") with timeout " << timeout << " ms\n";
+    movementHelper.reset(timeout);
+    movementTask->create([this, point, timeout, params]()
+                         { moveToPointTask(point, timeout, params); }, "LIMELIB_MOVE_TO_POINT");
 }
 void limelib::Chassis::moveToPointTask(Point2D point, int timeout, moveToPointParams params)
 {
-    movementHelper.reset(timeout);
-    motionProfile.reset();
-    motionProfile.setMaxSpeed(params.maxSpeed);
     Pose2D currentPose = locator.getPose();
-    real_t totalDistance = movementHelper.getDistance(point, currentPose);
-    motionProfile.generateProfile(totalDistance);
+    real_t totalDistance = MovementHelper::getDistance(point, currentPose);
+    bool approaching = false;
     while (!movementHelper.isDone())
     {
-        currentPose = locator.getPose();
-        std::cout << "Current Pose: (" << currentPose.x << ", " << currentPose.y << ", " << currentPose.theta << ")\n";
-        real_t distance = movementHelper.getDistance(point, currentPose);
-        std::cout << "Distance to Point: " << distance << "\n";
+        currentPose = this->locator.getPose();
+        real_t distance = MovementHelper::getDistance(point, currentPose);
+        if (distance < 1)
+        {
+            approaching = true;
+        }
         if (distance <= params.earlyExitRange)
         {
             break;
         }
-        real_t targetVelocity = motionProfile.getVelocity(movementHelper.elapsedTime() / 1000.0);
-        real_t heading = params.forwards ? std::atan2(point.x - currentPose.x, point.y - currentPose.y) * 180 / M_PI : std::atan2(currentPose.x - point.x, currentPose.y - point.y) * 180 / M_PI;
-        std::cout << "Target Heading: " << heading << "\n";
-        std::cout << "Target Velocity: " << targetVelocity << ", Current Velocity: " << locator.getVelocity().linear << "\n";
-        real_t velocityOutput = lateralController.update(motionProfile.getPosition(movementHelper.elapsedTime() / 1000.0) - (totalDistance - distance)) + targetVelocity;
-        real_t angularError = movementHelper.getAngleDiff(heading, currentPose.theta);
-        std::cout << "Angular Error: " << angularError << "\n";
+        real_t forwardHeading = std::atan2(point.x - currentPose.x, point.y - currentPose.y) * 180 / M_PI;
+        real_t backwardHeading = std::atan2(currentPose.x - point.x, currentPose.y - point.y) * 180 / M_PI;
+        bool forwards = approaching ? (abs(forwardHeading - currentPose.theta) < abs(backwardHeading - currentPose.theta)) : params.forwards;
+        real_t heading = params.forwards ? forwardHeading : backwardHeading;
+        real_t angularError = approaching ? 0 : MovementHelper::getAngleDiff(heading, currentPose.theta);
         real_t angularOutput = angularController.update(angularError);
-        // clamp velocity outputs to minSpeed and maxSpeed
-        if (std::abs(velocityOutput) < params.minSpeed)
-        {
-            velocityOutput = (velocityOutput >= 0 ? 1 : -1) * params.minSpeed;
-        }
-        if (std::abs(velocityOutput) > params.maxSpeed)
-        {
-            velocityOutput = (velocityOutput >= 0 ? 1 : -1) * params.maxSpeed;
-        }
-        std::cout << "Velocity Output: " << velocityOutput << "\n";
-        real_t lateralOutput = velocityController.update(velocityOutput - locator.getVelocity().linear)*(1-abs(angularError)/180);
-        std::cout << "Lateral Output: " << lateralOutput << ", Angular Output: " << angularOutput << "\n";
-        leftDr.move_voltage(static_cast<int16_t>(lateralOutput - angularOutput) * 1000);
-        rightDr.move_voltage(static_cast<int16_t>(lateralOutput + angularOutput) * 1000);
+        distance = forwards ? distance : -distance;
+        real_t lateralOutput = lateralController.update(distance);
+        std::pair<real_t, real_t> desaturated = MovementHelper::desaturate(lateralOutput, angularOutput, params.maxSpeed);
+        leftDr.move(static_cast<int16_t>(desaturated.first));
+        rightDr.move(static_cast<int16_t>(desaturated.second));
 
         pros::delay(10);
     }
     std::cout << "MoveToPoint complete. Final error: " << movementHelper.getDistance(point, locator.getPose()) << " inches\n";
-    movementHelper.cancel();
     leftDr.brake();
     rightDr.brake();
 }
@@ -97,31 +81,83 @@ void limelib::Chassis::moveToPoint(real_t x, real_t y, int timeout, moveToPointP
 
 void limelib::Chassis::turnToHeading(real_t heading, int timeout, turnToHeadingParams params)
 {
-    while (!movementHelper.isDone())
-    {
-        pros::delay(10);
-    }
-    movementTask.remove();
-    movementTask.create([this, heading, timeout, params]()
-                        { turnToHeadingTask(heading, timeout, params); });
+    movementHelper.waitUntilDone();
+    pros::delay(20); // Small delay to ensure previous movement has fully stopped
+    std::cout << "Starting turnToHeading to " << heading << " degrees with timeout " << timeout << " ms\n";
+    movementHelper.reset(timeout);
+    movementTask->create([this, heading, timeout, params]()
+                         { turnToHeadingTask(heading, timeout, params); });
 }
 
 void limelib::Chassis::turnToHeadingTask(real_t heading, int timeout, turnToHeadingParams params)
 {
-    // Stuff
+    Pose2D currentPose = locator.getPose();
+    while (!this->movementHelper.isDone())
+    {
+        currentPose = this->locator.getPose();
+        real_t angleDiff = MovementHelper::getAngleDiff(heading, currentPose.theta);
+        if (std::abs(angleDiff) <= params.earlyExitRange)
+        {
+            break;
+        }
+        real_t angularOutput = angularController.update(angleDiff);
+        if (std::abs(angularOutput) < params.minSpeed)
+        {
+            angularOutput = (angularOutput >= 0 ? 1 : -1) * params.minSpeed;
+        }
+        if (std::abs(angularOutput) > params.maxSpeed)
+        {
+            angularOutput = (angularOutput >= 0 ? 1 : -1) * params.maxSpeed;
+        }
+        leftDr.move(static_cast<int16_t>(angularOutput));
+        rightDr.move(static_cast<int16_t>(-angularOutput));
+
+        pros::delay(10);
+    }
+    std::cout << "TurnToHeading complete. Final error: " << movementHelper.getAngleDiff(heading, locator.getPose().theta) << " degrees\n";
+    leftDr.brake();
+    rightDr.brake();
 }
 
 void limelib::Chassis::turnToPoint(Point2D point, int timeout, turnToHeadingParams params)
 {
-    while (!movementHelper.isDone())
+    movementHelper.waitUntilDone();
+    pros::delay(20); // Small delay to ensure previous movement has fully stopped
+    std::cout << "Starting turnToPoint to (" << point.x << ", " << point.y << ") with timeout " << timeout << " ms\n";
+    movementHelper.reset(timeout);
+    movementTask->create([this, point, timeout, params]()
+                         { turnToPointTask(point, timeout, params); });
+}
+
+void limelib::Chassis::turnToPointTask(Point2D point, int timeout, turnToHeadingParams params)
+{
+    Pose2D currentPose = locator.getPose();
+    while (!this->movementHelper.isDone())
     {
+        currentPose = this->locator.getPose();
+        real_t targetHeading = std::atan2(point.x - currentPose.x, point.y - currentPose.y) * 180 / M_PI;
+        real_t angleDiff = MovementHelper::getAngleDiff(targetHeading, currentPose.theta);
+        if (std::abs(angleDiff) <= params.earlyExitRange)
+        {
+            break;
+        }
+        real_t angularOutput = angularController.update(angleDiff);
+        if (std::abs(angularOutput) < params.minSpeed)
+        {
+            angularOutput = (angularOutput >= 0 ? 1 : -1) * params.minSpeed;
+        }
+        if (std::abs(angularOutput) > params.maxSpeed)
+        {
+            angularOutput = (angularOutput >= 0 ? 1 : -1) * params.maxSpeed;
+        }
+        leftDr.move(static_cast<int16_t>(angularOutput));
+        rightDr.move(static_cast<int16_t>(-angularOutput));
+
         pros::delay(10);
     }
-    movementTask.remove();
-    Pose2D currentPose = locator.getPose();
-    real_t targetHeading = std::atan2(point.y - currentPose.y, point.x - currentPose.x) * 180 / M_PI;
-    movementTask.create([this, targetHeading, timeout, params]()
-                        { turnToHeadingTask(targetHeading, timeout, params); });
+    std::cout << "TurnToPoint complete. Final error: " << movementHelper.getAngleDiff(std::atan2(point.x - locator.getPose().x, point.y - locator.getPose().y) * 180 / M_PI, locator.getPose().theta) << " degrees\n";
+    leftDr.brake();
+    rightDr.brake();
 }
 
 void limelib::Chassis::turnToPoint(real_t x, real_t y, int timeout, turnToHeadingParams params)
