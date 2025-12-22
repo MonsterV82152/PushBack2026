@@ -12,24 +12,20 @@ Helper::Helper(
     pros::Rotation &scoringRotation,
     Piston &scoreLift,
     Piston &intakePTO,
-    Piston &hookPTO) : left1(left1),
-                       left2(left2),
-                       right1(right1),
-                       right2(right2),
+    Piston &hookPTO) : leftHookMotorPort(leftHook),
+                       rightHookMotorPort(rightHook),
+                       leftIntakeMotorPort(leftIntake),
+                       rightIntakeMotorPort(rightIntake),
+                       leftSensorMotor({left1, left2}),
+                       rightSensorMotor({right1, right2}),
                        leftIntakeMotor(leftIntake),
                        rightIntakeMotor(rightIntake),
                        leftHookMotor(leftHook),
                        rightHookMotor(rightHook),
                        intakePTO(intakePTO),
                        scoringRotation(scoringRotation),
-                       leftDT4({left1, left2, leftIntake, leftHook}),
-                       rightDT4({right1, right2, rightIntake, rightHook}),
-                       leftDT3Hook({left1, left2, leftHook}),
-                       leftDT3Intake({left1, left2, leftIntake}),
-                       rightDT3Hook({right1, right2, rightHook}),
-                       rightDT3Intake({right1, right2, rightIntake}),
-                       leftDT2({left1, left2}),
-                       rightDT2({right1, right2}),
+                       leftDT({left1, left2, leftIntake, leftHook}),
+                       rightDT({right1, right2, rightIntake, rightHook}),
                        hookPTO(hookPTO),
                        scoreLift(scoreLift)
 {
@@ -39,49 +35,31 @@ Robot::Robot(Helper &helper, limelib::MCL &mcl, pros::Controller &controller)
     : helper(helper), mcl(mcl), master(controller),
       intakePTOState(false),
       hookPTOState(false),
-      intakePTOTask([&]() {}),
-      hookPTOTask([&]() {}),
-      scoringTask([&]() {}),
-      hookPID(0.4, 0.0005, 0.6, 0.05, true),
+      intakePTOTask(nullptr),
+      hookPTOTask(nullptr),
+      scoringTask(nullptr),
+      hookPID(0.4, 0.001, 0.5, 0.05, true),
       angularPID4(0, 0, 0),
       lateralPID4(0, 0, 0),
-      velocityPID4(0, 0, 0),
-      motionProfile4(0.5, 1.0),
       angularPID6(0, 0, 0),
       lateralPID6(0, 0, 0),
-      velocityPID6(0, 0, 0),
-      motionProfile6(0.5, 1.0),
       angularPID8(0, 0, 0),
       lateralPID8(0, 0, 0),
-      velocityPID8(0, 0, 0),
-      motionProfile8(0.5, 1.0),
-      chassis4(mcl, helper.leftDT4, helper.rightDT4,
-               lateralPID4,
-               velocityPID4,
-               angularPID4,
-               motionProfile4),
-      chassis6Intake(mcl, helper.leftDT3Intake, helper.rightDT3Intake,
-                     lateralPID6,
-                     velocityPID6,
-                     angularPID6,
-                     motionProfile6),
-      chassis6Hook(mcl, helper.leftDT3Hook, helper.rightDT3Hook,
-                   lateralPID6,
-                   velocityPID6,
-                   angularPID6,
-                   motionProfile6),
-      chassis8(mcl, helper.leftDT4, helper.rightDT4,
-               lateralPID8,
-               velocityPID8,
-               angularPID8,
-               motionProfile8)
+      chassis(mcl, helper.leftDT, helper.rightDT,
+              lateralPID4,
+              angularPID4)
 {
 }
 
 void Robot::init()
 {
-    pros::lcd::initialize();
+    intakePTOTask = std::make_unique<pros::Task>([&]() {});
+    hookPTOTask = std::make_unique<pros::Task>([&]() {});
+    scoringTask = std::make_unique<pros::Task>([&]() {});
     helper.scoringRotation.set_position(0);
+    intakePTOTask->remove();
+    hookPTOTask->remove();
+    scoringTask->remove();
 }
 
 void Robot::moveState(PTOState state)
@@ -94,14 +72,20 @@ void Robot::moveState(PTOState state)
     bool hookPTOCurrentState = hookPTOState.load();
     if (state.hookPTOState == ON && !hookPTOCurrentState)
     {
-        if (hookPTOTask.get_state() == pros::task_state_e_t::E_TASK_STATE_RUNNING)
+        if (hookTaskQueued)
         {
             return;
         }
-        hookPTOTask.create([this, state]()
-                           {
+        hookTaskQueued = true;
+        hookPTOTask->create([this, state]()
+                            {
                 pros::delay(50);
                 hookPTOState.store(true);
+                hookTaskQueued = false;
+                helper.leftDT.erase_port(helper.leftHookMotorPort);
+                std::cout << helper.leftDT.size() << std::endl;
+                helper.rightDT.erase_port(helper.rightHookMotorPort);
+                std::cout << helper.rightDT.size() << std::endl;
                 if (state.hookSpeed == 0) {
                     helper.leftHookMotor.brake();
                     helper.rightHookMotor.brake();
@@ -114,6 +98,8 @@ void Robot::moveState(PTOState state)
     }
     else if (state.hookPTOState == OFF && hookPTOCurrentState)
     {
+        helper.leftDT.append(helper.leftHookMotor);
+        helper.rightDT.append(helper.rightHookMotor);
         hookPTOState.store(false);
     }
     else if (state.hookPTOState == ON)
@@ -132,14 +118,18 @@ void Robot::moveState(PTOState state)
 
     if (state.intakePTOState == ON && !intakePTOCurrentState)
     {
-        if (intakePTOTask.get_state() == pros::task_state_e_t::E_TASK_STATE_RUNNING)
+        if (intakeTaskQueued)
         {
             return;
         }
-        intakePTOTask.create([this, state]()
-                             {
+        intakeTaskQueued = true;
+        intakePTOTask->create([this, state]()
+                              {
                 pros::delay(50);
                 intakePTOState.store(true);
+                intakeTaskQueued = false;
+                helper.leftDT.erase_port(helper.leftIntakeMotorPort);
+                helper.rightDT.erase_port(helper.rightIntakeMotorPort);
                 if (state.intakeSpeed == 0) {
                     helper.leftIntakeMotor.brake();
                     helper.rightIntakeMotor.brake();
@@ -152,6 +142,8 @@ void Robot::moveState(PTOState state)
     }
     else if (state.intakePTOState == OFF && intakePTOCurrentState)
     {
+        helper.leftDT.append(helper.leftIntakeMotor);
+        helper.rightDT.append(helper.rightIntakeMotor);
         intakePTOState.store(false);
     }
     else if (state.intakePTOState == ON)
@@ -173,19 +165,8 @@ void Robot::teleopControl()
 {
     int forward = master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
     int turn = master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-    helper.leftDT4.move(forward + turn);
-    helper.rightDT4.move(forward - turn);
-
-    if (!intakePTOState.load())
-    {
-        helper.leftIntakeMotor.move(forward + turn);
-        helper.rightIntakeMotor.move(forward - turn);
-    }
-    if (!hookPTOState.load())
-    {
-        helper.leftHookMotor.move(forward + turn);
-        helper.rightHookMotor.move(forward - turn);
-    }
+    helper.leftDT.move(forward + turn);
+    helper.rightDT.move(forward - turn);
     if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1))
     {
         intaking = !intaking;
@@ -209,11 +190,19 @@ void Robot::teleopControl()
     }
     if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1))
     {
-        startScoring();
+        setScoringAction(ScoringAction::SCOREANDHOLD);
     }
     if (master.get_digital_new_release(pros::E_CONTROLLER_DIGITAL_L1))
     {
-        stopScoring();
+        setScoringAction(ScoringAction::RESET);
+    }
+    if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
+    {
+        setScoringAction(ScoringAction::DESCOREANDHOLD);
+    }
+    if (master.get_digital_new_release(pros::E_CONTROLLER_DIGITAL_X))
+    {
+        setScoringAction(ScoringAction::RESET);
     }
     if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT))
     {
@@ -240,6 +229,12 @@ void Robot::teleopControl()
 void Robot::setScoringAction(ScoringAction action)
 {
     currentScoringAction.store(action);
+
+    if (!scoringTaskRunning.load())
+    {
+        scoringTask->create([this]()
+                            { this->scoringLoop(); });
+    }
 }
 
 void Robot::scoringLoop()
@@ -253,6 +248,41 @@ void Robot::scoringLoop()
 
         switch (action)
         {
+        case ScoringAction::DESCOREANDHOLD:
+            if (abs(DESCORING_POSITION - currentAngle) > 5)
+            {
+                double speed = hookPID.update(DESCORING_POSITION - currentAngle);
+                if (speed > 127)
+                    speed = 127;
+                else if (speed < -127)
+                    speed = -127;
+                moveState({LEAVE, ON, LEAVE, (short)speed});
+            }
+            else
+            {
+                helper.leftHookMotor.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+                helper.rightHookMotor.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+                currentScoringAction.store(ScoringAction::DEHOLD);
+                hookPID.reset();
+            }
+
+            break;
+        case ScoringAction::DESCOREANDRESET:
+            if (abs(DESCORING_POSITION - currentAngle) > 5)
+            {
+                double speed = hookPID.update(DESCORING_POSITION - currentAngle);
+                if (speed > 127)
+                    speed = 127;
+                else if (speed < -127)
+                    speed = -127;
+                moveState({LEAVE, ON, LEAVE, (short)speed});
+            }
+            else
+            {
+                currentScoringAction.store(ScoringAction::RESET);
+                hookPID.reset();
+            }
+            break;
         case ScoringAction::SCOREANDHOLD:
             if (abs(currentAngle - SCORING_POSITION) > 5)
             {
@@ -309,6 +339,7 @@ void Robot::scoringLoop()
             break;
 
         case ScoringAction::HOLD:
+        {
             // Hold position - stop motors but keep PTO engaged
             double speed = hookPID.update(SCORING_POSITION - currentAngle);
             if (speed > 127)
@@ -318,6 +349,18 @@ void Robot::scoringLoop()
             moveState({LEAVE, ON, LEAVE, (short)speed});
             break;
         }
+        case ScoringAction::DEHOLD:
+        {
+            // Hold position - stop motors but keep PTO engaged
+            double speed = hookPID.update(DESCORING_POSITION - currentAngle);
+            if (speed > 127)
+                speed = 127;
+            else if (speed < -127)
+                speed = -127;
+            moveState({LEAVE, ON, LEAVE, (short)speed});
+            break;
+        }
+        }
 
         pros::delay(10); // Small delay to prevent CPU hogging
     }
@@ -326,32 +369,4 @@ void Robot::scoringLoop()
 void Robot::score()
 {
     setScoringAction(ScoringAction::SCOREANDRESET);
-
-    if (!scoringTaskRunning.load())
-    {
-        scoringTask.create([this]()
-                           { this->scoringLoop(); });
-    }
-}
-
-void Robot::startScoring()
-{
-    setScoringAction(ScoringAction::SCOREANDHOLD);
-
-    if (!scoringTaskRunning.load())
-    {
-        scoringTask.create([this]()
-                           { this->scoringLoop(); });
-    }
-}
-
-void Robot::stopScoring()
-{
-    setScoringAction(ScoringAction::RESET);
-
-    if (!scoringTaskRunning.load())
-    {
-        scoringTask.create([this]()
-                           { this->scoringLoop(); });
-    }
 }

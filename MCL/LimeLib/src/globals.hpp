@@ -15,6 +15,7 @@
 #include "main.h"
 
 using namespace limelib;
+
 /*----------------------Defines----------------------*/
 
 // Constants
@@ -82,10 +83,14 @@ inline std::vector<std::shared_ptr<Object2D>> obstacles = {
     std::make_shared<Line2D>(Point2D(-2.9f, 0.5f), Point2D(0.5f, 2.9f)),
     std::make_shared<Line2D>(Point2D(-0.5f, -2.9f), Point2D(2.9f, -0.5f)),
 };
+
+
 inline Field2D field(144.0f, 144.0f, obstacles);
 // inline MCL mcl(&verticalTW, nullptr, inertial, mclSensors, field, 200, 0.1, 0.1, false, 5);
 inline Odometry odom(&verticalTW, nullptr, inertial);
 inline PID lateralPID(3, 0.0, 2);
 inline PID angularPID(0.9, 0.0, 1);
 inline Chassis chassis(odom, leftDT, rightDT, lateralPID, angularPID);
+
+
 #endif

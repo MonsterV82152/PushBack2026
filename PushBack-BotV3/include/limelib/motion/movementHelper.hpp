@@ -34,11 +34,13 @@ namespace limelib
         int elapsedTime();
         void cancel();
         void reset(int milis);
-        real_t getAngleDiff(real_t targetAngle, real_t currentAngle);
-        real_t getDistance(const Pose2D &targetPose, const Pose2D &currentPose);
-        real_t getDistance(const Point2D &targetPose, const Pose2D &currentPose);
-        real_t getDistance(const Pose2D &targetPose, const Point2D &currentPose);
-        real_t getDistance(const Point2D &targetPose, const Point2D &currentPose);
+        void waitUntilDone();
+        static real_t getAngleDiff(real_t targetAngle, real_t currentAngle);
+        static real_t getDistance(const Pose2D &targetPose, const Pose2D &currentPose);
+        static real_t getDistance(const Point2D &targetPose, const Pose2D &currentPose);
+        static real_t getDistance(const Pose2D &targetPose, const Point2D &currentPose);
+        static real_t getDistance(const Point2D &targetPose, const Point2D &currentPose);
+        static std::pair<real_t, real_t> desaturate(real_t throttle, real_t turn, real_t maxMagnitude = 127);
 
 
     private:

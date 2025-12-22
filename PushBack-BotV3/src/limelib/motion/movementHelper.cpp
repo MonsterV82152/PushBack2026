@@ -41,6 +41,13 @@ int limelib::MovementHelper::elapsedTime()
 {
     return timer.elapsedTime();
 }
+void limelib::MovementHelper::waitUntilDone()
+{
+    while (!isDone())
+    {
+        pros::delay(10);
+    }
+}
 limelib::real_t limelib::MovementHelper::getAngleDiff(real_t targetAngle, real_t currentAngle)
 {
     real_t diff = targetAngle - currentAngle;
@@ -68,4 +75,17 @@ limelib::real_t limelib::MovementHelper::getDistance(const Point2D &targetPose, 
     real_t dx = targetPose.x - currentPose.x;
     real_t dy = targetPose.y - currentPose.y;
     return std::sqrt(dx * dx + dy * dy);
+}
+
+std::pair<limelib::real_t, limelib::real_t> limelib::MovementHelper::desaturate(real_t throttle, real_t turn, real_t maxMagnitude)
+{
+    real_t left = throttle + turn;
+    real_t right = throttle - turn;
+    real_t maxVal = std::max(std::abs(left), std::abs(right));
+    if (maxVal > maxMagnitude)
+    {
+        left = left / maxVal * maxMagnitude;
+        right = right / maxVal * maxMagnitude;
+    }
+    return {left, right};
 }

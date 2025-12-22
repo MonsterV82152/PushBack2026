@@ -10,6 +10,7 @@
 #include "limelib/motion/movementHelper.hpp"
 #include "pros/motor_group.hpp"
 #include "pros/rtos.hpp"
+#include <memory>
 
 namespace limelib
 {
@@ -56,18 +57,15 @@ namespace limelib
          * @param leftDr Reference to the left motor group
          * @param rightDr Reference to the right motor group
          * @param lateralController Reference to the lateral PID controller
-         * @param velocityController Reference to the velocity PID controller
          * @param angularController Reference to the angular PID controller
-         * @param motionProfile Reference to the trapezoidal motion profiler
          */
-        Chassis(Locator &locator, pros::MotorGroup &leftDr, pros::MotorGroup &rightDr, PID &lateralController, PID &velocityController, PID &angularController, TrapezoidalMotionProfile &motionProfile);
+        Chassis(Locator &locator, pros::MotorGroup &leftDr, pros::MotorGroup &rightDr, PID &lateralController, PID &angularController);
         void calibrate();
         void cancelAllMovement();
         void setPose(Pose2D pose);
         void setPose(real_t x, real_t y, real_t theta);
         void moveToPoint(Point2D point, int timeout, moveToPointParams params = moveToPointParams());
         void moveToPoint(real_t x, real_t y, int timeout, moveToPointParams params = moveToPointParams());
-        void moveToPose(Pose2D pose, int timeout, moveToPoseParams params = moveToPoseParams());
         void moveToPose(real_t x, real_t y, real_t theta, int timeout, moveToPoseParams params = moveToPoseParams());
         void turnToHeading(real_t heading, int timeout, turnToHeadingParams params = turnToHeadingParams());
         void turnToPoint(Point2D point, int timeout, turnToHeadingParams params = turnToHeadingParams());
@@ -79,17 +77,14 @@ namespace limelib
         pros::MotorGroup &leftDr;
         pros::MotorGroup &rightDr;
         PID &lateralController;
-        PID &velocityController;
         PID &angularController;
         bool isMoving = false;
         bool motionQueued = false;
-        pros::Task movementTask;
-        TrapezoidalMotionProfile &motionProfile;
+        std::unique_ptr<pros::Task> movementTask;
 
         void moveToPointTask(Point2D point, int timeout, moveToPointParams params);
-        void moveToPoseTask(Pose2D pose, int timeout, moveToPoseParams params = moveToPoseParams());
         void turnToHeadingTask(real_t heading, int timeout, turnToHeadingParams params = turnToHeadingParams());
-
+        void turnToPointTask(Point2D point, int timeout, turnToHeadingParams params = turnToHeadingParams());
 
 
     };
