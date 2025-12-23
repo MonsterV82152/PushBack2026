@@ -91,7 +91,9 @@ limelib::MCL::MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW,
                   pros::Imu &imu, std::vector<MCLDistance> &sensors, Field2D &field, int num_particles, real_t rotationNoise, real_t translationNoise, bool debug,
                   int intensity, bool shouldTaskRun)
     : odomHelper(verticalTW, horizontalTW, imu, false), sensors(sensors), field(field), NUM_PARTICLES(num_particles),
-      ROTATION_NOISE(rotationNoise), TRANSLATION_NOISE(translationNoise), debug(debug), INTENSITY(intensity), last_mcl_update(intensity), randomParticleCount(0), shouldTaskRun(shouldTaskRun), prevPose(0, 0, 0), lastUpdateTime(pros::millis()), currentVelocity(), debugCounter(0), master(pros::E_CONTROLLER_MASTER)
+      ROTATION_NOISE(rotationNoise), TRANSLATION_NOISE(translationNoise), debug(debug), INTENSITY(intensity), last_mcl_update(intensity), randomParticleCount(0), shouldTaskRun(shouldTaskRun), prevPose(0, 0, 0), lastUpdateTime(pros::millis()), currentVelocity(), debugCounter(0),
+      currentMode(LocalizationMode::ODOMETRY_PRIMARY), sensorConfidence(0.5), motionConfidence(1.0), overallConfidence(0.5),
+      consecutiveLowConfidence(0), consecutiveHighConfidence(0), master(pros::E_CONTROLLER_MASTER)
 {
     // Initialize particles with random positions but heading will be set from odometry later
     for (int i = 0; i < NUM_PARTICLES; i++)
@@ -196,11 +198,22 @@ void limelib::MCL::updateMCL()
     // Get current odometry heading for all particles
     real_t odomHeading = odomHelper.getPose(true).theta;
 
+    // Adaptive noise: increase noise when confidence is low to maintain diversity
+    real_t adaptiveTranslationNoise = TRANSLATION_NOISE;
+    if (currentMode == LocalizationMode::RECOVERY_MODE)
+    {
+        adaptiveTranslationNoise *= 3.0; // Triple noise in recovery mode
+    }
+    else if (overallConfidence < 0.4)
+    {
+        adaptiveTranslationNoise *= 1.5; // Increase noise when struggling
+    }
+
     for (MCLParticle &particle : particles)
     {
-        // Apply only translation motion with noise, use odometry heading for all particles
-        particle.point.x += odomDelta.x + getRandomReal_t(-TRANSLATION_NOISE, TRANSLATION_NOISE);
-        particle.point.y += odomDelta.y + getRandomReal_t(-TRANSLATION_NOISE, TRANSLATION_NOISE);
+        // Apply translation motion with adaptive noise
+        particle.point.x += odomDelta.x + getRandomReal_t(-adaptiveTranslationNoise, adaptiveTranslationNoise);
+        particle.point.y += odomDelta.y + getRandomReal_t(-adaptiveTranslationNoise, adaptiveTranslationNoise);
         // Set all particles to use the same odometry heading (no rotation correction)
         particle.point.theta = odomHeading;
     }
@@ -213,6 +226,7 @@ void limelib::MCL::updateMCL()
                   << std::endl
                   << "---- MCL Update ----" << std::endl;
         std::cout << "Valid sensor readings: " << std::endl;
+        std::cout << "Current Localization Mode: " << (currentMode == LocalizationMode::ODOMETRY_PRIMARY ? "ODOMETRY_PRIMARY" : (currentMode == LocalizationMode::MCL_PRIMARY ? "MCL_PRIMARY" : "BALANCED")) << std::endl;
     }
     for (MCLDistance &sensor : sensors)
     {
@@ -234,6 +248,8 @@ void limelib::MCL::updateMCL()
         }
         else
         {
+            if (debug && debugCounter >= 50)
+                std::cout << "(invalid) " << std::endl;
             sensor.reading = -1; // Mark as invalid
         }
     }
@@ -241,7 +257,7 @@ void limelib::MCL::updateMCL()
         std::cout << std::endl;
 
     // Debug: Print sensor readings
-    if ((debug && debugCounter >= 50)/* || master.get_digital(pros::E_CONTROLLER_DIGITAL_A)*/)
+    if ((debug && debugCounter >= 50) /* || master.get_digital(pros::E_CONTROLLER_DIGITAL_A)*/)
     {
         std::cout << "Valid sensors: " << validSensorCount << "/" << sensors.size() << " - Readings: ";
         for (const MCLDistance &sensor : sensors)
@@ -266,6 +282,8 @@ void limelib::MCL::updateMCL()
     {
         real_t likelihood = 1.0;
         bool isFirstParticle = (&particle == &particles[0]); // Debug only first particle
+        real_t particleAvgError = 0.0;
+        int particleSensorCount = 0;
 
         // For each sensor, compare actual vs expected readings
         for (const MCLDistance &sensor : sensors)
@@ -299,7 +317,6 @@ void limelib::MCL::updateMCL()
             // Debug output for first particle
             if (debug && isFirstParticle && debugCounter >= 50)
             {
-                debugCounter = 0;
                 std::cout << "Particle at (" << particle.point.x << ", " << particle.point.y << ", " << particle.point.theta * 180 / M_PI << "deg)" << std::endl;
                 std::cout << "Sensor at angle " << sensor.pose.theta << "deg, globalX: " << sensorGlobalX << ", globalY: " << sensorGlobalY
                           << ", actual=" << actualDistance << "in, expected=" << expectedDistance << "in" << std::endl;
@@ -307,12 +324,13 @@ void limelib::MCL::updateMCL()
 
             // Calculate likelihood based on how well actual matches expected
             real_t error = std::abs(actualDistance - expectedDistance);
-            // Gaussian likelihood with σ=5 inches (variance=25)
-            // This means 1 inch error → likelihood ≈ 0.98
-            //           3 inch error → likelihood ≈ 0.84
-            //           5 inch error → likelihood ≈ 0.61
-            //          10 inch error → likelihood ≈ 0.14
-            real_t sensorLikelihood = exp(-error * error / (2.0 * 25.0));
+
+            // Track error for confidence calculation
+            particleAvgError += error;
+            particleSensorCount++;
+
+            // Gaussian likelihood with σ=4 inches (variance=16)
+            real_t sensorLikelihood = exp(-error * error / (2.0 * 16.0));
             // Apply minimum likelihood floor to prevent complete particle starvation
             sensorLikelihood = std::max(sensorLikelihood, real_t(0.001));
 
@@ -343,6 +361,7 @@ void limelib::MCL::updateMCL()
     // (Must happen BEFORE resampling to use meaningful weights from correction step)
     real_t sumX = 0, sumY = 0, sumWeights = 0;
     real_t maxWeight = 0;
+    real_t bestParticleAvgError = 1000.0; // Track error of best particle
 
     for (const MCLParticle &particle : particles)
     {
@@ -351,7 +370,31 @@ void limelib::MCL::updateMCL()
         sumX += particle.point.x * weight;
         sumY += particle.point.y * weight;
         sumWeights += weight;
-        maxWeight = std::max(maxWeight, weight);
+
+        if (weight > maxWeight)
+        {
+            maxWeight = weight;
+            // Recalculate error for the best particle
+            real_t errorSum = 0.0;
+            int errorCount = 0;
+            for (const MCLDistance &sensor : sensors)
+            {
+                if (sensor.reading <= 0)
+                    continue;
+
+                real_t actualDistance = sensor.reading * MM_TO_IN;
+                real_t cosTheta = cos(particle.point.theta);
+                real_t sinTheta = sin(particle.point.theta);
+                real_t sensorGlobalX = particle.point.x + sensor.pose.x * cosTheta + sensor.pose.y * sinTheta;
+                real_t sensorGlobalY = particle.point.y + sensor.pose.y * cosTheta - sensor.pose.x * sinTheta;
+                real_t sensorGlobalTheta = particle.point.theta + sensor.pose.theta * M_PI / 180;
+                Ray2D ray(Point2D(sensorGlobalX, sensorGlobalY), sensorGlobalTheta);
+                real_t expectedDistance = getRayCastDistance(field.getEdges(), ray);
+                errorSum += std::abs(actualDistance - expectedDistance);
+                errorCount++;
+            }
+            bestParticleAvgError = errorCount > 0 ? errorSum / errorCount : 1000.0;
+        }
     }
     // std::cout << "Max Particle Weight: " << maxWeight << std::endl;
     if (sumWeights > 0)
@@ -361,22 +404,25 @@ void limelib::MCL::updateMCL()
         // Use odometry heading directly instead of particle-based rotation
         estimatedPose.point.theta = odomHeading;
 
-        // Calculate confidence based on particle concentration
-        // Higher max weight = more particles agree = higher confidence
-        estimatedPose.weight = maxWeight * NUM_PARTICLES; // Normalized confidence [0, 1]
-        // if (master.get_digital(pros::E_CONTROLLER_DIGITAL_UP))
-        // {
-        //     std::cout << "Estimated Pose before blending: (" << estimatedPose.point.x << ", " << estimatedPose.point.y << ", " << estimatedPose.point.theta * 180 / M_PI << "deg), Confidence: " << estimatedPose.weight << std::endl;
-        // }
+        // Mixed MCL - Calculate multi-factor confidence
+        sensorConfidence = calculateSensorConfidence(validSensorCount, maxWeight, sensors.size(), bestParticleAvgError);
+        motionConfidence = calculateMotionConfidence();
+        overallConfidence = combinedConfidence(sensorConfidence, motionConfidence);
 
-        // Alternative confidence calculation based on effective sample size
-        // real_t ess = 1.0 / std::accumulate(particles.begin(), particles.end(), 0.0,
-        //     [](real_t sum, const MCLParticle& p) { return sum + p.weight * p.weight; });
-        // estimatedPose.weight = ess / NUM_PARTICLES;
+        // Update localization mode based on confidence trends
+        updateLocalizationMode();
+        if (debug && debugCounter >= 50)
+        {
+            std::cout << "Best Particle Avg Error: " << bestParticleAvgError << " inches" << std::endl;
+            std::cout << "Sensor Confidence: " << sensorConfidence << ", Motion Confidence: " << motionConfidence
+                      << ", Overall Confidence: " << overallConfidence << std::endl;
+        }
 
-        // Use confidence to blend MCL estimate with odometry
-        real_t confidence = estimatedPose.weight;
-        confidence = std::clamp(confidence, 0.1f, 0.9f); // Prevent full reliance on either source
+        // Get adaptive blend factor based on current mode
+        real_t confidence = getAdaptiveBlendFactor();
+
+        // Store simple weight for backwards compatibility
+        estimatedPose.weight = overallConfidence;
 
         // Calculate odometry-based pose from last actualPose + accumulated delta
         Pose2D odomBasedPose;
@@ -384,11 +430,22 @@ void limelib::MCL::updateMCL()
         odomBasedPose.y = actualPose.y + odomDelta.y;
         odomBasedPose.theta = odomHeading; // Use current odometry heading
 
-        // Blend only X and Y positions based on confidence, use odometry heading directly
+        // Adaptive blending based on localization mode
         actualPose.x = confidence * estimatedPose.point.x + (1.0 - confidence) * odomBasedPose.x;
         actualPose.y = confidence * estimatedPose.point.y + (1.0 - confidence) * odomBasedPose.y;
         // Always use odometry heading (no rotation correction)
         actualPose.theta = odomHeading;
+
+        // Debug output for mode and confidence
+        if (debug && debugCounter >= 50)
+        {
+            debugCounter = 0;
+            const char *modeStr = currentMode == LocalizationMode::MCL_PRIMARY ? "MCL_PRIMARY" : currentMode == LocalizationMode::ODOMETRY_PRIMARY ? "ODOM_PRIMARY"
+                                                                                                                                                   : "RECOVERY";
+            std::cout << "Mode: " << modeStr << ", Confidence: " << overallConfidence
+                      << " (sensor=" << sensorConfidence << ", motion=" << motionConfidence
+                      << "), Blend=" << confidence << std::endl;
+        }
     }
     else
     {
@@ -402,8 +459,25 @@ void limelib::MCL::updateMCL()
     std::vector<MCLParticle> newParticles;
     newParticles.reserve(NUM_PARTICLES);
 
-    // Calculate how many random particles to inject (for kidnapping resistance)
-    int numRandom = randomParticleCount;
+    // Calculate how many random particles to inject based on mode
+    int numRandom;
+    if (currentMode == LocalizationMode::RECOVERY_MODE)
+    {
+        // RECOVERY: Very aggressive - inject 50% random particles to search entire field
+        numRandom = NUM_PARTICLES / 2; // 50% random particles
+        std::cout << "RECOVERY MODE: Injecting " << numRandom << " random particles (50%)" << std::endl;
+    }
+    else if (overallConfidence < 0.4)
+    {
+        // Even in normal mode, if confidence is low, inject more random particles
+        numRandom = NUM_PARTICLES / 10; // 10% random when struggling
+    }
+    else
+    {
+        // Normal operation: small number for kidnapping resistance
+        numRandom = randomParticleCount;
+    }
+
     int numResampled = NUM_PARTICLES - numRandom;
 
     // Guard against edge cases
@@ -554,4 +628,160 @@ limelib::real_t limelib::getRayCastDistance(const std::vector<LineSegment2D> &ed
     }
 
     return min_distance;
+}
+
+// Mixed MCL - Confidence Calculation Helpers
+
+limelib::real_t limelib::MCL::calculateSensorConfidence(int validSensors, real_t maxWeight, int totalSensors, real_t avgError)
+{
+    // Component 1: Sensor availability (more valid sensors = higher confidence)
+    real_t sensorAvailability = static_cast<real_t>(validSensors) / totalSensors;
+
+    // Component 2: Particle agreement (higher max weight = particles agree more)
+    // maxWeight is already normalized, multiply by NUM_PARTICLES for scaling
+    real_t particleAgreement = maxWeight * NUM_PARTICLES;
+    particleAgreement = std::clamp(particleAgreement, 0.0f, 1.0f);
+
+    // Component 3: Error magnitude (NEW - addresses the issue!)
+    // Low error = high confidence, high error = low confidence
+    // Use exponential decay: good at 2in, poor at 10in
+    real_t errorConfidence = std::exp(-avgError / 5.0); // e^(-error/5)
+    // At 2 inches: e^(-0.4) ≈ 0.67
+    // At 5 inches: e^(-1.0) ≈ 0.37
+    // At 10 inches: e^(-2.0) ≈ 0.14
+    // At 40 inches: e^(-8.0) ≈ 0.0003 (nearly zero!)
+
+    // Combine all three factors (geometric mean ensures all contribute)
+    real_t sensorConf = std::pow(sensorAvailability * particleAgreement * errorConfidence, 1.0 / 3.0);
+    if (validSensors < 2)
+    {
+        sensorConf *= 0.5; // Heavily penalize low sensor count
+    }
+
+    return std::clamp(sensorConf, 0.0f, 1.0f);
+}
+
+limelib::real_t limelib::MCL::calculateMotionConfidence()
+{
+    // Calculate recent motion magnitude
+    real_t deltaDistance = std::sqrt(odomDelta.x * odomDelta.x + odomDelta.y * odomDelta.y);
+
+    // Motion confidence decreases with speed (odometry drift increases)
+    // At low speeds: high confidence in odometry
+    // At high speeds: lower confidence due to wheel slip, etc.
+    real_t maxTrustedSpeed = 5.0; // inches per update cycle (adjust based on your robot)
+    real_t speedRatio = deltaDistance / maxTrustedSpeed;
+
+    // Exponential decay: slow = 1.0, fast = approaches 0
+    real_t motionConf = std::exp(-speedRatio);
+
+    return std::clamp(motionConf, 0.2f, 1.0f); // Never go below 0.2
+}
+
+limelib::real_t limelib::MCL::combinedConfidence(real_t sensorConf, real_t motionConf)
+{
+    // Weight sensor confidence more heavily (70/30 split)
+    // Sensor data is more reliable for absolute position
+    real_t combined = 0.7 * sensorConf + 0.3 * motionConf;
+
+    return std::clamp(combined, 0.1f, 0.9f);
+}
+
+void limelib::MCL::updateLocalizationMode()
+{
+    // Track confidence trends
+    if (overallConfidence > 0.6)
+    {
+        consecutiveHighConfidence++;
+        consecutiveLowConfidence = 0;
+    }
+    else if (overallConfidence < 0.3)
+    {
+        consecutiveLowConfidence++;
+        consecutiveHighConfidence = 0;
+    }
+    else
+    {
+        // Medium confidence - decay counters
+        consecutiveHighConfidence = std::max(0, consecutiveHighConfidence - 1);
+        consecutiveLowConfidence = std::max(0, consecutiveLowConfidence - 1);
+    }
+
+    // State machine for mode transitions
+    switch (currentMode)
+    {
+    case LocalizationMode::ODOMETRY_PRIMARY:
+        // Transition to MCL_PRIMARY if we have sustained high confidence
+        if (consecutiveHighConfidence >= 5)
+        {
+            currentMode = LocalizationMode::MCL_PRIMARY;
+            consecutiveLowConfidence = 0; // Reset counter
+            std::cout << "Mode: ODOMETRY_PRIMARY -> MCL_PRIMARY" << std::endl;
+        }
+        // Transition to RECOVERY if we're stuck with low confidence
+        // Reduced threshold from 20 to 10 for faster recovery
+        else if (consecutiveLowConfidence >= 10)
+        {
+            currentMode = LocalizationMode::RECOVERY_MODE;
+            std::cout << "Mode: ODOMETRY_PRIMARY -> RECOVERY_MODE (stuck at low confidence)" << std::endl;
+        }
+        break;
+
+    case LocalizationMode::MCL_PRIMARY:
+        // Transition to ODOMETRY_PRIMARY if confidence drops
+        if (consecutiveLowConfidence >= 10)
+        {
+            currentMode = LocalizationMode::ODOMETRY_PRIMARY;
+            std::cout << "Mode: MCL_PRIMARY -> ODOMETRY_PRIMARY" << std::endl;
+        }
+        // Transition to RECOVERY if we're completely lost
+        else if (overallConfidence < 0.15 && consecutiveLowConfidence >= 5)
+        {
+            currentMode = LocalizationMode::RECOVERY_MODE;
+            std::cout << "Mode: MCL_PRIMARY -> RECOVERY_MODE" << std::endl;
+        }
+        break;
+
+    case LocalizationMode::RECOVERY_MODE:
+        // Exit recovery when we find good localization
+        if (consecutiveHighConfidence >= 3)
+        {
+            currentMode = LocalizationMode::ODOMETRY_PRIMARY;
+            consecutiveLowConfidence = 0; // Reset for fresh start
+            std::cout << "Mode: RECOVERY_MODE -> ODOMETRY_PRIMARY (recovered!)" << std::endl;
+        }
+        // If we're stuck in recovery for too long without improving, reset more aggressively
+        else if (consecutiveLowConfidence >= 30)
+        {
+            std::cout << "RECOVERY: Still stuck after 30 cycles, re-dispersing all particles!" << std::endl;
+            // Force complete particle reset (will happen in next resampling)
+            consecutiveLowConfidence = 0; // Reset to stay in recovery mode
+        }
+        break;
+    }
+}
+
+limelib::real_t limelib::MCL::getAdaptiveBlendFactor()
+{
+    // Return blend factor for MCL vs odometry
+    // Higher value = trust MCL more
+    // Lower value = trust odometry more
+
+    switch (currentMode)
+    {
+    case LocalizationMode::MCL_PRIMARY:
+        // High confidence: trust MCL heavily (70-90%)
+        return std::clamp(0.7f + overallConfidence * 0.2f, 0.7f, 0.9f);
+
+    case LocalizationMode::ODOMETRY_PRIMARY:
+        // Low confidence: trust odometry more (10-50%)
+        return std::clamp(overallConfidence * 0.5f, 0.1f, 0.5f);
+
+    case LocalizationMode::RECOVERY_MODE:
+        // Recovery: very aggressive MCL (90-95%)
+        return std::clamp(0.9f + overallConfidence * 0.05f, 0.9f, 0.95f);
+
+    default:
+        return 0.5f;
+    }
 }

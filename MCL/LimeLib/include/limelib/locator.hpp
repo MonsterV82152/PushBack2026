@@ -105,6 +105,13 @@ namespace limelib
         Velocity currentVelocity;
     };
 
+    enum class LocalizationMode
+    {
+        MCL_PRIMARY,      // MCL leads, odometry assists (high confidence)
+        ODOMETRY_PRIMARY, // Odometry leads, MCL corrects (low confidence)
+        RECOVERY_MODE     // Lost - aggressive MCL search
+    };
+
     class MCL : public Locator
     {
     public:
@@ -124,7 +131,7 @@ namespace limelib
          * @return MCL object
          *
          * @example
-         * limelib::MCL mcl(&verticalTW, &horizontalTW, imu, sensors, field, 100, 0.1, 0.1, true, 10, true);
+         * `limelib::MCL mcl(&verticalTW, &horizontalTW, imu, sensors, field, 100, 0.1, 0.1, true, 10, true);`
          *
          * This creates an MCL localization object using the specified tracking wheels, IMU, distance sensors, and field.
          * It uses 100 particles with 0.1 rotation and translation noise, enables debug display, updates every 10 cycles, and runs in a separate task.
@@ -186,8 +193,24 @@ namespace limelib
         uint32_t lastUpdateTime;
         Velocity currentVelocity;
         std::unique_ptr<pros::Task> mclTask; // Task must persist!
+
+        // Mixed MCL - Mode and confidence tracking
+        LocalizationMode currentMode;
+        real_t sensorConfidence;
+        real_t motionConfidence;
+        real_t overallConfidence;
+        int consecutiveLowConfidence;
+        int consecutiveHighConfidence;
+
         void updateMCL();
         void debugDisplay();
+
+        // Mixed MCL - Confidence calculation helpers
+        real_t calculateSensorConfidence(int validSensors, real_t maxWeight, int totalSensors, real_t avgError);
+        real_t calculateMotionConfidence();
+        real_t combinedConfidence(real_t sensorConf, real_t motionConf);
+        void updateLocalizationMode();
+        real_t getAdaptiveBlendFactor();
     };
 
 }
