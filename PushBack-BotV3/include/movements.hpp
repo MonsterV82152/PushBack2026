@@ -182,13 +182,13 @@ private:
     std::unique_ptr<pros::Task> scoringTask;
     std::atomic<bool> hookPTOState;
     std::atomic<bool> intakePTOState;
+    std::atomic<bool> intakeTaskQueued{false};
+    std::atomic<bool> hookTaskQueued{false};
     std::atomic<ScoringAction> currentScoringAction{ScoringAction::RESET};
     std::atomic<bool> scoringTaskRunning{false};
     limelib::PID hookPID;
     bool intaking = false;
     bool liftState = false;
-    bool intakeTaskQueued = false;
-    bool hookTaskQueued = false;
     double currentAngle = 0;
 };
 

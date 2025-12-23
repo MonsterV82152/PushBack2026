@@ -5,8 +5,7 @@
 
 namespace limelib
 {
-    template <typename T>
-    constexpr T sgn(T value) { return value < 0 ? -1 : 1; }
+    constexpr real_t sgn(real_t value) { return value < 0 ? -1 : 1; }
     class PID
     {
     public:

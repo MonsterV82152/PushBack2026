@@ -174,6 +174,11 @@ limelib::Pose2D limelib::MCL::update()
         updateMCL();
         if (debug)
             debugDisplay();
+        // if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B))
+        // {
+        //     Pose2D pose = getPose();
+        //     std::cout << "MCL Pose: (" << pose.x << ", " << pose.y << ", " << pose.theta << "deg)" << std::endl;
+        // }
         last_mcl_update = 0;
     }
     else
@@ -236,7 +241,7 @@ void limelib::MCL::updateMCL()
         std::cout << std::endl;
 
     // Debug: Print sensor readings
-    if ((debug && debugCounter >= 50))
+    if ((debug && debugCounter >= 50)/* || master.get_digital(pros::E_CONTROLLER_DIGITAL_A)*/)
     {
         std::cout << "Valid sensors: " << validSensorCount << "/" << sensors.size() << " - Readings: ";
         for (const MCLDistance &sensor : sensors)
@@ -302,7 +307,12 @@ void limelib::MCL::updateMCL()
 
             // Calculate likelihood based on how well actual matches expected
             real_t error = std::abs(actualDistance - expectedDistance);
-            real_t sensorLikelihood = exp(-error * error / (2.0 * 9.0));
+            // Gaussian likelihood with σ=5 inches (variance=25)
+            // This means 1 inch error → likelihood ≈ 0.98
+            //           3 inch error → likelihood ≈ 0.84
+            //           5 inch error → likelihood ≈ 0.61
+            //          10 inch error → likelihood ≈ 0.14
+            real_t sensorLikelihood = exp(-error * error / (2.0 * 25.0));
             // Apply minimum likelihood floor to prevent complete particle starvation
             sensorLikelihood = std::max(sensorLikelihood, real_t(0.001));
 

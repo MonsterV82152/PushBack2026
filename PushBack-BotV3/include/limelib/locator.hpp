@@ -52,12 +52,44 @@ namespace limelib
     class Odometry : public Locator
     {
     public:
+        /**
+         * Odometry Constructor
+         * @param verticalTW Pointer to the vertical tracking wheel
+         * @param horizontalTW Pointer to the horizontal tracking wheel
+         * @param imu Reference to the IMU sensor
+         * @param shouldTaskRun Whether to run the odometry update in a separate task
+         */
         Odometry(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::IMU &imu, bool shouldTaskRun = true);
+        /**
+         * Update the odometry and return the change in pose
+         * @return Change in Pose2D since last update
+         */
         Pose2D update() override;
+        /**
+         *  Calibrate the odometry system
+         */
         void calibrate() override;
+        /**
+         * Get the current pose
+         * @param radians Whether to return the heading in radians (default is degrees)
+         */
         Pose2D getPose(bool radians = false) const override;
+        /**
+         * Set the current pose
+         * @param pose Pose2D to set as the current pose
+         */
         void setPose(Pose2D pose) override;
+        /**
+         * Set the current pose
+         * @param x X coordinate
+         * @param y Y coordinate
+         * @param theta Heading angle
+         */
         void setPose(real_t x, real_t y, real_t theta) override;
+        /**
+         * Get the current velocity
+         * @return Current Velocity
+         */
         Velocity getVelocity() const override;
 
     private:
@@ -98,11 +130,37 @@ namespace limelib
          * It uses 100 particles with 0.1 rotation and translation noise, enables debug display, updates every 10 cycles, and runs in a separate task.
          */
         MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::Imu &imu, std::vector<MCLDistance> &sensors, Field2D &field, int num_particles, real_t rotationNoise, real_t translationNoise, bool debug = false, int intensitivity = 10, bool shouldTaskRun = true);
+        /**
+         * Calibrate the MCL localization system
+         */
         void calibrate() override;
+        /**
+         * Update the MCL localization and return the estimated pose
+         * @return Estimated Pose2D after MCL update
+         */
         Pose2D update() override;
+        /**
+         * Get the current estimated pose
+         * @param radians Whether to return the heading in radians (default is degrees)
+         * @return Current estimated Pose2D
+         */
         Pose2D getPose(bool radians = false) const override;
+        /**
+         * Set the current estimated pose
+         * @param pose Pose2D to set as the current estimate
+         */
         void setPose(Pose2D pose) override;
+        /**
+         * Set the current estimated pose
+         * @param x X coordinate
+         * @param y Y coordinate
+         * @param theta Heading angle
+         */
         void setPose(real_t x, real_t y, real_t theta) override;
+        /**
+         * Get the current estimated velocity
+         * @return Current estimated Velocity
+         */
         Velocity getVelocity() const override;
 
     private:

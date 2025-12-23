@@ -72,20 +72,19 @@ void Robot::moveState(PTOState state)
     bool hookPTOCurrentState = hookPTOState.load();
     if (state.hookPTOState == ON && !hookPTOCurrentState)
     {
-        if (hookTaskQueued)
+        if (hookTaskQueued.load())
         {
             return;
         }
-        hookTaskQueued = true;
+        hookTaskQueued.store(true);
         hookPTOTask->create([this, state]()
                             {
                 pros::delay(50);
                 hookPTOState.store(true);
-                hookTaskQueued = false;
+                hookTaskQueued.store(false);
                 helper.leftDT.erase_port(helper.leftHookMotorPort);
-                std::cout << helper.leftDT.size() << std::endl;
                 helper.rightDT.erase_port(helper.rightHookMotorPort);
-                std::cout << helper.rightDT.size() << std::endl;
+                
                 if (state.hookSpeed == 0) {
                     helper.leftHookMotor.brake();
                     helper.rightHookMotor.brake();
@@ -118,18 +117,19 @@ void Robot::moveState(PTOState state)
 
     if (state.intakePTOState == ON && !intakePTOCurrentState)
     {
-        if (intakeTaskQueued)
+        if (intakeTaskQueued.load())
         {
             return;
         }
-        intakeTaskQueued = true;
+        intakeTaskQueued.store(true);
         intakePTOTask->create([this, state]()
                               {
                 pros::delay(50);
                 intakePTOState.store(true);
-                intakeTaskQueued = false;
+                intakeTaskQueued.store(false);
                 helper.leftDT.erase_port(helper.leftIntakeMotorPort);
                 helper.rightDT.erase_port(helper.rightIntakeMotorPort);
+                
                 if (state.intakeSpeed == 0) {
                     helper.leftIntakeMotor.brake();
                     helper.rightIntakeMotor.brake();
@@ -159,6 +159,7 @@ void Robot::moveState(PTOState state)
             helper.rightIntakeMotor.move(-state.intakeSpeed);
         }
     }
+
 }
 
 void Robot::teleopControl()
