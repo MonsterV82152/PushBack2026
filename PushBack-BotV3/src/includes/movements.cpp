@@ -11,6 +11,8 @@ Helper::Helper(
     std::int8_t rightHook,
     pros::Rotation &scoringRotation,
     Piston &scoreLift,
+    Piston &matchLoader,
+    Piston &descore,
     Piston &intakePTO,
     Piston &hookPTO) : leftHookMotorPort(leftHook),
                        rightHookMotorPort(rightHook),
@@ -27,7 +29,9 @@ Helper::Helper(
                        leftDT({left1, left2, leftIntake, leftHook}),
                        rightDT({right1, right2, rightIntake, rightHook}),
                        hookPTO(hookPTO),
-                       scoreLift(scoreLift)
+                       scoreLift(scoreLift),
+                       matchLoader(matchLoader),
+                       descore(descore)
 {
 }
 
@@ -40,13 +44,13 @@ Robot::Robot(Helper &helper, limelib::MCL &mcl, pros::Controller &controller)
       scoringTask(nullptr),
       hookPID(0.4, 0.001, 0.5, 0.05, true),
       angularPID4(0, 0, 0),
-      lateralPID4(0, 0, 0),
+      linearPID4(0, 0, 0),
       angularPID6(0, 0, 0),
-      lateralPID6(0, 0, 0),
+      linearPID6(0, 0, 0),
       angularPID8(0, 0, 0),
-      lateralPID8(0, 0, 0),
+      linearPID8(0, 0, 0),
       chassis(mcl, helper.leftDT, helper.rightDT,
-              lateralPID4,
+              linearPID4,
               angularPID4)
 {
 }
@@ -57,6 +61,7 @@ void Robot::init()
     hookPTOTask = std::make_unique<pros::Task>([&]() {});
     scoringTask = std::make_unique<pros::Task>([&]() {});
     helper.scoringRotation.set_position(0);
+    helper.descore.setState(true);
     intakePTOTask->remove();
     hookPTOTask->remove();
     scoringTask->remove();
@@ -64,10 +69,28 @@ void Robot::init()
 
 void Robot::moveState(PTOState state)
 {
-    if (state.hookPTOState != LEAVE)
-        helper.hookPTO.setState(state.hookPTOState == ON);
-    if (state.intakePTOState != LEAVE)
+    if (state.intakePTOState != LEAVE && helper.intakePTO.getState() != (state.intakePTOState == ON))
+    {
         helper.intakePTO.setState(state.intakePTOState == ON);
+        motorCount += state.intakePTOState == ON ? -1 : 1;
+    }
+    if (state.hookPTOState != LEAVE && helper.hookPTO.getState() != (state.hookPTOState == ON))
+    {
+        helper.hookPTO.setState(state.hookPTOState == ON);
+        motorCount += state.hookPTOState == ON ? -1 : 1;
+    }
+    if (motorCount == 4)
+    {
+        chassis.setPID(linearPID8, angularPID8);
+    }
+    else if (motorCount == 3)
+    {
+        chassis.setPID(linearPID6, angularPID6);
+    }
+    else
+    {
+        chassis.setPID(linearPID4, angularPID4);
+    }
     bool intakePTOCurrentState = intakePTOState.load();
     bool hookPTOCurrentState = hookPTOState.load();
     if (state.hookPTOState == ON && !hookPTOCurrentState)
@@ -159,7 +182,6 @@ void Robot::moveState(PTOState state)
             helper.rightIntakeMotor.move(-state.intakeSpeed);
         }
     }
-
 }
 
 void Robot::teleopControl()
@@ -176,13 +198,29 @@ void Robot::teleopControl()
     {
         moveState({ON, LEAVE, -127, LEAVE});
     }
-    else if (intaking && !scoringTaskRunning.load() && !liftState)
+    else if (intaking && currentScoringAction.load() == ScoringAction::RESET && !liftState)
     {
         moveState({ON, LEAVE, 127, LEAVE});
     }
     else
     {
         moveState({OFF, LEAVE, LEAVE, LEAVE});
+    }
+    if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B))
+    {
+        matchLoad();
+    }
+    if (master.get_digital_new_release(pros::E_CONTROLLER_DIGITAL_B))
+    {
+        matchLoad(false);
+    }
+    if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN))
+    {
+        descore();
+    }
+    if (master.get_digital_new_release(pros::E_CONTROLLER_DIGITAL_DOWN))
+    {
+        descore(false);
     }
     if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L2))
     {
@@ -320,25 +358,16 @@ void Robot::scoringLoop()
             }
             break;
         case ScoringAction::RESET:
-            if (abs(currentAngle - 0) > 10)
-            {
-                double speed = hookPID.update(-currentAngle);
-                if (speed > 127)
-                    speed = 127;
-                else if (speed < -127)
-                    speed = -127;
-                moveState({LEAVE, ON, LEAVE, (short)speed});
-            }
-            else
-            {
-                helper.leftHookMotor.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-                helper.rightHookMotor.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-                moveState({LEAVE, OFF, LEAVE, LEAVE});
-                scoringTaskRunning.store(false);
-                hookPID.reset();
-            }
-            break;
+        {
+            double speed = hookPID.update(-currentAngle);
+            if (speed > 127)
+                speed = 127;
+            else if (speed < -127)
+                speed = -127;
+            moveState({LEAVE, ON, LEAVE, (short)speed});
 
+            break;
+        }
         case ScoringAction::HOLD:
         {
             // Hold position - stop motors but keep PTO engaged
@@ -370,4 +399,45 @@ void Robot::scoringLoop()
 void Robot::score()
 {
     setScoringAction(ScoringAction::SCOREANDRESET);
+}
+void Robot::lift(bool up)
+{
+    liftState = up;
+    helper.scoreLift.setState(liftState);
+}
+void Robot::intake(bool on)
+{
+    if (on)
+    {
+        moveState({ON, LEAVE, 127, LEAVE});
+    }
+    else
+    {
+        moveState({OFF, LEAVE, LEAVE, LEAVE});
+    }
+}
+void Robot::matchLoad(bool load)
+{
+    helper.matchLoader.setState(load);
+}
+void Robot::descore(bool descoring)
+{
+    helper.descore.setState(!descoring);
+    if (!liftState && descoring)
+    {
+        liftState = true;
+        helper.scoreLift.setState(liftState);
+    }
+}
+void Robot::moveToPoint(limelib::Point2D point, int timeout, limelib::moveToPointParams params)
+{
+    chassis.moveToPoint(point, timeout, params);
+}
+void Robot::turnToHeading(limelib::real_t heading, int timeout, limelib::turnToHeadingParams params)
+{
+    chassis.turnToHeading(heading, timeout, params);
+}
+void Robot::turnToPoint(limelib::Point2D point, int timeout, limelib::turnToHeadingParams params)
+{
+    chassis.turnToPoint(point, timeout, params);
 }

@@ -22,7 +22,7 @@ namespace limelib
         bool forwards = true;
         real_t maxSpeed = 127;
         real_t minSpeed = 0;
-        real_t earlyExitRange = 0.1;
+        real_t earlyExitRange = 0.0;
     };
     /**
      * Parameters for moveToPose function
@@ -33,7 +33,7 @@ namespace limelib
         bool angularForwards = true;
         real_t maxSpeed = 127;
         real_t minSpeed = 0;
-        real_t earlyExitRange = 0.1;
+        real_t earlyExitRange = 0.0;
     };
     /**
      * Parameters for turnToHeading function
@@ -43,7 +43,7 @@ namespace limelib
         bool forwards = true;
         real_t maxSpeed = 127;
         real_t minSpeed = 0;
-        real_t earlyExitRange = 0.1;
+        real_t earlyExitRange = 0.0;
     };
     /**
      * Class representing a robot chassis
@@ -64,6 +64,7 @@ namespace limelib
         void cancelAllMovement();
         void setPose(Pose2D pose);
         void setPose(real_t x, real_t y, real_t theta);
+        void setPID(PID &linearController, PID &angularController);
         void moveToPoint(Point2D point, int timeout, moveToPointParams params = moveToPointParams());
         void moveToPoint(real_t x, real_t y, int timeout, moveToPointParams params = moveToPointParams());
         void moveToPose(real_t x, real_t y, real_t theta, int timeout, moveToPoseParams params = moveToPoseParams());
@@ -76,7 +77,7 @@ namespace limelib
         MovementHelper movementHelper;
         pros::MotorGroup &leftDr;
         pros::MotorGroup &rightDr;
-        PID &lateralController;
+        PID &linearController;
         PID &angularController;
         bool isMoving = false;
         bool motionQueued = false;
@@ -85,8 +86,6 @@ namespace limelib
         void moveToPointTask(Point2D point, int timeout, moveToPointParams params);
         void turnToHeadingTask(real_t heading, int timeout, turnToHeadingParams params = turnToHeadingParams());
         void turnToPointTask(Point2D point, int timeout, turnToHeadingParams params = turnToHeadingParams());
-
-
     };
 }
 

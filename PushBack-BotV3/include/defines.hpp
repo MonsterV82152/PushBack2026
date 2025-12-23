@@ -68,11 +68,16 @@ inline std::vector<MCLDistance> mclDistanceSensors = {
 inline pros::ADIDigitalOut intakePTOPiston('A'); ///< Piston on ADI port A
 inline pros::ADIDigitalOut hookPTOPiston('B');   ///< Piston on ADI port B
 inline pros::ADIDigitalOut scoreLiftPiston('C'); ///< Piston on ADI port C
+inline pros::ADIDigitalOut matchLoaderPiston('D'); ///< Piston on ADI port D
+inline pros::ADIDigitalOut descorePiston('E'); ///< Piston on ADI port E
 
 // Piston wrapper objects for state management
 inline Piston intakePTO(&intakePTOPiston); ///< Intake piston object
 inline Piston hookPTO(&hookPTOPiston);     ///< Hook piston object
 inline Piston scoreLift(&scoreLiftPiston); ///< Scoring lift piston object
+inline Piston matchLoader(&matchLoaderPiston); ///< Match loader piston object
+inline Piston descore(&descorePiston);     ///< Descore piston object
+
 
 // ==============================
 // Robot Control Objects
@@ -97,7 +102,7 @@ inline std::vector<std::shared_ptr<Object2D>> obstacles = {
 inline Field2D field(144.0f, 144.0f, obstacles);
 
 inline MCL mcl(nullptr, nullptr, imu, mclDistanceSensors, field, 200, 10, 10, false, 10, false);          ///< LemLib MCL object for odometry and localization
-inline Helper helper(-15, -14, 20, 19, 16, -18, 13, -17, scoringRotation, scoreLift, intakePTO, hookPTO); ///< Helper object for robot mechanisms
+inline Helper helper(-15, -14, 20, 19, 16, -18, 13, -17, scoringRotation, scoreLift, matchLoader, descore, intakePTO, hookPTO); ///< Helper object for robot mechanisms
 inline Robot robot(helper, mcl, master);                                                                  ///< Main robot control object
 
 #endif

@@ -38,6 +38,8 @@ public:
         std::int8_t rightHook,
         pros::Rotation &scoringRotation,
         Piston &scoreLift,
+        Piston &matchLoader,
+        Piston &descore,
         Piston &intakePTO,
         Piston &hookPTO);
     std::int8_t leftIntakeMotorPort;
@@ -55,6 +57,8 @@ public:
 
     pros::Rotation &scoringRotation;
     Piston &scoreLift;
+    Piston &matchLoader;
+    Piston &descore;
     Piston &intakePTO;
     Piston &hookPTO;
 
@@ -62,9 +66,9 @@ private:
 };
 
 // State definitions
-#define ON 1 // PTO is engaged
-#define OFF 0 // PTO is disengaged
-#define LEAVE 128 // Leave the PTO state unchanged  
+#define ON 1      // PTO is engaged
+#define OFF 0     // PTO is disengaged
+#define LEAVE 128 // Leave the PTO state unchanged
 
 /**
  * @brief Struct to represent the state of the PTOs and their speeds
@@ -124,11 +128,26 @@ public:
     /**
      * @brief Control the intake mechanism
      */
-    void intake();
+    void intake(bool on = true);
     /**
      * @brief Control the lift mechanism
      */
     void score();
+    /**
+     * @brief Control the lift mechanism
+     * @param up True to lift up, false to lower
+     */
+    void lift(bool up = true);
+    /**
+     * @brief Control the match loader mechanism
+     * @param load True to engage the match loader, false to disengage
+     */
+    void matchLoad(bool load = true);
+    /**
+     * @brief Control the descore mechanism
+     * @param descoring True to engage descore, false to disengage
+     */
+    void descore(bool descoring = true);
     /**
      * @brief Move the robot based on the given PTO state
      * @param state The desired PTO state
@@ -141,11 +160,6 @@ public:
      * @param params Additional parameters for the movement
      */
     void moveToPoint(limelib::Point2D point, int timeout, limelib::moveToPointParams params = limelib::moveToPointParams());
-    /**
-     * @brief Move the robot to a specific pose
-     * @param pose The target pose to move to
-     */
-    void moveToPose(limelib::Pose2D pose, int timeout, limelib::moveToPoseParams params = limelib::moveToPoseParams());
     /**
      * @brief Turn the robot to a specific heading
      * @param heading The target heading in degrees
@@ -164,16 +178,15 @@ private:
     constexpr static int SCORING_POSITION = 1800;
     constexpr static int DESCORING_POSITION = -1800;
 
-
     Helper &helper;
     pros::Controller &master;
 
     limelib::Chassis chassis;
-    limelib::PID lateralPID8;
+    limelib::PID linearPID8;
     limelib::PID angularPID8;
-    limelib::PID lateralPID6;
+    limelib::PID linearPID6;
     limelib::PID angularPID6;
-    limelib::PID lateralPID4;
+    limelib::PID linearPID4;
     limelib::PID angularPID4;
     limelib::MCL &mcl;
 
@@ -190,6 +203,7 @@ private:
     bool intaking = false;
     bool liftState = false;
     double currentAngle = 0;
+    int motorCount = 4;
 };
 
 #endif

@@ -64,6 +64,7 @@ namespace limelib
         void cancelAllMovement();
         void setPose(Pose2D pose);
         void setPose(real_t x, real_t y, real_t theta);
+        void setPID(PID &linearController, PID &angularController);
         void moveToPoint(Point2D point, int timeout, moveToPointParams params = moveToPointParams());
         void moveToPoint(real_t x, real_t y, int timeout, moveToPointParams params = moveToPointParams());
         void moveToPose(real_t x, real_t y, real_t theta, int timeout, moveToPoseParams params = moveToPoseParams());
@@ -76,7 +77,7 @@ namespace limelib
         MovementHelper movementHelper;
         pros::MotorGroup &leftDr;
         pros::MotorGroup &rightDr;
-        PID &lateralController;
+        PID &linearController;
         PID &angularController;
         bool isMoving = false;
         bool motionQueued = false;
