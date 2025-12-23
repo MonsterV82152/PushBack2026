@@ -46,6 +46,7 @@ inline pros::Imu imu(13); ///< Inertial sensor for heading/orientation (port 13)
 // Sensors - Distance and Optical
 // ==============================
 inline pros::Rotation scoringRotation(-7); ///< Rotation sensor for scoring mechanism (port 7)
+inline pros::Rotation horizontalTrackingWheel(8);
 
 // ==============================
 // Localization Distance Sensors
