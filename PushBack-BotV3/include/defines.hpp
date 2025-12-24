@@ -26,6 +26,8 @@
 
 using namespace limelib;
 
+// 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 21
+
 // ==============================
 // Autonomous Selector
 // ==============================
@@ -36,7 +38,9 @@ inline AutonSelector autonSelect; ///< Autonomous selector for pre-match routine
 // Drivetrain Motors
 // ==============================
 
-inline pros::Imu imu(13); ///< Inertial sensor for heading/orientation (port 13)
+inline pros::Imu imu(13);                            ///< Inertial sensor for heading/orientation (port 13)
+inline pros::MotorGroup leftDriveMotors({-15, -14}); ///< Left drivetrain motors (ports 14 and 15)
+inline pros::MotorGroup rightDriveMotors({19, 20});  ///< Right drivetrain
 
 // ==============================
 // Roller System Motors
@@ -52,33 +56,40 @@ inline pros::Rotation horizontalTrackingWheel(8);
 // Localization Distance Sensors
 // ==============================
 
+inline pros::Distance leftDS(1);
+inline pros::Distance rightDS(2);
+inline pros::Distance frontDS(3);
+inline pros::Distance backDS(4);
+
 inline std::vector<MCLDistance> mclDistanceSensors = {
-    // MCLDistance(&leftDistanceSensor, MCLDistance::LEFT, -3.5, 0),
-    // MCLDistance(&rightDistanceSensor, MCLDistance::RIGHT, 3.5, 0),
-    // MCLDistance(&backDistanceSensor, MCLDistance::BACK, 0, -3.5)
-};
+    MCLDistance(leftDS, Pose2D{1, 2, 3}),
+    MCLDistance(rightDS, Pose2D{1, 2, 3}),
+    MCLDistance(backDS, Pose2D{1, 2, 3}),
+    MCLDistance(frontDS, Pose2D{1, 2, 3})};
 
 // ==============================
 // Tracking Wheels
 // ==============================
 
+inline limelib::TrackingWheel horizontalTW(&horizontalTrackingWheel, 2, 0);          ///< Horizontal tracking wheel
+inline limelib::TrackingWheel verticalTW(&leftDriveMotors, &rightDriveMotors, 3.25); ///< Vertical tracking wheel using drivetrain encoders
+
 // ==============================
 // Pneumatic Pistons (ADI Ports)
 // ==============================
 
-inline pros::ADIDigitalOut intakePTOPiston('A'); ///< Piston on ADI port A
-inline pros::ADIDigitalOut hookPTOPiston('B');   ///< Piston on ADI port B
-inline pros::ADIDigitalOut scoreLiftPiston('C'); ///< Piston on ADI port C
+inline pros::ADIDigitalOut intakePTOPiston('A');   ///< Piston on ADI port A
+inline pros::ADIDigitalOut hookPTOPiston('B');     ///< Piston on ADI port B
+inline pros::ADIDigitalOut scoreLiftPiston('C');   ///< Piston on ADI port C
 inline pros::ADIDigitalOut matchLoaderPiston('D'); ///< Piston on ADI port D
-inline pros::ADIDigitalOut descorePiston('E'); ///< Piston on ADI port E
+inline pros::ADIDigitalOut descorePiston('E');     ///< Piston on ADI port E
 
 // Piston wrapper objects for state management
-inline Piston intakePTO(&intakePTOPiston); ///< Intake piston object
-inline Piston hookPTO(&hookPTOPiston);     ///< Hook piston object
-inline Piston scoreLift(&scoreLiftPiston); ///< Scoring lift piston object
+inline Piston intakePTO(&intakePTOPiston);     ///< Intake piston object
+inline Piston hookPTO(&hookPTOPiston);         ///< Hook piston object
+inline Piston scoreLift(&scoreLiftPiston);     ///< Scoring lift piston object
 inline Piston matchLoader(&matchLoaderPiston); ///< Match loader piston object
-inline Piston descore(&descorePiston);     ///< Descore piston object
-
+inline Piston descore(&descorePiston);         ///< Descore piston object
 
 // ==============================
 // Robot Control Objects
@@ -102,8 +113,8 @@ inline std::vector<std::shared_ptr<Object2D>> obstacles = {
 };
 inline Field2D field(144.0f, 144.0f, obstacles);
 
-inline MCL mcl(nullptr, nullptr, imu, mclDistanceSensors, field, 200, 10, 10, false, 10, false);          ///< LemLib MCL object for odometry and localization
+inline MCL mcl(nullptr, nullptr, imu, mclDistanceSensors, field, 200, 10, 10, false, 10, false);                                ///< LemLib MCL object for odometry and localization
 inline Helper helper(-15, -14, 20, 19, 16, -18, 13, -17, scoringRotation, scoreLift, matchLoader, descore, intakePTO, hookPTO); ///< Helper object for robot mechanisms
-inline Robot robot(helper, mcl, master);                                                                  ///< Main robot control object
+inline Robot robot(helper, mcl, master);                                                                                        ///< Main robot control object
 
 #endif

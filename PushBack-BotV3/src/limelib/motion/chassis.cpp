@@ -79,8 +79,10 @@ void limelib::Chassis::moveToPointTask(Point2D point, int timeout, moveToPointPa
         pros::delay(10);
     }
     std::cout << "MoveToPoint complete. Final error: " << movementHelper.getDistance(point, locator.getPose()) << " inches\n";
-    leftDr.brake();
-    rightDr.brake();
+    if (params.earlyExitRange == 0) {
+        leftDr.brake();
+        rightDr.brake();
+    }
 }
 
 void limelib::Chassis::moveToPoint(real_t x, real_t y, int timeout, moveToPointParams params)
@@ -124,8 +126,10 @@ void limelib::Chassis::turnToHeadingTask(real_t heading, int timeout, turnToHead
         pros::delay(10);
     }
     std::cout << "TurnToHeading complete. Final error: " << movementHelper.getAngleDiff(heading, locator.getPose().theta) << " degrees\n";
-    leftDr.brake();
-    rightDr.brake();
+    if (params.earlyExitRange == 0) {
+        leftDr.brake();
+        rightDr.brake();
+    }
 }
 
 void limelib::Chassis::turnToPoint(Point2D point, int timeout, turnToHeadingParams params)
@@ -165,8 +169,11 @@ void limelib::Chassis::turnToPointTask(Point2D point, int timeout, turnToHeading
         pros::delay(10);
     }
     std::cout << "TurnToPoint complete. Final error: " << movementHelper.getAngleDiff(std::atan2(point.x - locator.getPose().x, point.y - locator.getPose().y) * 180 / M_PI, locator.getPose().theta) << " degrees\n";
-    leftDr.brake();
-    rightDr.brake();
+    
+    if (params.earlyExitRange == 0) {
+        leftDr.brake();
+        rightDr.brake();
+    }
 }
 
 void limelib::Chassis::turnToPoint(real_t x, real_t y, int timeout, turnToHeadingParams params)

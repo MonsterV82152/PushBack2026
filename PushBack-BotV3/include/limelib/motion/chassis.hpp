@@ -22,7 +22,7 @@ namespace limelib
         bool forwards = true;
         real_t maxSpeed = 127;
         real_t minSpeed = 0;
-        real_t earlyExitRange = 0.1;
+        real_t earlyExitRange = 0.0;
     };
     /**
      * Parameters for moveToPose function
@@ -33,7 +33,7 @@ namespace limelib
         bool angularForwards = true;
         real_t maxSpeed = 127;
         real_t minSpeed = 0;
-        real_t earlyExitRange = 0.1;
+        real_t earlyExitRange = 0.0;
     };
     /**
      * Parameters for turnToHeading function
@@ -43,7 +43,7 @@ namespace limelib
         bool forwards = true;
         real_t maxSpeed = 127;
         real_t minSpeed = 0;
-        real_t earlyExitRange = 0.1;
+        real_t earlyExitRange = 0.0;
     };
     /**
      * Class representing a robot chassis
@@ -86,8 +86,6 @@ namespace limelib
         void moveToPointTask(Point2D point, int timeout, moveToPointParams params);
         void turnToHeadingTask(real_t heading, int timeout, turnToHeadingParams params = turnToHeadingParams());
         void turnToPointTask(Point2D point, int timeout, turnToHeadingParams params = turnToHeadingParams());
-
-
     };
 }
 
