@@ -66,7 +66,7 @@ inline std::vector<MCLDistance> mclSensors = {
     {localization::leftDS, Pose2D(-4.25, -2.25, 270)},
     {localization::frontDS, Pose2D(4.5, 3, 0)},
     {localization::backDS, Pose2D(-3.5, -5.5, 180)}};
-inline TrackingWheel verticalTW(vertical, 2.75, -0.25);
+inline TrackingWheel verticalTW(&vertical, 2.75, -0.25);
 inline std::vector<std::shared_ptr<Object2D>> obstacles = {
     std::make_shared<Circle2D>(67.5f, 48.0f, 4.17f),
     std::make_shared<Circle2D>(-67.5f, 48.0f, 4.17f),

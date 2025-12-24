@@ -220,8 +220,7 @@ void limelib::MCL::updateMCL()
         int32_t raw = sensor.sensor.get_distance();
         if (debug && debugCounter >= 50)
         {
-            std::cout << "Sensor at angle " << sensor.pose.theta << "deg: ";
-            std::cout << raw << " ";
+            std::cout << "Sensor at angle " << sensor.pose.theta << "deg: " << raw << " ";
         }
         // Valid readings are positive and less than 9999 (no object detected)
         // PROS_ERR is typically negative, which becomes huge positive when cast to float
@@ -235,6 +234,8 @@ void limelib::MCL::updateMCL()
         else
         {
             sensor.reading = -1; // Mark as invalid
+            if (debug && debugCounter >= 50)
+                std::cout << "(invalid) " << std::endl;
         }
     }
     if (debug && debugCounter >= 50)

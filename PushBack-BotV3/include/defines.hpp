@@ -78,11 +78,11 @@ inline limelib::TrackingWheel verticalTW(&leftDriveMotors, &rightDriveMotors, 3.
 // Pneumatic Pistons (ADI Ports)
 // ==============================
 
-inline pros::ADIDigitalOut intakePTOPiston('A');   ///< Piston on ADI port A
-inline pros::ADIDigitalOut hookPTOPiston('B');     ///< Piston on ADI port B
-inline pros::ADIDigitalOut scoreLiftPiston('C');   ///< Piston on ADI port C
-inline pros::ADIDigitalOut matchLoaderPiston('D'); ///< Piston on ADI port D
-inline pros::ADIDigitalOut descorePiston('E');     ///< Piston on ADI port E
+inline pros::ADIDigitalOut intakePTOPiston('C');   ///< Piston on ADI port A
+inline pros::ADIDigitalOut hookPTOPiston('D');     ///< Piston on ADI port B
+inline pros::ADIDigitalOut scoreLiftPiston('E');   ///< Piston on ADI port C
+inline pros::ADIDigitalOut matchLoaderPiston('A'); ///< Piston on ADI port D
+inline pros::ADIDigitalOut descorePiston('B');     ///< Piston on ADI port E
 
 // Piston wrapper objects for state management
 inline Piston intakePTO(&intakePTOPiston);     ///< Intake piston object
@@ -94,26 +94,9 @@ inline Piston descore(&descorePiston);         ///< Descore piston object
 // ==============================
 // Robot Control Objects
 // ==============================
+inline Field2D field(144.0f, 144.0f);
 
-inline std::vector<std::shared_ptr<Object2D>> obstacles = {
-    std::make_shared<Circle2D>(67.5f, 48.0f, 4.17f),
-    std::make_shared<Circle2D>(-67.5f, 48.0f, 4.17f),
-    std::make_shared<Circle2D>(67.5f, -48.0f, 4.17f),
-    std::make_shared<Circle2D>(-67.5f, -48.0f, 4.17f),
-    std::make_shared<Line2D>(Point2D(22.25f, 45.6f), Point2D(20.8f, 47.1f)),
-    std::make_shared<Line2D>(Point2D(22.25f, 48.6f), Point2D(20.8f, 47.1f)),
-    std::make_shared<Line2D>(Point2D(-22.25f, 45.6f), Point2D(-20.8f, 47.1f)),
-    std::make_shared<Line2D>(Point2D(-22.25f, 48.6f), Point2D(-20.8f, 47.1f)),
-    std::make_shared<Line2D>(Point2D(22.25f, -45.6f), Point2D(20.8f, -47.1f)),
-    std::make_shared<Line2D>(Point2D(22.25f, -48.6f), Point2D(20.8f, -47.1f)),
-    std::make_shared<Line2D>(Point2D(-22.25f, -45.6f), Point2D(-20.8f, -47.1f)),
-    std::make_shared<Line2D>(Point2D(-22.25f, -48.6f), Point2D(-20.8f, -47.1f)),
-    std::make_shared<Line2D>(Point2D(-2.9f, 0.5f), Point2D(0.5f, 2.9f)),
-    std::make_shared<Line2D>(Point2D(-0.5f, -2.9f), Point2D(2.9f, -0.5f)),
-};
-inline Field2D field(144.0f, 144.0f, obstacles);
-
-inline MCL mcl(nullptr, nullptr, imu, mclDistanceSensors, field, 200, 10, 10, false, 10, false);                                ///< LemLib MCL object for odometry and localization
+inline MCL mcl(&verticalTW, &horizontalTW, imu, mclDistanceSensors, field, 1000, 0.1, 0.1, false, 10, false);                                ///< LemLib MCL object for odometry and localization
 inline Helper helper(-15, -14, 20, 19, 16, -18, 13, -17, scoringRotation, scoreLift, matchLoader, descore, intakePTO, hookPTO); ///< Helper object for robot mechanisms
 inline Robot robot(helper, mcl, master);                                                                                        ///< Main robot control object
 
