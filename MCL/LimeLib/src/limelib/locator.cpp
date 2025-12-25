@@ -54,6 +54,10 @@ limelib::Pose2D limelib::Odometry::update()
     lastUpdateTime = currentTime;
 
     real_t heading = imu.get_heading() * M_PI / 180 + headingOffset;
+    while (heading < 0)
+        heading += 2 * M_PI;
+    while (heading >= 2 * M_PI)
+        heading -= 2 * M_PI;
     real_t headingDiff = heading - currentPose.theta;
     real_t vertDist = verticalTW != nullptr ? verticalTW->getDistanceTravelled() + verticalTW->getOffset() * headingDiff / 2 : 0;
     real_t horDist = horizontalTW != nullptr ? horizontalTW->getDistanceTravelled() + horizontalTW->getOffset() * headingDiff / 2 : 0;
@@ -218,13 +222,14 @@ void limelib::MCL::updateMCL()
     {
         // Get raw int32_t value first to check for errors
         int32_t raw = sensor.sensor.get_distance();
+        int16_t size = sensor.sensor.get_object_size();
         if (debug && debugCounter >= 50)
         {
-            std::cout << "Sensor at angle " << sensor.pose.theta << "deg: " << raw << " ";
+            std::cout << "Sensor at angle " << sensor.pose.theta << "deg: " << raw << " size: " << size << " ";
         }
         // Valid readings are positive and less than 9999 (no object detected)
         // PROS_ERR is typically negative, which becomes huge positive when cast to float
-        if (raw > 0 && raw < 2000)
+        if (raw > 0 && raw < 2000 && size > 80)
         {
             if (debug && debugCounter >= 50)
                 std::cout << "(valid) " << std::endl;
@@ -242,7 +247,7 @@ void limelib::MCL::updateMCL()
         std::cout << std::endl;
 
     // Debug: Print sensor readings
-    if ((debug && debugCounter >= 50)/* || master.get_digital(pros::E_CONTROLLER_DIGITAL_A)*/)
+    if ((debug && debugCounter >= 50) /* || master.get_digital(pros::E_CONTROLLER_DIGITAL_A)*/)
     {
         std::cout << "Valid sensors: " << validSensorCount << "/" << sensors.size() << " - Readings: ";
         for (const MCLDistance &sensor : sensors)

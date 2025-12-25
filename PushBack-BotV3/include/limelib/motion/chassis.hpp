@@ -62,6 +62,7 @@ namespace limelib
         Chassis(Locator &locator, pros::MotorGroup &leftDr, pros::MotorGroup &rightDr, PID &lateralController, PID &angularController);
         void calibrate();
         void cancelAllMovement();
+        void waitUntilDone();
         void setPose(Pose2D pose);
         void setPose(real_t x, real_t y, real_t theta);
         void setPID(PID &linearController, PID &angularController);

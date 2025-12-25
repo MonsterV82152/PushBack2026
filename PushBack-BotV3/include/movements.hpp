@@ -104,7 +104,8 @@ enum class ScoringAction
      * @brief Hold the scoring mechanism in its current position
      */
     HOLD,
-    DEHOLD
+    DEHOLD,
+    IDLE
 };
 
 class Robot
@@ -113,14 +114,15 @@ public:
     /**
      * @brief Constructor for Robot class
      * @param helper Reference to a Helper object containing robot components
-     * @param mcl Reference to a limelib::MCL object for motion control
+     * @param locator Reference to a limelib::Locator object for motion control
      * @param controller Reference to a pros::Controller object for user input
      */
-    Robot(Helper &helper, limelib::MCL &mcl, pros::Controller &controller);
+    Robot(Helper &helper, limelib::Locator &locator, pros::Controller &controller);
     /**
      * @brief Initialize the robot's systems
      */
     void init();
+    void debug();
     /**
      * @brief Control the robot during teleoperation
      */
@@ -132,7 +134,7 @@ public:
     /**
      * @brief Control the lift mechanism
      */
-    void score();
+    void score(int position = DEFAULT_SCORING_POSITION);
     /**
      * @brief Control the lift mechanism
      * @param up True to lift up, false to lower
@@ -149,17 +151,29 @@ public:
      */
     void descore(bool descoring = true);
     /**
+     * @brief Set the robot's pose
+     * @param x The desired x-coordinate of the pose
+     * @param y The desired y-coordinate of the pose
+     * @param theta The desired orientation (in degrees) of the pose
+     */
+    void setPose(limelib::real_t x, limelib::real_t y, limelib::real_t theta);
+    /**
+     * @brief Wait until the current movement is complete
+     */
+    void waitUntilDone();
+    /**
      * @brief Move the robot based on the given PTO state
      * @param state The desired PTO state
      */
     void moveState(PTOState state);
     /**
      * @brief Move the robot to a specific point
-     * @param point The target point to move to
+     * @param x The target x-coordinate
+     * @param y The target y-coordinate
      * @param timeout The maximum time to attempt the movement
      * @param params Additional parameters for the movement
      */
-    void moveToPoint(limelib::Point2D point, int timeout, limelib::moveToPointParams params = limelib::moveToPointParams());
+    void moveToPoint(limelib::real_t x, limelib::real_t y, int timeout, limelib::moveToPointParams params = limelib::moveToPointParams());
     /**
      * @brief Turn the robot to a specific heading
      * @param heading The target heading in degrees
@@ -167,17 +181,19 @@ public:
     void turnToHeading(limelib::real_t heading, int timeout, limelib::turnToHeadingParams params = limelib::turnToHeadingParams());
     /**
      * @brief Turn the robot to face a specific point
-     * @param point The target point to face
+     * @param x The target x-coordinate
+     * @param y The target y-coordinate
      */
-    void turnToPoint(limelib::Point2D point, int timeout, limelib::turnToHeadingParams params = limelib::turnToHeadingParams());
+    void turnToPoint(limelib::real_t x, limelib::real_t y, int timeout, limelib::turnToHeadingParams params = limelib::turnToHeadingParams());
 
 private:
     void scoringLoop();                          // Main scoring task function
     void setScoringAction(ScoringAction action); // Set the current scoring action
 
-    constexpr static int SCORING_POSITION = 1800;
-    constexpr static int DESCORING_POSITION = -1800;
-
+    constexpr static int DEFAULT_SCORING_POSITION = 1850;
+    constexpr static int DEFAULT_DESCORING_POSITION = -1800;
+    int scoringPosition = DEFAULT_SCORING_POSITION;
+    int descoringPosition = DEFAULT_DESCORING_POSITION;
     Helper &helper;
     pros::Controller &master;
 
@@ -188,7 +204,7 @@ private:
     limelib::PID angularPID6;
     limelib::PID linearPID4;
     limelib::PID angularPID4;
-    limelib::MCL &mcl;
+    limelib::Locator &locator;
 
     std::unique_ptr<pros::Task> hookPTOTask;
     std::unique_ptr<pros::Task> intakePTOTask;

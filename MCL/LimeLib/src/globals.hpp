@@ -67,28 +67,12 @@ inline std::vector<MCLDistance> mclSensors = {
     {localization::frontDS, Pose2D(4.5, 3, 0)},
     {localization::backDS, Pose2D(-3.5, -5.5, 180)}};
 inline TrackingWheel verticalTW(&vertical, 2.75, -0.25);
-inline std::vector<std::shared_ptr<Object2D>> obstacles = {
-    std::make_shared<Circle2D>(67.5f, 48.0f, 4.17f),
-    std::make_shared<Circle2D>(-67.5f, 48.0f, 4.17f),
-    std::make_shared<Circle2D>(67.5f, -48.0f, 4.17f),
-    std::make_shared<Circle2D>(-67.5f, -48.0f, 4.17f),
-    std::make_shared<Line2D>(Point2D(22.25f, 45.6f), Point2D(20.8f, 47.1f)),
-    std::make_shared<Line2D>(Point2D(22.25f, 48.6f), Point2D(20.8f, 47.1f)),     
-    std::make_shared<Line2D>(Point2D(-22.25f, 45.6f), Point2D(-20.8f, 47.1f)),
-    std::make_shared<Line2D>(Point2D(-22.25f, 48.6f), Point2D(-20.8f, 47.1f)),
-    std::make_shared<Line2D>(Point2D(22.25f, -45.6f), Point2D(20.8f, -47.1f)),
-    std::make_shared<Line2D>(Point2D(22.25f, -48.6f), Point2D(20.8f, -47.1f)),
-    std::make_shared<Line2D>(Point2D(-22.25f, -45.6f), Point2D(-20.8f, -47.1f)),
-    std::make_shared<Line2D>(Point2D(-22.25f, -48.6f), Point2D(-20.8f, -47.1f)),
-    std::make_shared<Line2D>(Point2D(-2.9f, 0.5f), Point2D(0.5f, 2.9f)),
-    std::make_shared<Line2D>(Point2D(-0.5f, -2.9f), Point2D(2.9f, -0.5f)),
-};
 
-inline Field2D field(144.0f, 144.0f, obstacles);
-inline MCL mcl(&verticalTW, nullptr, inertial, mclSensors, field, 200, 0.1, 0.1, false, 5);
+inline Field2D field(144.0f, 144.0f);
+inline MCL mcl(&verticalTW, nullptr, inertial, mclSensors, field, 1000, 1, 1, false, 0);
 // inline Odometry odom(&verticalTW, nullptr, inertial);
-inline PID linearPID(3, 0.0, 2);
-inline PID angularPID(0.9, 0.0, 1);
-inline Chassis chassis(mcl, leftDT, rightDT, linearPID, angularPID);
+inline PID linearPID(3.5, 0.0, 1);
+inline PID angularPID(0.9, 0.0, 2);
+inline Chassis chassis(mcl, leftDT, rightDT, linearPID, angularPID)  ;
 
 #endif

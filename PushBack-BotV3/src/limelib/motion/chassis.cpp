@@ -19,6 +19,11 @@ void limelib::Chassis::cancelAllMovement()
     movementHelper.cancel();
 }
 
+void limelib::Chassis::waitUntilDone()
+{
+    movementHelper.waitUntilDone();
+}
+
 void limelib::Chassis::setPose(Pose2D pose)
 {
     locator.setPose(pose);

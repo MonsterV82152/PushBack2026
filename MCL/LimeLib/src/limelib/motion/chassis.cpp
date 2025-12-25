@@ -19,6 +19,11 @@ void limelib::Chassis::cancelAllMovement()
     movementHelper.cancel();
 }
 
+void limelib::Chassis::waitUntilDone()
+{
+    movementHelper.waitUntilDone();
+}
+
 void limelib::Chassis::setPose(Pose2D pose)
 {
     locator.setPose(pose);
@@ -79,7 +84,8 @@ void limelib::Chassis::moveToPointTask(Point2D point, int timeout, moveToPointPa
         pros::delay(10);
     }
     std::cout << "MoveToPoint complete. Final error: " << movementHelper.getDistance(point, locator.getPose()) << " inches\n";
-    if (params.earlyExitRange == 0) {
+    if (params.earlyExitRange == 0)
+    {
         leftDr.brake();
         rightDr.brake();
     }
@@ -126,7 +132,8 @@ void limelib::Chassis::turnToHeadingTask(real_t heading, int timeout, turnToHead
         pros::delay(10);
     }
     std::cout << "TurnToHeading complete. Final error: " << movementHelper.getAngleDiff(heading, locator.getPose().theta) << " degrees\n";
-    if (params.earlyExitRange == 0) {
+    if (params.earlyExitRange == 0)
+    {
         leftDr.brake();
         rightDr.brake();
     }
@@ -169,8 +176,9 @@ void limelib::Chassis::turnToPointTask(Point2D point, int timeout, turnToHeading
         pros::delay(10);
     }
     std::cout << "TurnToPoint complete. Final error: " << movementHelper.getAngleDiff(std::atan2(point.x - locator.getPose().x, point.y - locator.getPose().y) * 180 / M_PI, locator.getPose().theta) << " degrees\n";
-    
-    if (params.earlyExitRange == 0) {
+
+    if (params.earlyExitRange == 0)
+    {
         leftDr.brake();
         rightDr.brake();
     }

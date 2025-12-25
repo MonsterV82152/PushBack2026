@@ -38,7 +38,7 @@ inline AutonSelector autonSelect; ///< Autonomous selector for pre-match routine
 // Drivetrain Motors
 // ==============================
 
-inline pros::Imu imu(13);                            ///< Inertial sensor for heading/orientation (port 13)
+inline pros::Imu imu(12);                            ///< Inertial sensor for heading/orientation (port 13)
 inline pros::MotorGroup leftDriveMotors({-15, -14}); ///< Left drivetrain motors (ports 14 and 15)
 inline pros::MotorGroup rightDriveMotors({19, 20});  ///< Right drivetrain
 
@@ -49,23 +49,24 @@ inline pros::MotorGroup rightDriveMotors({19, 20});  ///< Right drivetrain
 // ==============================
 // Sensors - Distance and Optical
 // ==============================
-inline pros::Rotation scoringRotation(-7); ///< Rotation sensor for scoring mechanism (port 7)
-inline pros::Rotation horizontalTrackingWheel(8);
+inline pros::Rotation scoringRotation(-8); ///< Rotation sensor for scoring mechanism (port 7)
+inline pros::Rotation horizontalTrackingWheel(11);
+inline pros::Distance intakeDS(3);
 
 // ==============================
 // Localization Distance Sensors
 // ==============================
 
-inline pros::Distance leftDS(1);
-inline pros::Distance rightDS(2);
-inline pros::Distance frontDS(3);
-inline pros::Distance backDS(4);
+inline pros::Distance leftDS(2);
+inline pros::Distance rightDS(9);
+inline pros::Distance frontDS(1);
+inline pros::Distance backDS(10);
 
 inline std::vector<MCLDistance> mclDistanceSensors = {
-    MCLDistance(leftDS, Pose2D{1, 2, 3}),
-    MCLDistance(rightDS, Pose2D{1, 2, 3}),
-    MCLDistance(backDS, Pose2D{1, 2, 3}),
-    MCLDistance(frontDS, Pose2D{1, 2, 3})};
+    MCLDistance(leftDS, Pose2D{-5, 5, 270}),
+    MCLDistance(rightDS, Pose2D{5, 5, 90}),
+    MCLDistance(backDS, Pose2D{5.5, 3.5, 180}),
+    MCLDistance(frontDS, Pose2D{-4.25, 8, 0})};
 
 // ==============================
 // Tracking Wheels
@@ -94,10 +95,14 @@ inline Piston descore(&descorePiston);         ///< Descore piston object
 // ==============================
 // Robot Control Objects
 // ==============================
-inline Field2D field(144.0f, 144.0f);
+inline std::vector<std::shared_ptr<limelib::Object2D>> fieldObstacles = {
+    std::make_shared<limelib::Line2D>(-10, 5, 5, -10),
+    std::make_shared<limelib::Line2D>(-5, 10, 10, -5)};
+inline Field2D field(140.0f, 140.0f);
 
-inline MCL mcl(&verticalTW, &horizontalTW, imu, mclDistanceSensors, field, 1000, 0.1, 0.1, false, 10, false);                                ///< LemLib MCL object for odometry and localization
+// inline MCL locator(&verticalTW, &horizontalTW, imu, mclDistanceSensors, field, 1000, 1, 1, false, 1);                           ///< LemLib MCL object for odometry and localization
+inline Odometry locator(&verticalTW, &horizontalTW, imu);                                                                       ///< LemLib Odometry object for basic odometry
 inline Helper helper(-15, -14, 20, 19, 16, -18, 13, -17, scoringRotation, scoreLift, matchLoader, descore, intakePTO, hookPTO); ///< Helper object for robot mechanisms
-inline Robot robot(helper, mcl, master);                                                                                        ///< Main robot control object
+inline Robot robot(helper, locator, master);                                                                                    ///< Main robot control object
 
 #endif
