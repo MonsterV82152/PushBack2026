@@ -6,7 +6,7 @@ void limelib::Locator::setPose(real_t x, real_t y, real_t theta)
 }
 
 limelib::Odometry::Odometry(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::IMU &imu, bool shouldTaskRun)
-    : verticalTW(verticalTW), horizontalTW(horizontalTW), imu(imu), currentPose(0, 0, 0), prevPose(0, 0, 0), headingOffset(0), shouldTaskRun(shouldTaskRun), lastUpdateTime(pros::millis()), currentVelocity(), odomTask(nullptr)
+    : verticalTW(verticalTW), horizontalTW(horizontalTW), imu(imu), currentPose(0, 0, 0), prevPose(0, 0, 0), headingOffset(0), shouldTaskRun(shouldTaskRun), lastUpdateTime(pros::millis()), currentVelocity(), odomTask(nullptr), master(pros::E_CONTROLLER_MASTER)
 {
 }
 
@@ -21,7 +21,7 @@ void limelib::Odometry::calibrate()
     {
         pros::delay(20);
     }
-
+    master.rumble(".");
     headingOffset = -imu.get_heading() * M_PI / 180;
     if (shouldTaskRun)
     {
@@ -53,10 +53,6 @@ limelib::Pose2D limelib::Odometry::update()
     lastUpdateTime = currentTime;
 
     real_t heading = imu.get_heading() * M_PI / 180 + headingOffset;
-    while (heading < 0)
-        heading += 2 * M_PI;
-    while (heading >= 2 * M_PI)
-        heading -= 2 * M_PI;
     real_t headingDiff = heading - currentPose.theta;
     real_t vertDist = verticalTW != nullptr ? verticalTW->getDistanceTravelled() + verticalTW->getOffset() * headingDiff / 2 : 0;
     real_t horDist = horizontalTW != nullptr ? horizontalTW->getDistanceTravelled() + horizontalTW->getOffset() * headingDiff / 2 : 0;
@@ -81,6 +77,11 @@ limelib::Pose2D limelib::Odometry::update()
 }
 limelib::Pose2D limelib::Odometry::getPose(bool radians) const
 {
+    Pose2D currentPose = this->currentPose;
+    while (currentPose.theta < 0)
+        currentPose.theta += 2 * M_PI;
+    while (currentPose.theta >= 2 * M_PI)
+        currentPose.theta -= 2 * M_PI;
     return radians ? currentPose : currentPose.toDegrees();
 }
 
@@ -93,7 +94,7 @@ limelib::MCL::MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW,
                   pros::Imu &imu, std::vector<MCLDistance> &sensors, Field2D &field, int num_particles, real_t rotationNoise, real_t translationNoise, bool debug,
                   int intensity, bool shouldTaskRun)
     : odomHelper(verticalTW, horizontalTW, imu, false), sensors(sensors), field(field), NUM_PARTICLES(num_particles),
-      ROTATION_NOISE(rotationNoise), TRANSLATION_NOISE(translationNoise), debug(debug), INTENSITY(intensity), last_mcl_update(intensity), randomParticleCount(0), shouldTaskRun(shouldTaskRun), prevPose(0, 0, 0), lastUpdateTime(pros::millis()), currentVelocity(), debugCounter(0), master(pros::E_CONTROLLER_MASTER)
+      ROTATION_NOISE(rotationNoise), TRANSLATION_NOISE(translationNoise), debug(debug), INTENSITY(intensity), last_mcl_update(intensity), randomParticleCount(0), shouldTaskRun(shouldTaskRun), prevPose(0, 0, 0), lastUpdateTime(pros::millis()), currentVelocity(), debugCounter(0)
 {
     // Initialize particles with random positions but heading will be set from odometry later
     for (int i = 0; i < NUM_PARTICLES; i++)
@@ -176,11 +177,6 @@ limelib::Pose2D limelib::MCL::update()
         updateMCL();
         if (debug)
             debugDisplay();
-        // if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B))
-        // {
-        //     Pose2D pose = getPose();
-        //     std::cout << "MCL Pose: (" << pose.x << ", " << pose.y << ", " << pose.theta << "deg)" << std::endl;
-        // }
         last_mcl_update = 0;
     }
     else
@@ -227,7 +223,7 @@ void limelib::MCL::updateMCL()
         }
         // Valid readings are positive and less than 9999 (no object detected)
         // PROS_ERR is typically negative, which becomes huge positive when cast to float
-        if (raw > 0 && raw < 2000 && size > 80)
+        if (raw > 0 && raw < 2000 && size > 70)
         {
             if (debug && debugCounter >= 50)
                 std::cout << "(valid) " << std::endl;
@@ -316,7 +312,7 @@ void limelib::MCL::updateMCL()
             //           3 inch error → likelihood ≈ 0.84
             //           5 inch error → likelihood ≈ 0.61
             //          10 inch error → likelihood ≈ 0.14
-            real_t sensorLikelihood = exp(-error * error / (2.0 * 25.0));
+            real_t sensorLikelihood = exp(-error * error / (2.0 * 16.0));
             // Apply minimum likelihood floor to prevent complete particle starvation
             sensorLikelihood = std::max(sensorLikelihood, real_t(0.001));
 
@@ -368,10 +364,6 @@ void limelib::MCL::updateMCL()
         // Calculate confidence based on particle concentration
         // Higher max weight = more particles agree = higher confidence
         estimatedPose.weight = maxWeight * NUM_PARTICLES; // Normalized confidence [0, 1]
-        // if (master.get_digital(pros::E_CONTROLLER_DIGITAL_UP))
-        // {
-        //     std::cout << "Estimated Pose before blending: (" << estimatedPose.point.x << ", " << estimatedPose.point.y << ", " << estimatedPose.point.theta * 180 / M_PI << "deg), Confidence: " << estimatedPose.weight << std::endl;
-        // }
 
         // Alternative confidence calculation based on effective sample size
         // real_t ess = 1.0 / std::accumulate(particles.begin(), particles.end(), 0.0,

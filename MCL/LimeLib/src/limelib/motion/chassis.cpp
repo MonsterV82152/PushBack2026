@@ -80,6 +80,8 @@ void limelib::Chassis::moveToPointTask(Point2D point, int timeout, moveToPointPa
         std::pair<real_t, real_t> desaturated = MovementHelper::desaturate(lateralOutput, angularOutput, params.maxSpeed);
         leftDr.move(static_cast<int16_t>(desaturated.first));
         rightDr.move(static_cast<int16_t>(desaturated.second));
+        // leftDr.move(static_cast<int16_t>(lateralOutput + angularOutput));
+        // rightDr.move(static_cast<int16_t>(lateralOutput - angularOutput));
 
         pros::delay(10);
     }

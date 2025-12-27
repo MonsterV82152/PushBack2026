@@ -11,6 +11,7 @@
 #include "pros/rtos.hpp"
 #include "pros/screen.hpp"
 #include "pros/misc.hpp"
+#include "pros/llemu.hpp"
 #include <memory>
 
 namespace limelib
@@ -95,6 +96,7 @@ namespace limelib
     private:
         TrackingWheel *verticalTW;
         TrackingWheel *horizontalTW;
+        pros::Controller master;
         pros::IMU &imu;
         Pose2D currentPose;
         Pose2D prevPose;
@@ -165,7 +167,6 @@ namespace limelib
 
     private:
         Odometry odomHelper;
-        pros::Controller master;
         std::vector<MCLDistance> &sensors;
         Field2D &field;
         Pose2D odomDelta;

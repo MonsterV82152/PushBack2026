@@ -99,6 +99,7 @@ enum class ScoringAction
     /**
      * @brief Reset the scoring mechanism to its initial position
      */
+    UNJAM,
     RESET,
     /**
      * @brief Hold the scoring mechanism in its current position
@@ -134,7 +135,7 @@ public:
     /**
      * @brief Control the lift mechanism
      */
-    void score(int position = DEFAULT_SCORING_POSITION);
+    void score(int position = DEFAULT_SCORING_POSITION, int maxSpeed = 127);
     /**
      * @brief Control the lift mechanism
      * @param up True to lift up, false to lower
@@ -189,11 +190,15 @@ public:
 private:
     void scoringLoop();                          // Main scoring task function
     void setScoringAction(ScoringAction action); // Set the current scoring action
-
-    constexpr static int DEFAULT_SCORING_POSITION = 1850;
+    constexpr static int FEEDFORWARD = 20;    // Angle to unjam the scoring mechanism
+    constexpr static int DEFAULT_SCORING_POSITION = 1800;
     constexpr static int DEFAULT_DESCORING_POSITION = -1800;
     int scoringPosition = DEFAULT_SCORING_POSITION;
     int descoringPosition = DEFAULT_DESCORING_POSITION;
+    int maxSpeed = 127;
+    int unjamAngle = 0;
+    int highestCurrent = 0;
+    ScoringAction lastState = ScoringAction::IDLE;
     Helper &helper;
     pros::Controller &master;
 
@@ -209,10 +214,12 @@ private:
     std::unique_ptr<pros::Task> hookPTOTask;
     std::unique_ptr<pros::Task> intakePTOTask;
     std::unique_ptr<pros::Task> scoringTask;
+    std::unique_ptr<pros::Task> descoreTask;
     std::atomic<bool> hookPTOState;
     std::atomic<bool> intakePTOState;
     std::atomic<bool> intakeTaskQueued{false};
     std::atomic<bool> hookTaskQueued{false};
+    std::atomic<bool> fullSpeed{false};
     std::atomic<ScoringAction> currentScoringAction{ScoringAction::RESET};
     std::atomic<bool> scoringTaskRunning{false};
     limelib::PID hookPID;

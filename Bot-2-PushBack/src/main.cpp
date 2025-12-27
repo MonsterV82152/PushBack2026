@@ -291,8 +291,8 @@ void initialize()
         autonomousRoute{"red", "HalfSolo", "Position: Right, facing right", halfSAWPRight},
         autonomousRoute{"blue", "HalfSolo", "Position: Left, facing right", halfSAWPLeft},
         autonomousRoute{"red", "HalfSolo", "Position: Left, facing right", halfSAWPLeft},
-        autonomousRoute{"blue", "DriveOff", "Position: literally anywhere 😭", test},
-        autonomousRoute{"red", "DriveOff", "Position: literally anywhere 😭", test},
+        autonomousRoute{"blue", "DriveOff", "Position: literally anywhere", test},
+        autonomousRoute{"red", "DriveOff", "Position: literally anywhere", test},
     });
     autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", riskySkillsV2});
 

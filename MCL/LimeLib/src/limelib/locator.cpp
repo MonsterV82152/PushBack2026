@@ -45,7 +45,6 @@ void limelib::Odometry::setPose(real_t x, real_t y, real_t theta)
 {
     setPose(limelib::Pose2D(x, y, theta));
 }
-
 limelib::Pose2D limelib::Odometry::update()
 {
     // Calculate time delta in seconds
@@ -54,10 +53,6 @@ limelib::Pose2D limelib::Odometry::update()
     lastUpdateTime = currentTime;
 
     real_t heading = imu.get_heading() * M_PI / 180 + headingOffset;
-    while (heading < 0)
-        heading += 2 * M_PI;
-    while (heading >= 2 * M_PI)
-        heading -= 2 * M_PI;
     real_t headingDiff = heading - currentPose.theta;
     real_t vertDist = verticalTW != nullptr ? verticalTW->getDistanceTravelled() + verticalTW->getOffset() * headingDiff / 2 : 0;
     real_t horDist = horizontalTW != nullptr ? horizontalTW->getDistanceTravelled() + horizontalTW->getOffset() * headingDiff / 2 : 0;
@@ -80,9 +75,13 @@ limelib::Pose2D limelib::Odometry::update()
 
     return Pose2D(xChange, yChange, headingDiff);
 }
-
 limelib::Pose2D limelib::Odometry::getPose(bool radians) const
 {
+    Pose2D currentPose = this->currentPose;
+    while (currentPose.theta < 0)
+        currentPose.theta += 2 * M_PI;
+    while (currentPose.theta >= 2 * M_PI)
+        currentPose.theta -= 2 * M_PI;
     return radians ? currentPose : currentPose.toDegrees();
 }
 
@@ -318,7 +317,7 @@ void limelib::MCL::updateMCL()
             //           3 inch error → likelihood ≈ 0.84
             //           5 inch error → likelihood ≈ 0.61
             //          10 inch error → likelihood ≈ 0.14
-            real_t sensorLikelihood = exp(-error * error / (2.0 * 25.0));
+            real_t sensorLikelihood = exp(-error * error / (2.0 * 16.0));
             // Apply minimum likelihood floor to prevent complete particle starvation
             sensorLikelihood = std::max(sensorLikelihood, real_t(0.001));
 

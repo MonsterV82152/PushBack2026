@@ -38,9 +38,9 @@ inline AutonSelector autonSelect; ///< Autonomous selector for pre-match routine
 // Drivetrain Motors
 // ==============================
 
-inline pros::Imu imu(12);                            ///< Inertial sensor for heading/orientation (port 13)
-inline pros::MotorGroup leftDriveMotors({-15, -14}); ///< Left drivetrain motors (ports 14 and 15)
-inline pros::MotorGroup rightDriveMotors({19, 20});  ///< Right drivetrain
+inline pros::Imu imu(12);                                                    ///< Inertial sensor for heading/orientation (port 13)
+inline pros::MotorGroup leftDriveMotors({-15, -14}, pros::MotorGears::blue); ///< Left drivetrain motors (ports 14 and 15)
+inline pros::MotorGroup rightDriveMotors({19, 20}, pros::MotorGears::blue);  ///< Right drivetrain
 
 // ==============================
 // Roller System Motors
@@ -66,14 +66,14 @@ inline std::vector<MCLDistance> mclDistanceSensors = {
     MCLDistance(leftDS, Pose2D{-5, 5, 270}),
     MCLDistance(rightDS, Pose2D{5, 5, 90}),
     MCLDistance(backDS, Pose2D{5.5, 3.5, 180}),
-    MCLDistance(frontDS, Pose2D{-4.25, 8, 0})};
+    MCLDistance(frontDS, Pose2D{-4.25, 7.5, 0})};
 
 // ==============================
 // Tracking Wheels
 // ==============================
 
-inline limelib::TrackingWheel horizontalTW(&horizontalTrackingWheel, 2, 0);          ///< Horizontal tracking wheel
-inline limelib::TrackingWheel verticalTW(&leftDriveMotors, &rightDriveMotors, 3.25); ///< Vertical tracking wheel using drivetrain encoders
+inline limelib::TrackingWheel horizontalTW(&horizontalTrackingWheel, 2, 0);                ///< Horizontal tracking wheel
+inline limelib::TrackingWheel verticalTW(&leftDriveMotors, &rightDriveMotors, 3.25, 0.75); ///< Vertical tracking wheel using drivetrain encoders
 
 // ==============================
 // Pneumatic Pistons (ADI Ports)
@@ -100,8 +100,8 @@ inline std::vector<std::shared_ptr<limelib::Object2D>> fieldObstacles = {
     std::make_shared<limelib::Line2D>(-5, 10, 10, -5)};
 inline Field2D field(140.0f, 140.0f);
 
-// inline MCL locator(&verticalTW, &horizontalTW, imu, mclDistanceSensors, field, 1000, 1, 1, false, 1);                           ///< LemLib MCL object for odometry and localization
-inline Odometry locator(&verticalTW, &horizontalTW, imu);                                                                       ///< LemLib Odometry object for basic odometry
+inline MCL locator(&verticalTW, &horizontalTW, imu, mclDistanceSensors, field, 750, 1, 1, false, 0); ///< LemLib MCL object for odometry and localization
+// inline Odometry locator(&verticalTW, &horizontalTW, imu);                                                                       ///< LemLib Odometry object for basic odometry
 inline Helper helper(-15, -14, 20, 19, 16, -18, 13, -17, scoringRotation, scoreLift, matchLoader, descore, intakePTO, hookPTO); ///< Helper object for robot mechanisms
 inline Robot robot(helper, locator, master);                                                                                    ///< Main robot control object
 

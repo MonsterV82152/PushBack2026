@@ -15,7 +15,27 @@ void on_center_button() {}
  */
 void initialize()
 {
+	autonSelect.setAutons(std::vector<autonomousRoute>{
+		autonomousRoute{"red", "Left2G", "Position: Left, facing up", left},
+		autonomousRoute{"red", "Right2G", "Position: Right, facing up", right},
+		autonomousRoute{"red", "Left1G", "Position: Left, facing up", left2},
+		autonomousRoute{"red", "Right1G", "Position: Right, facing up", right2},
+		autonomousRoute{"blue", "Left2G", "Position: Left, facing up", left},
+		autonomousRoute{"blue", "Right2G", "Position: Right, facing up", right},
+		autonomousRoute{"blue", "Left1G", "Position: Left, facing up", left2},
+		autonomousRoute{"blue", "Right1G", "Position: Right, facing up", right2},
+		autonomousRoute{"blue", "SoloAWP", "Position: Right, facing right", soloAWP},
+		autonomousRoute{"red", "SoloAWP", "Position: Right, facing right", soloAWP},
+		autonomousRoute{"blue", "HalfSolo", "Position: Right, facing right", halfSAWPRight},
+		autonomousRoute{"red", "HalfSolo", "Position: Right, facing right", halfSAWPRight},
+		autonomousRoute{"blue", "HalfSolo", "Position: Left, facing right", halfSAWPLeft},
+		autonomousRoute{"red", "HalfSolo", "Position: Left, facing right", halfSAWPLeft},
+		autonomousRoute{"blue", "DriveOff", "Position: literally anywhere 😭", test},
+		autonomousRoute{"red", "DriveOff", "Position: literally anywhere 😭", test},
+	});
+	autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", riskySkillsV2});
 	robot.init();
+	// autonSelect.start();
 }
 
 /**
@@ -49,6 +69,9 @@ void competition_initialize() {}
  */
 void autonomous()
 {
+	// right();
+	soloAWP();
+	// autonSelect.runAuton();
 }
 
 /**
@@ -66,9 +89,10 @@ void autonomous()
  */
 void opcontrol()
 {
+	robot.lift(false);
 	while (true)
 	{
-		robot.debug();
+		robot.teleopControl();
 		pros::delay(20); // Run for 20 ms then update
 	}
 }
