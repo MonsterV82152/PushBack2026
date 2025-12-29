@@ -23,7 +23,7 @@ namespace limelib
         real_t maxSpeed = 127;
         real_t minSpeed = 0;
         real_t earlyExitRange = 0.0;
-        real_t curve = 0.5;
+        real_t curve = 0.6;
     };
     /**
      * Parameters for moveToPose function

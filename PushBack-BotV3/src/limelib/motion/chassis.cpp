@@ -61,7 +61,7 @@ void limelib::Chassis::moveToPointTask(Point2D point, int timeout, moveToPointPa
     {
         currentPose = this->locator.getPose();
         real_t distance = MovementHelper::getDistance(point, currentPose);
-        if (distance < 2)
+        if (distance < 5)
         {
             approaching = true;
         }
@@ -72,10 +72,11 @@ void limelib::Chassis::moveToPointTask(Point2D point, int timeout, moveToPointPa
         }
         real_t forwardHeading = std::atan2(point.x - currentPose.x, point.y - currentPose.y) * 180 / M_PI;
         real_t backwardHeading = std::atan2(currentPose.x - point.x, currentPose.y - point.y) * 180 / M_PI;
-        bool forwards = approaching ? (abs(forwardHeading - currentPose.theta) < abs(backwardHeading - currentPose.theta)) : params.forwards;
+        bool forwards = approaching ? (abs(MovementHelper::getAngleDiff(forwardHeading, currentPose.theta)) < abs(MovementHelper::getAngleDiff(backwardHeading, currentPose.theta))) : params.forwards;
         real_t heading = params.forwards ? forwardHeading : backwardHeading;
-        real_t angularError = approaching ? 0 : MovementHelper::getAngleDiff(heading, currentPose.theta);
+        real_t angularError = MovementHelper::getAngleDiff(heading, currentPose.theta);
         real_t angularOutput = angularController.update(angularError);
+        angularOutput = approaching ? 0 : angularOutput;
         distance = forwards ? distance : -distance;
         real_t lateralOutput = linearController.update(distance);
         std::pair<real_t, real_t> desaturated = MovementHelper::desaturate(lateralOutput, angularOutput * params.curve, params.maxSpeed);

@@ -165,6 +165,7 @@ void skills()
 {
     robot.setPose(-50, 0, 270);
     robot.intake();
+    // getting out of park
     move(40);
     pros::delay(500);
     move(-30);
@@ -184,64 +185,102 @@ void skills()
     move(30);
     pros::delay(400);
     move(-80);
+
+    // incase if balls are missed
     robot.matchLoad(true);
     pros::delay(700);
     robot.matchLoad(false);
+
+    // move to high tube
+    robot.moveToPoint(-24, 0, 700, {false});
     robot.turnToPoint(-24, 24, 800);
-    robot.moveToPoint(-24, 24, 1200);
+    robot.moveToPoint(-24, 24, 1000);
     robot.turnToPoint(-10, 10, 700);
     robot.moveToPoint(-10, 10, 1000);
-    robot.waitUntilDone();
-    robot.score(1800, 55, true);
-    pros::delay(3000);
-    robot.moveToPoint(-24, 24, 1000, {false});
+    pros::delay(800);
+
+    // score to high tube
+    robot.score(1750, 55, true);
+    pros::delay(2000);
+
+    // intake bottom left balls
+    robot.moveToPoint(-24, 24, 800, {false});
     robot.turnToPoint(-24, -24, 700);
     robot.moveToPoint(-24, -24, 1200);
-    robot.turnToPoint(-48, -48, 700);
+    robot.turnToPoint(-48, -48, 800);
     robot.moveToPoint(-48, -48, 1200);
-    robot.turnToPoint(-70, -48, 900);
+
+    // bottom left match load
+    robot.turnToPoint(-70, -48, 700);
     robot.matchLoad(true);
-    robot.moveToPoint(-70, -48, 1000);
+    robot.moveToPoint(-70, -48, 1500);
     robot.waitUntilDone();
-    pros::delay(500);
+    move(-20);
+    pros::delay(200);
+    move(50);
+    pros::delay(400);
+    move(-20);
+    pros::delay(200);
+    move(50);
+    pros::delay(400);
+
+    // move to bottom tube
     robot.moveToPoint(-52, -48, 700, {false});
     robot.matchLoad(false);
     robot.turnToPoint(-24, -32, 700, {false});
     robot.moveToPoint(-24, -32, 800, {false});
-    robot.turnToPoint(24, -32, 700, {false});
+    robot.turnToPoint(24, -32, 500, {false});
     robot.moveToPoint(24, -32, 1200, {false});
-    robot.turnToPoint(48, -48, 700, {false});
+    robot.turnToPoint(48, -48, 500, {false});
     robot.moveToPoint(48, -48, 1000, {false});
-    robot.turnToPoint(28, -48, 700);
+    robot.turnToPoint(28, -48, 600);
     robot.moveToPoint(28, -48, 1000);
-    pros::delay(400);
+
+    // score to bottom tube
     robot.lift();
+    robot.descore(false);
     robot.waitUntilDone();
+    pros::delay(700);
     robot.score(1700);
     pros::delay(1000);
     robot.lift(false);
+
+    // bottom right match load
     robot.intake();
     robot.moveToPoint(44, -48, 1000, {false});
     robot.turnToPoint(70, -48, 1000);
     robot.matchLoad(true);
     robot.moveToPoint(70, -48, 1000);
     robot.waitUntilDone();
-    pros::delay(500);
+    move(-20);
+    pros::delay(200);
+    move(50);
+    pros::delay(400);
+    move(-20);
+    pros::delay(200);
+    move(50);
+    pros::delay(400);
+
+    // move to bottom tube again
     robot.moveToPoint(48, -48, 700, {false});
     robot.matchLoad(false);
     robot.turnToPoint(28, -48, 1000);
     robot.moveToPoint(28, -48, 1000);
-    pros::delay(400);
+
+    // score to bottom tube
     robot.lift();
-    robot.waitUntilDone();
+    robot.descore(false);
+    pros::delay(700);
     robot.setLow();
     pros::delay(1000);
     robot.lift(false);
+
+    // right side balls
     robot.intake();
     robot.moveToPoint(48, -48, 1000, {false});
     robot.turnToPoint(36, 0, 700);
     robot.moveToPoint(36, 0, 1500);
-    robot.turnToPoint(70, 0, 1000);
+    robot.turnToPoint(70, 0, 800);
     robot.waitUntilDone();
     pros::delay(100);
     move(100);
@@ -268,15 +307,22 @@ void skills()
     pros::delay(400);
     move(-80);
     pros::delay(700);
+
+    // move to low tube
     robot.turnToPoint(24, 24, 1000);
     robot.moveToPoint(24, 24, 1000);
     robot.turnToPoint(9, 9, 700);
     robot.moveToPoint(9, 9, 1000);
     robot.waitUntilDone();
+
+    // score to low tube
     robot.moveState({ON, LEAVE, -30, LEAVE});
     robot.scoreLow(70);
     pros::delay(2000);
     helper.intakeLift.setState(false);
+
+    // top right match load
+    robot.turnToPoint(48, 48, 500, {false});
     robot.moveToPoint(48, 48, 1000, {false});
     robot.turnToPoint(70, 48, 700);
     robot.matchLoad(true);
@@ -284,21 +330,28 @@ void skills()
     robot.moveToPoint(70, 48, 1000);
     robot.waitUntilDone();
     pros::delay(500);
+
+    // move to top tube
     robot.moveToPoint(52, 48, 700, {false});
     robot.matchLoad(false);
     robot.turnToPoint(24, 32, 700, {false});
     robot.moveToPoint(24, 32, 800, {false});
-    robot.moveToPoint(-24, 32, 1000, {false});
+    robot.turnToPoint(-24, 32, 700, {false});
+    robot.moveToPoint(-24, 32, 1200, {false});
     robot.turnToPoint(-48, 48, 700, {false});
     robot.moveToPoint(-48, 48, 1000, {false});
     robot.turnToPoint(-28, 48, 700);
     robot.moveToPoint(-28, 48, 1000);
+
+    // score to top tube
     pros::delay(400);
     robot.lift();
     robot.waitUntilDone();
     robot.score(1740);
     pros::delay(1500);
     robot.lift(false);
+
+    // top left match load
     robot.intake();
     robot.moveToPoint(-48, 48, 1000, {false});
     robot.turnToPoint(-70, 48, 700);
@@ -307,20 +360,27 @@ void skills()
     robot.waitUntilDone();
     pros::delay(500);
     robot.moveToPoint(-48, 48, 700, {false});
+
+    // move to top tube again
     robot.matchLoad(false);
     robot.turnToPoint(-28, 48, 700);
     robot.moveToPoint(-28, 48, 700);
+
+    // score to top tube again
     pros::delay(400);
     robot.lift();
     robot.waitUntilDone();
     robot.score(1740);
     pros::delay(1500);
     robot.lift(false);
+
+    // park
     robot.intake();
     robot.moveToPoint(-48, 48, 1000, {false});
     robot.turnToPoint(-56, 24, 700);
     robot.moveToPoint(-56, 24, 1000);
     robot.turnToPoint(-60, 0, 700);
+    robot.waitUntilDone();
     move(80);
     pros::delay(800);
     move(0);

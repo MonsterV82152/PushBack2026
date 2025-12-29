@@ -210,14 +210,13 @@ private:
     constexpr static int FEEDFORWARD = 10;       // Angle to unjam the scoring mechanism
     constexpr static int DEFAULT_SCORING_POSITION = 1800;
     constexpr static int DEFAULT_DESCORING_POSITION = -1750;
-    constexpr static int LOWGOAL_POSITION = 1770;
+    constexpr static int LOWGOAL_POSITION = 1750;
     constexpr static int SCORELOW_POSITION = 50;
     constexpr static int TURN_THRESHOLD = 10;         // Threshold for in-place turning
     constexpr static double TURN_SENSITIVITY = 0.012; // Adjust for desired turning responsiveness
     int scoringPosition = DEFAULT_SCORING_POSITION;
     int descoringPosition = DEFAULT_DESCORING_POSITION;
     int maxSpeed = 127;
-    int highestCurrent = 0;
     ScoringAction lastState = ScoringAction::IDLE;
     Helper &helper;
     pros::Controller &master;

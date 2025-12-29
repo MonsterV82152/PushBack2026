@@ -100,7 +100,7 @@ inline Piston intakePark(&intakeParkPiston);   ///< Intake park piston object
 // Robot Control Objects
 // ==============================
 inline std::vector<std::shared_ptr<limelib::Object2D>> fieldObstacles = {};
-inline Field2D field(140.0f, 140.0f, fieldObstacles); ///< LemLib Field2D object representing the robot's environment
+inline Field2D field(140.5f, 140.5f, fieldObstacles); ///< LemLib Field2D object representing the robot's environment
 
 inline MCL locator(&verticalTW, &horizontalTW, imu, mclDistanceSensors, field, 1500, 0.2, false, -1); ///< LemLib MCL object for odometry and localization
 // inline Odometry locator(&verticalTW, &horizontalTW, imu);                                                                                                            ///< LemLib Odometry object for basic odometry

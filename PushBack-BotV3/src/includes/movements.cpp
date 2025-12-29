@@ -51,12 +51,12 @@ Robot::Robot(Helper &helper, limelib::Locator &locator, pros::Controller &contro
       hookPTOTask(nullptr),
       scoringTask(nullptr),
       hookPID(0.45, 0, 0),
-      angularPID4(3, 0, 24.5),
-      linearPID4(5, 0, 60),
-      angularPID6(3, 0.0000001, 20.75, 0.59),
-      linearPID6(5.75, 0, 44),
-      angularPID8(3, 0.0000001, 20.75, 1.32),
-      linearPID8(8, 0, 38),
+      angularPID4(3, 0, 25.5),
+      linearPID4(5, 0, 59.75),
+      angularPID6(3, 0.0000001, 21, 0.59),
+      linearPID6(5.75, 0, 43.5),
+      angularPID8(3, 0.0000001, 21, 1.32),
+      linearPID8(8, 0, 38.5),
       chassis(locator, helper.leftDT, helper.rightDT,
               linearPID4,
               angularPID4)
@@ -257,8 +257,8 @@ void Robot::teleopControl()
 {
     int forward = master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
     int turn = master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-    // int input = pow(abs(turn) / 127.0, 1.7) * 127;
-    // input = turn < 0 ? -input : input;
+    int input = pow(abs(turn) / 127.0, 1.7) * 127;
+    input = turn < 0 ? -input : input;
     // // Curvature drive implementation
     // int left, right;
     // if (abs(forward) > TURN_THRESHOLD)
@@ -278,9 +278,8 @@ void Robot::teleopControl()
     // helper.leftDT.move(left);
     // helper.rightDT.move(right);
 
-    turn *= 1.2;
-    helper.leftDT.move(forward + turn);
-    helper.rightDT.move(forward - turn);
+    helper.leftDT.move(forward + input);
+    helper.rightDT.move(forward - input);
 
     if (forward > 15 || forward < -15 || turn > 15 || turn < -15)
         std::cout << "Forward: " << forward << " Turn: " << turn << std::endl;
@@ -537,10 +536,11 @@ void Robot::scoringLoop()
             parking.store(false);
             descoring.store(false);
             approaching.store(false);
+            parkState = 0;
             if (abs(currentAngle) > 5)
             {
                 double speed = hookPID.update(-currentAngle);
-                speed += speed > 0 ? FEEDFORWARD : -FEEDFORWARD;
+                speed += speed > 0 ? 5 : -5;
                 if (speed > 127)
                     speed = 127;
                 else if (speed < -127)
@@ -591,58 +591,21 @@ void Robot::scoringLoop()
         case ScoringAction::PARK:
         {
             moveState({ON, OFF, -70, LEAVE});
-            switch (parkState)
+            if (parkState == 0 && helper.intakeDS.get_distance() < 150)
             {
-            case 0:
-                lift(true);
-                pros::delay(500);
                 parkState = 1;
-                break;
-            case 1:
-                if (abs(-70 - currentAngle) > 10)
-                {
-                    double speed = hookPID.update(-70 - currentAngle);
-                    speed += speed > 0 ? FEEDFORWARD : -FEEDFORWARD;
-                    if (speed > 127)
-                        speed = 127;
-                    else if (speed < -127)
-                        speed = -127;
-                    moveState({LEAVE, ON, LEAVE, (short)speed});
-                }
-                else
-                {
-                    parkState = 2;
-                }
-                break;
-            case 2:
-                lift(false);
-                parkState = 3;
-                break;
-            case 3:
-                if (abs(DEFAULT_DESCORING_POSITION - currentAngle) > 10)
-                {
-                    double speed = hookPID.update(DEFAULT_DESCORING_POSITION - currentAngle);
-                    speed += speed > 0 ? FEEDFORWARD : -FEEDFORWARD;
-                    if (speed > 127)
-                        speed = 127;
-                    else if (speed < -127)
-                        speed = -127;
-                    moveState({LEAVE, ON, LEAVE, (short)speed});
-                }
-                else
-                {
-                    parkState = 4;
-                }
-                if (helper.intakeDS.get_distance() < 150)
-                {
-                    moveState({OFF, OFF, LEAVE, LEAVE});
-                    helper.intakePark.setState(true);
-                    helper.matchLoader.setState(false);
-                    parking.store(false);
-                    currentScoringAction.store(ScoringAction::IDLE);
-                }
-                break;
             }
+            if (parkState == 1 && helper.intakeDS.get_distance() > 150)
+            {
+                moveState({ON, OFF, 60, LEAVE});
+                pros::delay(300);
+                moveState({OFF, OFF, LEAVE, LEAVE});
+                helper.intakePark.setState(true);
+                helper.matchLoader.setState(false);
+                parking.store(false);
+                currentScoringAction.store(ScoringAction::IDLE);
+            }
+            break;
         }
         }
 

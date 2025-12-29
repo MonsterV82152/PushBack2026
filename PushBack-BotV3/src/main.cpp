@@ -119,6 +119,7 @@ void opcontrol()
 	while (true)
 	{
 		robot.teleopControl();
+		// robot.debug();
 		pros::delay(20); // Run for 20 ms then update
 	}
 }
