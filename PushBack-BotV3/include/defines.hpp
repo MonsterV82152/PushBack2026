@@ -102,7 +102,7 @@ inline Piston intakePark(&intakeParkPiston);   ///< Intake park piston object
 inline std::vector<std::shared_ptr<limelib::Object2D>> fieldObstacles = {};
 inline Field2D field(140.0f, 140.0f, fieldObstacles); ///< LemLib Field2D object representing the robot's environment
 
-inline MCL locator(&verticalTW, &horizontalTW, imu, mclDistanceSensors, field, 1250, 0.2, 0.2, false, -1); ///< LemLib MCL object for odometry and localization
+inline MCL locator(&verticalTW, &horizontalTW, imu, mclDistanceSensors, field, 1500, 0.2, false, -1); ///< LemLib MCL object for odometry and localization
 // inline Odometry locator(&verticalTW, &horizontalTW, imu);                                                                                                            ///< LemLib Odometry object for basic odometry
 inline Helper helper(-15, -14, 20, 19, 16, -18, 13, -17, scoringRotation, intakeDS, scoreLift, matchLoader, descore, intakePTO, hookPTO, intakeLift, intakePark, autonSelect); ///< Helper object for robot mechanisms
 inline Robot robot(helper, locator, master);                                                                                                                                   ///< Main robot control object

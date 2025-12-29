@@ -22,6 +22,9 @@ namespace limelib
         real_t pose_x;
         real_t pose_y;
         real_t pose_theta_rad; // Pre-converted to radians
+
+        ValidSensor(real_t r, real_t x, real_t y, real_t theta)
+            : reading(r), pose_x(x), pose_y(y), pose_theta_rad(theta) {}
     };
 }
 
