@@ -86,6 +86,9 @@ void autonomous()
  */
 void opcontrol()
 {
+	if (master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT) && master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
+		skills();
+
 	robot.lift(false);
 	if (helper.autonSelector.isSkills() && master.get_digital(pros::E_CONTROLLER_DIGITAL_A))
 	{

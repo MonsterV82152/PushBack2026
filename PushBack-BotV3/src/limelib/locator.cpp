@@ -218,17 +218,17 @@ void limelib::MCL::updateMCL()
     std::vector<ValidSensor> validSensors;
     validSensors.reserve(sensors.size());
 
-    // bool firstSensor = true;
+    bool firstSensor = true;
     for (const MCLDistance &sensor : sensors)
     {
         int32_t raw = sensor.sensor.get_distance();
         int16_t size = sensor.sensor.get_object_size();
 
-        // if (firstSensor)
-        // {
-        //     pros::lcd::print(0, "DS1: %d mm, %d sz", raw, size);
-        //     firstSensor = false;
-        // }
+        if (firstSensor)
+        {
+            pros::lcd::print(0, "DS1: %d mm, %d sz", raw, size);
+            firstSensor = false;
+        }
 
         // Valid readings: positive, < 2000mm, size > 70
         if (raw > 0 && raw < 2000 && size > 70)
@@ -243,7 +243,7 @@ void limelib::MCL::updateMCL()
     }
 
     // If no valid sensors, skip correction step - just apply odometry
-    if (validSensors.size() <= 1)
+    if (validSensors.size() == 0)
     {
         actualPose.x += odomDelta.x;
         actualPose.y += odomDelta.y;
@@ -253,7 +253,7 @@ void limelib::MCL::updateMCL()
     }
 
     real_t totalWeight = 0.0;
-    const real_t INV_2_VARIANCE = 1.0 / (2.0 * 16.0); // Pre-compute constant
+    const real_t INV_2_VARIANCE = 1.0 / (2.0 * 4.0); // Pre-compute constant
 
     for (MCLParticle &particle : particles)
     {
