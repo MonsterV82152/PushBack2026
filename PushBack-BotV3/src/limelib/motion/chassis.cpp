@@ -67,6 +67,7 @@ void limelib::Chassis::moveToPointTask(Point2D point, int timeout, moveToPointPa
         }
         if (distance <= params.earlyExitRange)
         {
+            movementHelper.cancel();
             break;
         }
         real_t forwardHeading = std::atan2(point.x - currentPose.x, point.y - currentPose.y) * 180 / M_PI;
@@ -77,12 +78,12 @@ void limelib::Chassis::moveToPointTask(Point2D point, int timeout, moveToPointPa
         real_t angularOutput = angularController.update(angularError);
         distance = forwards ? distance : -distance;
         real_t lateralOutput = linearController.update(distance);
-        std::pair<real_t, real_t> desaturated = MovementHelper::desaturate(lateralOutput, angularOutput / 2, params.maxSpeed);
-        if (std::abs(desaturated.first) < params.minSpeed && (!approaching || params.earlyExitRange != 0))
+        std::pair<real_t, real_t> desaturated = MovementHelper::desaturate(lateralOutput, angularOutput * params.curve, params.maxSpeed);
+        if (std::abs(desaturated.first) < params.minSpeed && !approaching && params.earlyExitRange != 0)
         {
             desaturated.first = (desaturated.first >= 0 ? 1 : -1) * params.minSpeed;
         }
-        if (std::abs(desaturated.second) < params.minSpeed && (!approaching || params.earlyExitRange != 0))
+        if (std::abs(desaturated.second) < params.minSpeed && !approaching && params.earlyExitRange != 0)
         {
             desaturated.second = (desaturated.second >= 0 ? 1 : -1) * params.minSpeed;
         }
@@ -93,7 +94,7 @@ void limelib::Chassis::moveToPointTask(Point2D point, int timeout, moveToPointPa
 
         pros::delay(10);
     }
-    std::cout << "MoveToPoint complete. Final error: " << movementHelper.getDistance(point, locator.getPose()) << " inches\n";
+    std::cout << "MoveToPoint complete. Final position: x" << currentPose.x << " y" << currentPose.y << " inches\n";
     if (params.earlyExitRange == 0)
     {
         leftDr.brake();
@@ -125,6 +126,7 @@ void limelib::Chassis::turnToHeadingTask(real_t heading, int timeout, turnToHead
         real_t angleDiff = MovementHelper::getAngleDiff((params.forwards ? heading : heading + 180), currentPose.theta);
         if (std::abs(angleDiff) <= params.earlyExitRange)
         {
+            movementHelper.cancel();
             break;
         }
         real_t angularOutput = angularController.update(angleDiff);

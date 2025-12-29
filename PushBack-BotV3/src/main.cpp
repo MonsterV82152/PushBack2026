@@ -26,14 +26,10 @@ void initialize()
 		autonomousRoute{"blue", "Right1G", "Position: Right, facing up", right2},
 		autonomousRoute{"blue", "SoloAWP", "Position: Right, facing right", soloAWP},
 		autonomousRoute{"red", "SoloAWP", "Position: Right, facing right", soloAWP},
-		autonomousRoute{"blue", "HalfSolo", "Position: Right, facing right", halfSAWPRight},
-		autonomousRoute{"red", "HalfSolo", "Position: Right, facing right", halfSAWPRight},
-		autonomousRoute{"blue", "HalfSolo", "Position: Left, facing right", halfSAWPLeft},
-		autonomousRoute{"red", "HalfSolo", "Position: Left, facing right", halfSAWPLeft},
 		autonomousRoute{"blue", "DriveOff", "Position: literally anywhere 😭", test},
 		autonomousRoute{"red", "DriveOff", "Position: literally anywhere 😭", test},
 	});
-	autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", riskySkillsV2});
+	autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", skills});
 	robot.init();
 	// autonSelect.start();
 }
@@ -70,7 +66,8 @@ void competition_initialize() {}
 void autonomous()
 {
 	// right();
-	soloAWP();
+	// soloAWP();
+	skills();
 	// autonSelect.runAuton();
 }
 
@@ -90,6 +87,32 @@ void autonomous()
 void opcontrol()
 {
 	robot.lift(false);
+	if (helper.autonSelector.isSkills() && master.get_digital(pros::E_CONTROLLER_DIGITAL_A))
+	{
+		robot.intake();
+		move(40);
+		pros::delay(500);
+		move(-30);
+		pros::delay(200);
+		move(30);
+		pros::delay(500);
+		move(-50);
+		pros::delay(400);
+		move(70);
+		pros::delay(500);
+		move(-30);
+		pros::delay(200);
+		move(30);
+		pros::delay(500);
+		move(-30);
+		pros::delay(200);
+		move(30);
+		pros::delay(500);
+		move(-80);
+		robot.matchLoad(true);
+		pros::delay(700);
+		robot.matchLoad(false);
+	}
 	while (true)
 	{
 		robot.teleopControl();

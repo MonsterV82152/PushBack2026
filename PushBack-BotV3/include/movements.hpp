@@ -5,6 +5,7 @@
 
 #include "main.h"
 #include "piston.hpp"
+#include "autonomous_selector.hpp"
 
 /**
  * @brief Helper class to bundle robot components
@@ -37,11 +38,15 @@ public:
         std::int8_t leftHook,
         std::int8_t rightHook,
         pros::Rotation &scoringRotation,
+        pros::Distance &intakeDS,
         Piston &scoreLift,
         Piston &matchLoader,
         Piston &descore,
         Piston &intakePTO,
-        Piston &hookPTO);
+        Piston &hookPTO,
+        Piston &intakeLift,
+        Piston &intakePark,
+        AutonSelector &autonSelector);
     std::int8_t leftIntakeMotorPort;
     std::int8_t rightIntakeMotorPort;
     std::int8_t leftHookMotorPort;
@@ -56,11 +61,17 @@ public:
     pros::MotorGroup rightDT;
 
     pros::Rotation &scoringRotation;
+    pros::Distance &intakeDS;
+
     Piston &scoreLift;
     Piston &matchLoader;
     Piston &descore;
     Piston &intakePTO;
     Piston &hookPTO;
+    Piston &intakeLift;
+    Piston &intakePark;
+
+    AutonSelector &autonSelector;
 
 private:
 };
@@ -86,8 +97,8 @@ struct PTOState
  */
 enum class ScoringAction
 {
-    DESCOREANDHOLD,
-    DESCOREANDRESET,
+    LOWGOAL,
+    SCORELOW,
     /**
      * @brief Score and reset the scoring mechanism
      */
@@ -96,16 +107,18 @@ enum class ScoringAction
      * @brief Score and hold the scoring mechanism in position
      */
     SCOREANDHOLD,
+
+    UNJAM,
     /**
      * @brief Reset the scoring mechanism to its initial position
      */
-    UNJAM,
+    PARK,
     RESET,
+    // RESET1,
     /**
      * @brief Hold the scoring mechanism in its current position
      */
     HOLD,
-    DEHOLD,
     IDLE
 };
 
@@ -132,10 +145,12 @@ public:
      * @brief Control the intake mechanism
      */
     void intake(bool on = true);
+    void setLow();
+    void scoreLow(int maxSpeed = 35);
     /**
      * @brief Control the lift mechanism
      */
-    void score(int position = DEFAULT_SCORING_POSITION, int maxSpeed = 127);
+    void score(int position = DEFAULT_SCORING_POSITION, int maxSpeed = 127, bool approach = false);
     /**
      * @brief Control the lift mechanism
      * @param up True to lift up, false to lower
@@ -151,6 +166,8 @@ public:
      * @param descoring True to engage descore, false to disengage
      */
     void descore(bool descoring = true);
+    void lowerIntake();
+    void park();
     /**
      * @brief Set the robot's pose
      * @param x The desired x-coordinate of the pose
@@ -190,13 +207,16 @@ public:
 private:
     void scoringLoop();                          // Main scoring task function
     void setScoringAction(ScoringAction action); // Set the current scoring action
-    constexpr static int FEEDFORWARD = 20;    // Angle to unjam the scoring mechanism
+    constexpr static int FEEDFORWARD = 10;       // Angle to unjam the scoring mechanism
     constexpr static int DEFAULT_SCORING_POSITION = 1800;
-    constexpr static int DEFAULT_DESCORING_POSITION = -1800;
+    constexpr static int DEFAULT_DESCORING_POSITION = -1750;
+    constexpr static int LOWGOAL_POSITION = 1770;
+    constexpr static int SCORELOW_POSITION = 50;
+    constexpr static int TURN_THRESHOLD = 10;         // Threshold for in-place turning
+    constexpr static double TURN_SENSITIVITY = 0.012; // Adjust for desired turning responsiveness
     int scoringPosition = DEFAULT_SCORING_POSITION;
     int descoringPosition = DEFAULT_DESCORING_POSITION;
     int maxSpeed = 127;
-    int unjamAngle = 0;
     int highestCurrent = 0;
     ScoringAction lastState = ScoringAction::IDLE;
     Helper &helper;
@@ -220,12 +240,15 @@ private:
     std::atomic<bool> intakeTaskQueued{false};
     std::atomic<bool> hookTaskQueued{false};
     std::atomic<bool> fullSpeed{false};
-    std::atomic<ScoringAction> currentScoringAction{ScoringAction::RESET};
+    std::atomic<bool> descoring{false};
+    std::atomic<bool> lowGoalPosition{false};
+    std::atomic<bool> approaching{false};
+    std::atomic<ScoringAction> currentScoringAction{ScoringAction::IDLE};
     std::atomic<bool> scoringTaskRunning{false};
+    std::atomic<bool> parking{false};
     limelib::PID hookPID;
     bool intaking = false;
     bool liftState = false;
-    double currentAngle = 0;
     int motorCount = 4;
 };
 

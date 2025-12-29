@@ -199,8 +199,8 @@ void limelib::MCL::updateMCL()
         // Apply only translation motion with noise, use odometry heading for all particles
         particle.point.x += odomDelta.x + getRandomReal_t(-TRANSLATION_NOISE, TRANSLATION_NOISE);
         particle.point.y += odomDelta.y + getRandomReal_t(-TRANSLATION_NOISE, TRANSLATION_NOISE);
-        // Set all particles to use the same odometry heading (no rotation correction)
-        particle.point.theta = odomHeading;
+        // Set all particles to use the same odometry heading + noise
+        particle.point.theta = odomHeading + getRandomReal_t(-0.1, 0.1);
     }
     // 2. CORRECTION STEP - Update particle weights based on sensor observations
     real_t totalWeight = 0.0;
@@ -212,6 +212,8 @@ void limelib::MCL::updateMCL()
                   << "---- MCL Update ----" << std::endl;
         std::cout << "Valid sensor readings: " << std::endl;
     }
+
+    bool firstSensor = true;
     for (MCLDistance &sensor : sensors)
     {
         // Get raw int32_t value first to check for errors
@@ -220,6 +222,11 @@ void limelib::MCL::updateMCL()
         if (debug && debugCounter >= 50)
         {
             std::cout << "Sensor at angle " << sensor.pose.theta << "deg: " << raw << " size: " << size << " ";
+        }
+        if (firstSensor)
+        {
+            pros::lcd::print(0, "Distance Sensor 1: %d mm, %d size", raw, size);
+            firstSensor = false;
         }
         // Valid readings are positive and less than 9999 (no object detected)
         // PROS_ERR is typically negative, which becomes huge positive when cast to float
@@ -252,7 +259,7 @@ void limelib::MCL::updateMCL()
     }
 
     // If no valid sensors, skip correction step - just apply odometry
-    if (validSensorCount == 0)
+    if (validSensorCount <= 1)
     {
         // Still update actualPose with odometry delta
         actualPose.x += odomDelta.x;
@@ -307,12 +314,13 @@ void limelib::MCL::updateMCL()
 
             // Calculate likelihood based on how well actual matches expected
             real_t error = std::abs(actualDistance - expectedDistance);
-            // Gaussian likelihood with σ=5 inches (variance=25)
-            // This means 1 inch error → likelihood ≈ 0.98
-            //           3 inch error → likelihood ≈ 0.84
-            //           5 inch error → likelihood ≈ 0.61
-            //          10 inch error → likelihood ≈ 0.14
-            real_t sensorLikelihood = exp(-error * error / (2.0 * 16.0));
+            // Gaussian likelihood with σ=6 inches (variance=36.0)
+            // Larger variance = more forgiving of sensor noise, reduces oscillation
+            // This means 1 inch error → likelihood ≈ 0.99
+            //           3 inch error → likelihood ≈ 0.90
+            //           6 inch error → likelihood ≈ 0.61
+            //          10 inch error → likelihood ≈ 0.25
+            real_t sensorLikelihood = exp(-error * error / (2.0 * 9.0));
             // Apply minimum likelihood floor to prevent complete particle starvation
             sensorLikelihood = std::max(sensorLikelihood, real_t(0.001));
 
@@ -356,23 +364,35 @@ void limelib::MCL::updateMCL()
     // std::cout << "Max Particle Weight: " << maxWeight << std::endl;
     if (sumWeights > 0)
     {
-        estimatedPose.point.x = sumX / sumWeights;
-        estimatedPose.point.y = sumY / sumWeights;
+        // Raw MCL estimate from weighted average
+        real_t rawMCL_x = sumX / sumWeights;
+        real_t rawMCL_y = sumY / sumWeights;
+
+        // Apply exponential smoothing to reduce oscillation (alpha = 0.3 means 70% previous, 30% new)
+        const real_t SMOOTHING_ALPHA = 0.7;
+        estimatedPose.point.x = SMOOTHING_ALPHA * rawMCL_x + (1.0 - SMOOTHING_ALPHA) * estimatedPose.point.x;
+        estimatedPose.point.y = SMOOTHING_ALPHA * rawMCL_y + (1.0 - SMOOTHING_ALPHA) * estimatedPose.point.y;
         // Use odometry heading directly instead of particle-based rotation
         estimatedPose.point.theta = odomHeading;
 
-        // Calculate confidence based on particle concentration
-        // Higher max weight = more particles agree = higher confidence
-        estimatedPose.weight = maxWeight * NUM_PARTICLES; // Normalized confidence [0, 1]
-
-        // Alternative confidence calculation based on effective sample size
-        // real_t ess = 1.0 / std::accumulate(particles.begin(), particles.end(), 0.0,
-        //     [](real_t sum, const MCLParticle& p) { return sum + p.weight * p.weight; });
-        // estimatedPose.weight = ess / NUM_PARTICLES;
+        // Calculate confidence based on particle concentration using effective sample size
+        real_t ess = 1.0;
+        real_t sumSquaredWeights = 0.0;
+        for (const MCLParticle &p : particles)
+        {
+            sumSquaredWeights += p.weight * p.weight;
+        }
+        if (sumSquaredWeights > 0)
+        {
+            ess = 1.0 / sumSquaredWeights;
+        }
+        // Normalize ESS to [0, 1] range and apply smoothing
+        real_t essConfidence = ess / NUM_PARTICLES;
+        estimatedPose.weight = SMOOTHING_ALPHA * essConfidence + (1.0 - SMOOTHING_ALPHA) * estimatedPose.weight;
 
         // Use confidence to blend MCL estimate with odometry
         real_t confidence = estimatedPose.weight;
-        confidence = std::clamp(confidence, 0.1f, 0.9f); // Prevent full reliance on either source
+        confidence = std::clamp(confidence, 0.1f, 0.85f); // More conservative blending to reduce jumps
 
         // Calculate odometry-based pose from last actualPose + accumulated delta
         Pose2D odomBasedPose;
