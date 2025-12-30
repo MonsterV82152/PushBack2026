@@ -1,9 +1,9 @@
 #include "limelib/locator.hpp"
 
-void limelib::Locator::setPose(real_t x, real_t y, real_t theta)
-{
-    this->setPose(limelib::Pose2D(x, y, theta));
-}
+// void limelib::Locator::setPose(real_t x, real_t y, real_t theta, bool radians)
+// {
+//     this->setPose(limelib::Pose2D(x, y, theta), radians);
+// }
 
 limelib::Odometry::Odometry(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::IMU &imu, bool shouldTaskRun)
     : verticalTW(verticalTW), horizontalTW(horizontalTW), imu(imu), currentPose(0, 0, 0), prevPose(0, 0, 0), headingOffset(0), shouldTaskRun(shouldTaskRun), lastUpdateTime(pros::millis()), currentVelocity(), odomTask(nullptr), master(pros::E_CONTROLLER_MASTER)
@@ -35,15 +35,20 @@ void limelib::Odometry::calibrate()
     }
 }
 
-void limelib::Odometry::setPose(limelib::Pose2D pose)
+void limelib::Odometry::setPose(limelib::Pose2D pose, bool radians)
 {
-    headingOffset = (-imu.get_heading() + pose.theta) * M_PI / 180;
-    currentPose = pose;
+    if (radians)
+    {
+        pose = pose.toDegrees();
+    }
+    headingOffset = (-imu.get_heading() + pose.theta) * M_PI / 180.0;
+    currentPose = pose.toRadians();
+    // std::cout << "Odometry pose set to X: " << currentPose.x << " Y: " << currentPose.y << " Theta (deg): " << currentPose.theta << "\n";
 }
 
-void limelib::Odometry::setPose(real_t x, real_t y, real_t theta)
+void limelib::Odometry::setPose(real_t x, real_t y, real_t theta, bool radians)
 {
-    setPose(limelib::Pose2D(x, y, theta));
+    setPose(limelib::Pose2D(x, y, theta), radians);
 }
 limelib::Pose2D limelib::Odometry::update()
 {
@@ -130,12 +135,12 @@ void limelib::MCL::calibrate()
     }
 }
 
-void limelib::MCL::setPose(limelib::Pose2D pose)
+void limelib::MCL::setPose(limelib::Pose2D pose, bool radians)
 {
-    odomHelper.setPose(pose);
+    odomHelper.setPose(pose, radians);
 
     // Update actualPose to match the set pose
-    real_t odomHeading = pose.theta * M_PI / 180; // Convert to radians
+    real_t odomHeading = radians ? pose.theta : pose.theta * M_PI / 180; // Convert to radians if needed
     actualPose.x = pose.x;
     actualPose.y = pose.y;
     actualPose.theta = odomHeading;
@@ -155,9 +160,9 @@ void limelib::MCL::setPose(limelib::Pose2D pose)
     }
 }
 
-void limelib::MCL::setPose(real_t x, real_t y, real_t theta)
+void limelib::MCL::setPose(real_t x, real_t y, real_t theta, bool radians)
 {
-    setPose(limelib::Pose2D(x, y, theta));
+    setPose(limelib::Pose2D(x, y, theta), radians);
 }
 
 void limelib::MCL::setNoise(real_t translationNoise)
@@ -243,7 +248,7 @@ void limelib::MCL::updateMCL()
     }
 
     // If no valid sensors, skip correction step - just apply odometry
-    if (validSensors.size() == 0)
+    if (validSensors.size() <= 1)
     {
         actualPose.x += odomDelta.x;
         actualPose.y += odomDelta.y;
@@ -253,7 +258,7 @@ void limelib::MCL::updateMCL()
     }
 
     real_t totalWeight = 0.0;
-    const real_t INV_2_VARIANCE = 1.0 / (2.0 * 4.0); // Pre-compute constant
+    const real_t INV_2_VARIANCE = 1.0 / (2.0 * 6.0); // Pre-compute constant
 
     for (MCLParticle &particle : particles)
     {
@@ -477,20 +482,20 @@ void limelib::MCL::debugDisplay()
 }
 
 // Add these implementations for the Locator base class
-limelib::Pose2D limelib::Locator::update()
-{
-    return Pose2D(); // Default implementation
-}
+// limelib::Pose2D limelib::Locator::update()
+// {
+//     return Pose2D(); // Default implementation
+// }
 
-void limelib::Locator::calibrate()
-{
-    // Default implementation
-}
+// void limelib::Locator::calibrate()
+// {
+//     // Default implementation
+// }
 
-void limelib::Locator::setPose(Pose2D pose)
-{
-    // Default implementation
-}
+// void limelib::Locator::setPose(Pose2D pose, bool radians)
+// {
+//     // Default implementation
+// }
 
 limelib::real_t limelib::getRayCastDistance(const std::vector<LineSegment2D> &edges, Ray2D ray)
 {

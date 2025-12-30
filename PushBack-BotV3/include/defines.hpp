@@ -23,6 +23,7 @@
 #include "autonomous_selector.hpp"
 #include "movements.hpp"
 #include "piston.hpp"
+#include "sensor_loc.hpp"
 
 using namespace limelib;
 
@@ -62,11 +63,16 @@ inline pros::Distance rightDS(9);
 inline pros::Distance frontDS(1);
 inline pros::Distance backDS(10);
 
+inline MCLDistance leftDistanceSensor(leftDS, Pose2D{-5, 5, -90});
+inline MCLDistance rightDistanceSensor(rightDS, Pose2D{5, 5, 90});
+inline MCLDistance backDistanceSensor(backDS, Pose2D{5.5, 3.5, 180});
+inline MCLDistance frontDistanceSensor(frontDS, Pose2D{-4.25, 7.5, 0});
+
 inline std::vector<MCLDistance> mclDistanceSensors = {
-    MCLDistance(leftDS, Pose2D{-5, 5, -90}),
-    MCLDistance(rightDS, Pose2D{5, 5, 90}),
-    MCLDistance(backDS, Pose2D{5.5, 3.5, 180}),
-    MCLDistance(frontDS, Pose2D{-4.25, 7.5, 0})};
+    leftDistanceSensor,
+    rightDistanceSensor,
+    backDistanceSensor,
+    frontDistanceSensor};
 
 // ==============================
 // Tracking Wheels
@@ -102,8 +108,8 @@ inline Piston intakePark(&intakeParkPiston);   ///< Intake park piston object
 inline std::vector<std::shared_ptr<limelib::Object2D>> fieldObstacles = {};
 inline Field2D field(140.5f, 140.5f, fieldObstacles); ///< LemLib Field2D object representing the robot's environment
 
-inline MCL locator(&verticalTW, &horizontalTW, imu, mclDistanceSensors, field, 1500, 0.2, false, -1); ///< LemLib MCL object for odometry and localization
-// inline Odometry locator(&verticalTW, &horizontalTW, imu);                                                                                                            ///< LemLib Odometry object for basic odometry
+// inline MCL locator(&verticalTW, &horizontalTW, imu, mclDistanceSensors, field, 1500, 0.2, false, -1); ///< LemLib MCL object for odometry and localization
+inline Odometry locator(&verticalTW, &horizontalTW, imu);                                                                                                                      ///< LemLib Odometry object for basic odometry
 inline Helper helper(-15, -14, 20, 19, 16, -18, 13, -17, scoringRotation, intakeDS, scoreLift, matchLoader, descore, intakePTO, hookPTO, intakeLift, intakePark, autonSelect); ///< Helper object for robot mechanisms
 inline Robot robot(helper, locator, master);                                                                                                                                   ///< Main robot control object
 

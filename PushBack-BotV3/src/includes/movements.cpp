@@ -65,7 +65,7 @@ Robot::Robot(Helper &helper, limelib::Locator &locator, pros::Controller &contro
 
 void Robot::init()
 {
-    pros::lcd::initialize();
+    // pros::lcd::initialize();
     locator.calibrate();
     hookPTOTask = std::make_unique<pros::Task>([&]() {});
     intakePTOTask = std::make_unique<pros::Task>([&]() {});
@@ -76,6 +76,7 @@ void Robot::init()
     helper.scoringRotation.reset_position();
     helper.scoringRotation.reset();
     helper.scoringRotation.set_position(0);
+    helper.autonSelector.start();
 }
 
 void Robot::moveState(PTOState state)
@@ -113,7 +114,7 @@ void Robot::moveState(PTOState state)
         hookTaskQueued.store(true);
         hookPTOTask->create([this, state]()
                             {
-                pros::delay(50);
+                pros::delay(100);
                 hookPTOState.store(true);
                 hookTaskQueued.store(false);
                 helper.leftDT.erase_port(helper.leftHookMotorPort);
@@ -138,7 +139,7 @@ void Robot::moveState(PTOState state)
         hookTaskQueued.store(true);
         hookPTOTask->create([this, state]()
                             {
-                pros::delay(100);
+                pros::delay(150);
                 hookTaskQueued.store(false);
                 helper.leftDT.append(helper.leftHookMotor);
                 helper.rightDT.append(helper.rightHookMotor);
@@ -281,8 +282,8 @@ void Robot::teleopControl()
     helper.leftDT.move(forward + input);
     helper.rightDT.move(forward - input);
 
-    if (forward > 15 || forward < -15 || turn > 15 || turn < -15)
-        std::cout << "Forward: " << forward << " Turn: " << turn << std::endl;
+    // if (forward > 15 || forward < -15 || turn > 15 || turn < -15)
+    //     std::cout << "Forward: " << forward << " Turn: " << turn << std::endl;
     if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A) && pros::lcd::is_initialized())
     {
         limelib::Pose2D currentPose = locator.getPose();
@@ -293,7 +294,7 @@ void Robot::teleopControl()
         intaking = !intaking;
     }
     ScoringAction currentAction = currentScoringAction.load();
-    if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2) && helper.autonSelector.isSkills() && lowGoalPosition.load())
+    if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2) && lowGoalPosition.load())
     {
         scoreLow();
     }
@@ -503,8 +504,6 @@ void Robot::scoringLoop()
                 lowGoalPosition.store(false);
                 double speed = hookPID.update(SCORELOW_POSITION - currentAngle);
                 speed += speed > 0 ? FEEDFORWARD : -FEEDFORWARD;
-                matchLoad(true);
-                helper.intakeLift.setState(true);
                 if (velo > 2)
                     fullSpeed.store(true);
                 if (fullSpeed.load() && velo < 2 && abs(speed) > 10)
@@ -628,11 +627,21 @@ void Robot::scoreLow(int maxSpeed)
 {
     this->maxSpeed = maxSpeed;
     descoring.store(true);
+    matchLoad(true);
+    helper.intakeLift.setState(true);
+    descoreTask->create([this]()
+                        {
+        pros::delay(500);
+        matchLoad(false); });
     setScoringAction(ScoringAction::SCORELOW);
 }
 void Robot::lowerIntake()
 {
     helper.intakeLift.setState(false);
+}
+void Robot::raiseIntake()
+{
+    helper.intakeLift.setState(true);
 }
 void Robot::score(int position, int maxSpeed, bool approach)
 {
@@ -661,6 +670,10 @@ void Robot::lift(bool up)
         // helper.descore.setState(true);
     }
     liftState = up;
+}
+void Robot::reset()
+{
+    setScoringAction(ScoringAction::RESET);
 }
 void Robot::intake(bool on)
 {

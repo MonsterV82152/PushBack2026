@@ -65,7 +65,7 @@ namespace limelib
         void cancelAllMovement();
         void waitUntilDone();
         void setPose(Pose2D pose);
-        void setPose(real_t x, real_t y, real_t theta);
+        void setPose(real_t x, real_t y, real_t theta, bool radians = false);
         void setPID(PID &linearController, PID &angularController);
         void moveToPoint(Point2D point, int timeout, moveToPointParams params = moveToPointParams());
         void moveToPoint(real_t x, real_t y, int timeout, moveToPointParams params = moveToPointParams());

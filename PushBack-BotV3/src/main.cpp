@@ -65,9 +65,9 @@ void competition_initialize() {}
  */
 void autonomous()
 {
-	// right();
-	// soloAWP();
-	skills();
+	// right2();
+	soloAWP();
+	// skills();
 	// autonSelect.runAuton();
 }
 
@@ -90,6 +90,7 @@ void opcontrol()
 		skills();
 
 	robot.lift(false);
+	robot.reset();
 	if (helper.autonSelector.isSkills() && master.get_digital(pros::E_CONTROLLER_DIGITAL_A))
 	{
 		robot.intake();

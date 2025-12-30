@@ -14,6 +14,11 @@ void left();
  * Scores in long goal only - 7 blocks
  */
 void left2();
+/**
+ * @brief Autonomous path for left side starting position
+ */
+void left3();
+
 
 /**
  * @brief Autonomous path for right side starting position
@@ -31,6 +36,10 @@ void right();
  * Scores in long goal only - 7 blocks
  */
 void right2();
+/**
+ * @brief Autonomous path for right side starting position
+ */
+void right3();
 
 void move(int speed);
 
@@ -39,6 +48,12 @@ void move(int speed);
  * Safe route that gets ~80 points
  */
 void skills();
+
+/**
+ * @brief Autonomous path for skills challenge
+ * Aggressive route that gets ~100 points
+ */
+void skills2();
 
 /**
  * @brief Drives forward for 500ms at speed 20

@@ -167,6 +167,8 @@ public:
      */
     void descore(bool descoring = true);
     void lowerIntake();
+    void raiseIntake();
+    void reset();
     void park();
     /**
      * @brief Set the robot's pose
@@ -203,10 +205,10 @@ public:
      * @param y The target y-coordinate
      */
     void turnToPoint(limelib::real_t x, limelib::real_t y, int timeout, limelib::turnToHeadingParams params = limelib::turnToHeadingParams());
+    void setScoringAction(ScoringAction action); // Set the current scoring action
 
 private:
     void scoringLoop();                          // Main scoring task function
-    void setScoringAction(ScoringAction action); // Set the current scoring action
     constexpr static int FEEDFORWARD = 10;       // Angle to unjam the scoring mechanism
     constexpr static int DEFAULT_SCORING_POSITION = 1800;
     constexpr static int DEFAULT_DESCORING_POSITION = -1750;
