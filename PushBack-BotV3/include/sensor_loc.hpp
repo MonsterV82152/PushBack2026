@@ -12,6 +12,6 @@
  * @param correct_rate The rate at which to correct the position
  * @param forced If true, force the correction even if the distance is not valid
  */
-void correct_position(limelib::MCLDistance sensor, limelib::Locator *locator, bool x, bool forced = false, double correct_rate = 10);
+bool correct_position(limelib::MCLDistance sensor, limelib::Locator *locator, bool x, bool forced = false, double correct_rate = 10);
 
 #endif

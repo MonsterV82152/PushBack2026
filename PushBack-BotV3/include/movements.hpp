@@ -6,6 +6,7 @@
 #include "main.h"
 #include "piston.hpp"
 #include "autonomous_selector.hpp"
+#include "sensor_loc.hpp"
 
 /**
  * @brief Helper class to bundle robot components
@@ -45,7 +46,6 @@ public:
         Piston &intakePTO,
         Piston &hookPTO,
         Piston &intakeLift,
-        Piston &intakePark,
         AutonSelector &autonSelector);
     std::int8_t leftIntakeMotorPort;
     std::int8_t rightIntakeMotorPort;
@@ -69,7 +69,6 @@ public:
     Piston &intakePTO;
     Piston &hookPTO;
     Piston &intakeLift;
-    Piston &intakePark;
 
     AutonSelector &autonSelector;
 
@@ -112,7 +111,6 @@ enum class ScoringAction
     /**
      * @brief Reset the scoring mechanism to its initial position
      */
-    PARK,
     RESET,
     // RESET1,
     /**
@@ -168,8 +166,8 @@ public:
     void descore(bool descoring = true);
     void lowerIntake();
     void raiseIntake();
+    void disabled();
     void reset();
-    void park();
     /**
      * @brief Set the robot's pose
      * @param x The desired x-coordinate of the pose
@@ -208,11 +206,11 @@ public:
     void setScoringAction(ScoringAction action); // Set the current scoring action
 
 private:
-    void scoringLoop();                          // Main scoring task function
-    constexpr static int FEEDFORWARD = 10;       // Angle to unjam the scoring mechanism
+    void scoringLoop();                    // Main scoring task function
+    constexpr static int FEEDFORWARD = 10; // Angle to unjam the scoring mechanism
     constexpr static int DEFAULT_SCORING_POSITION = 1800;
     constexpr static int DEFAULT_DESCORING_POSITION = -1750;
-    constexpr static int LOWGOAL_POSITION = 1750;
+    constexpr static int LOWGOAL_POSITION = 1730;
     constexpr static int SCORELOW_POSITION = 50;
     constexpr static int TURN_THRESHOLD = 10;         // Threshold for in-place turning
     constexpr static double TURN_SENSITIVITY = 0.012; // Adjust for desired turning responsiveness

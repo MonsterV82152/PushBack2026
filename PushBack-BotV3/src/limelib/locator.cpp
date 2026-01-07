@@ -1,10 +1,5 @@
 #include "limelib/locator.hpp"
 
-// void limelib::Locator::setPose(real_t x, real_t y, real_t theta, bool radians)
-// {
-//     this->setPose(limelib::Pose2D(x, y, theta), radians);
-// }
-
 limelib::Odometry::Odometry(TrackingWheel *verticalTW, TrackingWheel *horizontalTW, pros::IMU &imu, bool shouldTaskRun)
     : verticalTW(verticalTW), horizontalTW(horizontalTW), imu(imu), currentPose(0, 0, 0), prevPose(0, 0, 0), headingOffset(0), shouldTaskRun(shouldTaskRun), lastUpdateTime(pros::millis()), currentVelocity(), odomTask(nullptr), master(pros::E_CONTROLLER_MASTER)
 {
@@ -16,11 +11,7 @@ void limelib::Odometry::calibrate()
         verticalTW->calibrate();
     if (horizontalTW != nullptr)
         horizontalTW->calibrate();
-    imu.reset();
-    while (imu.is_calibrating())
-    {
-        pros::delay(20);
-    }
+    imu.reset(true);
     master.rumble(".");
     headingOffset = -imu.get_heading() * M_PI / 180;
     if (shouldTaskRun)
@@ -30,7 +21,7 @@ void limelib::Odometry::calibrate()
             while (true)
             {
                 update();
-                pros::delay(10);
+                pros::delay(20);
             } });
     }
 }
@@ -41,7 +32,7 @@ void limelib::Odometry::setPose(limelib::Pose2D pose, bool radians)
     {
         pose = pose.toDegrees();
     }
-    headingOffset = (-imu.get_heading() + pose.theta) * M_PI / 180.0;
+    headingOffset = (-imu.get_rotation() + pose.theta) * M_PI / 180.0;
     currentPose = pose.toRadians();
     // std::cout << "Odometry pose set to X: " << currentPose.x << " Y: " << currentPose.y << " Theta (deg): " << currentPose.theta << "\n";
 }
@@ -56,8 +47,8 @@ limelib::Pose2D limelib::Odometry::update()
     uint32_t currentTime = pros::millis();
     real_t dt = (currentTime - lastUpdateTime) / 1000.0f;
     lastUpdateTime = currentTime;
-
-    real_t heading = imu.get_heading() * M_PI / 180 + headingOffset;
+    real_t IMUReading = imu.get_rotation();
+    real_t heading = IMUReading * M_PI / 180 + headingOffset;
     real_t headingDiff = heading - currentPose.theta;
     real_t vertDist = verticalTW != nullptr ? verticalTW->getDistanceTravelled() + verticalTW->getOffset() * headingDiff / 2 : 0;
     real_t horDist = horizontalTW != nullptr ? horizontalTW->getDistanceTravelled() + horizontalTW->getOffset() * headingDiff / 2 : 0;
@@ -113,25 +104,25 @@ limelib::MCL::MCL(TrackingWheel *verticalTW, TrackingWheel *horizontalTW,
 void limelib::MCL::calibrate()
 {
     odomHelper.calibrate();
-    std::cout << "Field Edges: " << field.getEdges().size() << std::endl;
-    std::cout << "MCL::calibrate - shouldTaskRun=" << shouldTaskRun << std::endl;
+    // std::cout << "Field Edges: " << field.getEdges().size() << std::endl;
+    // std::cout << "MCL::calibrate - shouldTaskRun=" << shouldTaskRun << std::endl;
     if (shouldTaskRun)
     {
-        std::cout << "MCL::calibrate - Creating MCL task..." << std::endl;
+        // std::cout << "MCL::calibrate - Creating MCL task..." << std::endl;
         // Create task and store in member variable so it persists
         mclTask = std::make_unique<pros::Task>([this]()
                                                {
-            std::cout << "MCL task started!" << std::endl;
+            // std::cout << "MCL task started!" << std::endl;
             while (true)
             {
                 update();
                 pros::delay(10);
             } });
-        std::cout << "MCL::calibrate - MCL task created, ptr=" << mclTask.get() << std::endl;
+        // std::cout << "MCL::calibrate - MCL task created, ptr=" << mclTask.get() << std::endl;
     }
     else
     {
-        std::cout << "MCL::calibrate - Task NOT created (shouldTaskRun=false)" << std::endl;
+        // std::cout << "MCL::calibrate - Task NOT created (shouldTaskRun=false)" << std::endl;
     }
 }
 
@@ -156,7 +147,7 @@ void limelib::MCL::setPose(limelib::Pose2D pose, bool radians)
     // Initialize particles with position spread but all using the same odometry heading
     for (int i = 0; i < NUM_PARTICLES; i++)
     {
-        particles.push_back(MCLParticle(Pose2D(pose.x + getRandomReal_t(-5, 5), pose.y + getRandomReal_t(-5, 5), odomHeading), 1.0 / NUM_PARTICLES));
+        particles.push_back(MCLParticle(Pose2D(pose.x + getRandomReal_t(-4, 4), pose.y + getRandomReal_t(-4, 4), odomHeading), 1.0 / NUM_PARTICLES));
     }
 }
 
@@ -223,17 +214,17 @@ void limelib::MCL::updateMCL()
     std::vector<ValidSensor> validSensors;
     validSensors.reserve(sensors.size());
 
-    bool firstSensor = true;
+    // bool firstSensor = true;
     for (const MCLDistance &sensor : sensors)
     {
         int32_t raw = sensor.sensor.get_distance();
         int16_t size = sensor.sensor.get_object_size();
 
-        if (firstSensor)
-        {
-            pros::lcd::print(0, "DS1: %d mm, %d sz", raw, size);
-            firstSensor = false;
-        }
+        // if (firstSensor)
+        // {
+        // pros::lcd::print(0, "DS1: %d mm, %d sz", raw, size);
+        //     firstSensor = false;
+        // }
 
         // Valid readings: positive, < 2000mm, size > 70
         if (raw > 0 && raw < 2000 && size > 70)
@@ -248,7 +239,7 @@ void limelib::MCL::updateMCL()
     }
 
     // If no valid sensors, skip correction step - just apply odometry
-    if (validSensors.size() <= 1)
+    if (validSensors.size() == 0)
     {
         actualPose.x += odomDelta.x;
         actualPose.y += odomDelta.y;
@@ -258,7 +249,7 @@ void limelib::MCL::updateMCL()
     }
 
     real_t totalWeight = 0.0;
-    const real_t INV_2_VARIANCE = 1.0 / (2.0 * 6.0); // Pre-compute constant
+    const real_t INV_2_VARIANCE = 1.0 / (2.0 * 16.0); // Pre-compute constant
 
     for (MCLParticle &particle : particles)
     {
@@ -480,22 +471,6 @@ void limelib::MCL::debugDisplay()
     pros::screen::set_pen(pros::Color::red);
     pros::screen::draw_circle(ax, ay, 2);
 }
-
-// Add these implementations for the Locator base class
-// limelib::Pose2D limelib::Locator::update()
-// {
-//     return Pose2D(); // Default implementation
-// }
-
-// void limelib::Locator::calibrate()
-// {
-//     // Default implementation
-// }
-
-// void limelib::Locator::setPose(Pose2D pose, bool radians)
-// {
-//     // Default implementation
-// }
 
 limelib::real_t limelib::getRayCastDistance(const std::vector<LineSegment2D> &edges, Ray2D ray)
 {

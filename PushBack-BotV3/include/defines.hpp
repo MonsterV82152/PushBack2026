@@ -63,10 +63,10 @@ inline pros::Distance rightDS(9);
 inline pros::Distance frontDS(1);
 inline pros::Distance backDS(10);
 
-inline MCLDistance leftDistanceSensor(leftDS, Pose2D{-5, 5, -90});
-inline MCLDistance rightDistanceSensor(rightDS, Pose2D{5, 5, 90});
-inline MCLDistance backDistanceSensor(backDS, Pose2D{5.5, 3.5, 180});
-inline MCLDistance frontDistanceSensor(frontDS, Pose2D{-4.25, 7.5, 0});
+inline MCLDistance leftDistanceSensor(leftDS, Pose2D{-4.5, 4.5, -90});
+inline MCLDistance rightDistanceSensor(rightDS, Pose2D{4.5, 4.5, 90});
+inline MCLDistance backDistanceSensor(backDS, Pose2D{5.5, 3, 180});
+inline MCLDistance frontDistanceSensor(frontDS, Pose2D{-4.25, 7, 0});
 
 inline std::vector<MCLDistance> mclDistanceSensors = {
     leftDistanceSensor,
@@ -89,18 +89,18 @@ inline pros::ADIDigitalOut intakePTOPiston('C');   ///< Piston on ADI port A
 inline pros::ADIDigitalOut hookPTOPiston('D');     ///< Piston on ADI port B
 inline pros::ADIDigitalOut scoreLiftPiston('E');   ///< Piston on ADI port C
 inline pros::ADIDigitalOut matchLoaderPiston('A'); ///< Piston on ADI port D
-inline pros::ADIDigitalOut descorePiston('B');     ///< Piston on ADI port E
+inline pros::ADIDigitalOut descoreUpPiston('B');   ///< Piston on ADI port E
 inline pros::ADIDigitalOut intakeLiftPiston('G');  ///< Piston on ADI port F
-inline pros::ADIDigitalOut intakeParkPiston('H');  ///< Piston on ADI port G
+inline pros::ADIDigitalOut descoreDownPiston('H'); ///< Piston on ADI port G
 
 // Piston wrapper objects for state management
-inline Piston intakePTO(&intakePTOPiston);     ///< Intake piston object
-inline Piston hookPTO(&hookPTOPiston);         ///< Hook piston object
-inline Piston scoreLift(&scoreLiftPiston);     ///< Scoring lift piston object
-inline Piston matchLoader(&matchLoaderPiston); ///< Match loader piston object
-inline Piston descore(&descorePiston);         ///< Descore piston object
-inline Piston intakeLift(&intakeLiftPiston);   ///< Intake lift piston object
-inline Piston intakePark(&intakeParkPiston);   ///< Intake park piston object
+inline Piston intakePTO(&intakePTOPiston);                   ///< Intake piston object
+inline Piston hookPTO(&hookPTOPiston);                       ///< Hook piston object
+inline Piston scoreLift(&scoreLiftPiston);                   ///< Scoring lift piston object
+inline Piston matchLoader(&matchLoaderPiston);               ///< Match loader piston object
+inline Piston descore(&descoreUpPiston, &descoreDownPiston); ///< Descore piston object
+inline Piston intakeLift(&intakeLiftPiston);                 ///< Intake lift piston object
+// inline Piston intakePark(&intakeParkPiston);   ///< Intake park piston object
 
 // ==============================
 // Robot Control Objects
@@ -108,9 +108,9 @@ inline Piston intakePark(&intakeParkPiston);   ///< Intake park piston object
 inline std::vector<std::shared_ptr<limelib::Object2D>> fieldObstacles = {};
 inline Field2D field(140.5f, 140.5f, fieldObstacles); ///< LemLib Field2D object representing the robot's environment
 
-// inline MCL locator(&verticalTW, &horizontalTW, imu, mclDistanceSensors, field, 1500, 0.2, false, -1); ///< LemLib MCL object for odometry and localization
-inline Odometry locator(&verticalTW, &horizontalTW, imu);                                                                                                                      ///< LemLib Odometry object for basic odometry
-inline Helper helper(-15, -14, 20, 19, 16, -18, 13, -17, scoringRotation, intakeDS, scoreLift, matchLoader, descore, intakePTO, hookPTO, intakeLift, intakePark, autonSelect); ///< Helper object for robot mechanisms
-inline Robot robot(helper, locator, master);                                                                                                                                   ///< Main robot control object
+// inline MCL locator(&verticalTW, &horizontalTW, imu, mclDistanceSensors, field, 500, 0.25, false, -1); ///< LemLib MCL object for odometry and localization
+inline Odometry locator(&verticalTW, &horizontalTW, imu);                                                                                                          ///< LemLib Odometry object for basic odometry
+inline Helper helper(-15, -14, 20, 19, 16, -18, 13, -17, scoringRotation, intakeDS, scoreLift, matchLoader, descore, intakePTO, hookPTO, intakeLift, autonSelect); ///< Helper object for robot mechanisms
+inline Robot robot(helper, locator, master);                                                                                                                       ///< Main robot control object
 
 #endif

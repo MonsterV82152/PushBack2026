@@ -1,16 +1,16 @@
 #include "sensor_loc.hpp"
 #include <string>
 
-void correct_position(limelib::MCLDistance sensor, limelib::Locator *locator, bool x, bool forced, double correct_rate)
+bool correct_position(limelib::MCLDistance sensor, limelib::Locator *locator, bool x, bool forced, double correct_rate)
 {
-    double wall_dist = 71.5;
+    double wall_dist = 70.5;
     limelib::Pose2D currentPos = locator->getPose(true);
     // std::cout << "Current Position: X: " << currentPos.x << " Y: " << currentPos.y << " Theta (rad): " << currentPos.theta << "\n";
     double distanceValue = sensor.sensor.get_distance();
 
     if (distanceValue == 9999)
     {
-        return;
+        return false;
     }
     else
     {
@@ -26,12 +26,13 @@ void correct_position(limelib::MCLDistance sensor, limelib::Locator *locator, bo
     double y_value = distanceValue * cos(currentPos.theta + sensor.pose.theta * M_PI / 180) + offset_y;
     if (x)
     {
-        x_value = wall_dist * x_value / abs(x_value) - x_value;
+        x_value = x_value > 0 ? wall_dist - x_value : -wall_dist - x_value;
         std::cout << "Calculated X Position: " << x_value << " deg " << currentPos.theta << "\n";
         if (abs(x_value - currentPos.x) < correct_rate || forced)
         {
             std::cout << "Corrected X Position from " << currentPos.x << " to " << x_value << " deg " << currentPos.theta << "\n";
             locator->setPose(x_value, currentPos.y, currentPos.theta, true);
+            return true;
         }
     }
     else
@@ -42,6 +43,8 @@ void correct_position(limelib::MCLDistance sensor, limelib::Locator *locator, bo
         {
             std::cout << "Corrected Y Position from " << currentPos.y << " to " << y_value << " deg " << currentPos.theta << "\n";
             locator->setPose(currentPos.x, y_value, currentPos.theta, true);
+            return true;
         }
     }
+    return false;
 }

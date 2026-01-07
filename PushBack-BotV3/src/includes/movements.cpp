@@ -17,7 +17,6 @@ Helper::Helper(
     Piston &intakePTO,
     Piston &hookPTO,
     Piston &intakeLift,
-    Piston &intakePark,
     AutonSelector &autonSelector) : leftHookMotorPort(leftHook),
                                     rightHookMotorPort(rightHook),
                                     leftIntakeMotorPort(leftIntake),
@@ -30,7 +29,6 @@ Helper::Helper(
                                     rightHookMotor(rightHook),
                                     intakePTO(intakePTO),
                                     intakeLift(intakeLift),
-                                    intakePark(intakePark),
                                     scoringRotation(scoringRotation),
                                     intakeDS(intakeDS),
                                     leftDT({left1, left2, leftIntake, leftHook}),
@@ -66,17 +64,18 @@ Robot::Robot(Helper &helper, limelib::Locator &locator, pros::Controller &contro
 void Robot::init()
 {
     // pros::lcd::initialize();
-    locator.calibrate();
+    helper.autonSelector.start();
     hookPTOTask = std::make_unique<pros::Task>([&]() {});
     intakePTOTask = std::make_unique<pros::Task>([&]() {});
     scoringTask = std::make_unique<pros::Task>([&]() {});
     descoreTask = std::make_unique<pros::Task>([&]() {});
     intakePTOTask->remove();
     scoringTask->remove();
+    locator.calibrate();
     helper.scoringRotation.reset_position();
     helper.scoringRotation.reset();
     helper.scoringRotation.set_position(0);
-    helper.autonSelector.start();
+    descore(true);
 }
 
 void Robot::moveState(PTOState state)
@@ -139,7 +138,7 @@ void Robot::moveState(PTOState state)
         hookTaskQueued.store(true);
         hookPTOTask->create([this, state]()
                             {
-                pros::delay(150);
+                pros::delay(200);
                 hookTaskQueued.store(false);
                 helper.leftDT.append(helper.leftHookMotor);
                 helper.rightDT.append(helper.rightHookMotor);
@@ -227,19 +226,19 @@ void Robot::debug()
         chassis.waitUntilDone();
         master.print(0, 0, "Error Heading: %.2f", locator.getPose().theta - 90);
     }
-    if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP))
+
+    if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1))
     {
         moveState({OFF, OFF, LEAVE, LEAVE});
     }
-    if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN))
+    if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L2))
     {
         moveState({ON, ON, 0, 0});
     }
-    if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT))
+    if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1))
     {
         moveState({OFF, ON, LEAVE, 0});
     }
-
     if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
     {
         float error = 0.0;
@@ -306,16 +305,16 @@ void Robot::teleopControl()
     {
         if (descoring.load())
         {
-            moveState({ON, LEAVE, -20, LEAVE});
+            moveState({ON, LEAVE, -40, LEAVE});
         }
         else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
         {
             if (helper.autonSelector.isSkills())
-                moveState({ON, LEAVE, -20, LEAVE});
+                moveState({ON, LEAVE, -40, LEAVE});
             else
                 moveState({ON, LEAVE, -127, LEAVE});
         }
-        else if (intaking && (currentAction == ScoringAction::RESET || currentAction == ScoringAction::IDLE) && !liftState)
+        else if (intaking && currentAction == ScoringAction::IDLE && !liftState)
         {
             moveState({ON, LEAVE, 127, LEAVE});
         }
@@ -338,9 +337,10 @@ void Robot::teleopControl()
     }
     if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN))
     {
+        lift(true);
         descore();
     }
-    if (master.get_digital_new_release(pros::E_CONTROLLER_DIGITAL_DOWN))
+    if (master.get_digital_new_release(pros::E_CONTROLLER_DIGITAL_DOWN) && liftState)
     {
         descore(false);
     }
@@ -359,8 +359,11 @@ void Robot::teleopControl()
         }
         else
         {
-            maxSpeed = 55;
-            approaching.store(true);
+            if (helper.autonSelector.isSkills())
+            {
+                maxSpeed = 55;
+                approaching.store(true);
+            }
         }
         setScoringAction(ScoringAction::SCOREANDHOLD);
     }
@@ -372,23 +375,15 @@ void Robot::teleopControl()
     {
         setLow();
     }
-    if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT))
-    {
-        park();
-    }
-    if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP) && !parking.load())
-    {
-        helper.intakePark.toggle();
-    }
     if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y))
     {
         matchLoad(false);
         setScoringAction(ScoringAction::RESET);
     }
-    if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT))
-    {
-        setScoringAction(ScoringAction::UNJAM);
-    }
+    // if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT))
+    // {
+    //     setScoringAction(ScoringAction::UNJAM);
+    // }
 }
 
 void Robot::setScoringAction(ScoringAction action)
@@ -430,11 +425,11 @@ void Robot::scoringLoop()
                     speed = maxSpeed;
                 else if (speed < -maxSpeed)
                     speed = -maxSpeed;
-                if (velo > 20)
+                if (velo > 15)
                     fullSpeed.store(true);
-                if (fullSpeed.load() && velo < 3 && speed > 30)
+                if (fullSpeed.load() && velo < 1 && speed > 20)
                 {
-                    unjamAngle = currentAngle - 20;
+                    unjamAngle = currentAngle - 90;
                     currentScoringAction.store(ScoringAction::UNJAM);
                     hookPID.reset();
                 }
@@ -461,11 +456,11 @@ void Robot::scoringLoop()
                     speed = maxSpeed;
                 else if (speed < -maxSpeed)
                     speed = -maxSpeed;
-                if (velo > 20)
+                if (velo > 15)
                     fullSpeed.store(true);
-                if (fullSpeed.load() && velo < 3 && speed > 30)
+                if (fullSpeed.load() && velo < 1 && speed > 20)
                 {
-                    unjamAngle = currentAngle - 30;
+                    unjamAngle = currentAngle - 90;
                     currentScoringAction.store(ScoringAction::UNJAM);
                     hookPID.reset();
                 }
@@ -504,11 +499,11 @@ void Robot::scoringLoop()
                 lowGoalPosition.store(false);
                 double speed = hookPID.update(SCORELOW_POSITION - currentAngle);
                 speed += speed > 0 ? FEEDFORWARD : -FEEDFORWARD;
-                if (velo > 2)
+                if (velo > 3)
                     fullSpeed.store(true);
-                if (fullSpeed.load() && velo < 2 && abs(speed) > 10)
+                if (fullSpeed.load() && velo < 1 && abs(speed) > 10 && currentAngle > 20)
                 {
-                    unjamAngle = currentAngle + 20;
+                    unjamAngle = currentAngle + 120;
                     currentScoringAction.store(ScoringAction::UNJAM);
                     hookPID.reset();
                 }
@@ -536,18 +531,22 @@ void Robot::scoringLoop()
             descoring.store(false);
             approaching.store(false);
             parkState = 0;
-            if (abs(currentAngle) > 5)
+            if (currentAngle > 5 || velo > 5)
             {
-                double speed = hookPID.update(-currentAngle);
-                speed += speed > 0 ? 5 : -5;
-                if (speed > 127)
-                    speed = 127;
-                else if (speed < -127)
-                    speed = -127;
+                double speed =
+                    /*hookPID.update(-currentAngle);
+                    speed += speed > 0 ? 10 : -10;
+                    if (speed > 127)
+                        speed = 127;
+                    else if (speed < -127)
+                        speed = -127;*/
+                    -100;
                 moveState({LEAVE, ON, LEAVE, (short)speed});
             }
             else
             {
+                moveState({LEAVE, ON, LEAVE, 0});
+                pros::delay(400);
                 moveState({LEAVE, OFF, LEAVE, 0});
                 currentScoringAction.store(ScoringAction::IDLE);
                 hookPID.reset();
@@ -566,7 +565,7 @@ void Robot::scoringLoop()
             break;
         }
         case ScoringAction::IDLE:
-            // Do nothing
+
             break;
         case ScoringAction::UNJAM:
             moveState({LEAVE, ON, LEAVE, -127});
@@ -587,36 +586,10 @@ void Robot::scoringLoop()
                 hookPID.reset();
             }
             break;
-        case ScoringAction::PARK:
-        {
-            moveState({ON, OFF, -70, LEAVE});
-            if (parkState == 0 && helper.intakeDS.get_distance() < 150)
-            {
-                parkState = 1;
-            }
-            if (parkState == 1 && helper.intakeDS.get_distance() > 150)
-            {
-                moveState({ON, OFF, 60, LEAVE});
-                pros::delay(300);
-                moveState({OFF, OFF, LEAVE, LEAVE});
-                helper.intakePark.setState(true);
-                helper.matchLoader.setState(false);
-                parking.store(false);
-                currentScoringAction.store(ScoringAction::IDLE);
-            }
-            break;
-        }
         }
 
         pros::delay(20); // Small delay to prevent CPU hogging
     }
-}
-
-void Robot::park()
-{
-    setScoringAction(ScoringAction::PARK);
-    parking.store(true);
-    matchLoad(true);
 }
 
 void Robot::setLow()
@@ -652,22 +625,16 @@ void Robot::score(int position, int maxSpeed, bool approach)
 }
 void Robot::lift(bool up)
 {
-    if (up)
-    {
-        moveState({OFF, LEAVE, LEAVE, LEAVE});
-    }
+    helper.scoreLift.setState(up);
     if (!up)
     {
-        helper.scoreLift.setState(false);
-        descoreTask->create([this]()
-                            {
-            pros::delay(300);
-            this->helper.descore.setState(false); });
-    }
-    else
-    {
-        helper.scoreLift.setState(up);
-        // helper.descore.setState(true);
+        descore(true);
+    //     descoreTask->create([this]()
+    //                         {
+    //         pros::delay(500);
+    //         liftState = false; });
+    // } else {
+    //     liftState = true;
     }
     liftState = up;
 }
@@ -692,20 +659,7 @@ void Robot::matchLoad(bool load)
 }
 void Robot::descore(bool descoring)
 {
-    if (!liftState && descoring)
-    {
-        liftState = true;
-        helper.descore.setState(true);
-        helper.scoreLift.setState(liftState);
-        descoreTask->create([this]()
-                            {
-            pros::delay(300);
-            this->helper.descore.setState(false); });
-    }
-    else if (liftState)
-    {
-        helper.descore.setState(!descoring);
-    }
+    helper.descore.setState(!descoring);
 }
 void Robot::setPose(limelib::real_t x, limelib::real_t y, limelib::real_t theta)
 {
@@ -715,6 +669,12 @@ void Robot::waitUntilDone()
 {
     chassis.waitUntilDone();
 }
+
+void Robot::disabled()
+{
+    lift(!liftState);
+}
+
 void Robot::moveToPoint(limelib::real_t x, limelib::real_t y, int timeout, limelib::moveToPointParams params)
 {
     chassis.moveToPoint(x, y, timeout, params);

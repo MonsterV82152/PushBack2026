@@ -16,14 +16,17 @@ namespace limelib
 {
     /**
      * Parameters for moveToPoint function
+     * Implements LemLib-style motion control with angular priority
      */
     struct moveToPointParams
     {
-        bool forwards = true;
-        real_t maxSpeed = 127;
-        real_t minSpeed = 0;
-        real_t earlyExitRange = 0.0;
-        real_t curve = 0.6;
+        bool forwards = true;           // Direction of travel
+        real_t maxSpeed = 127;          // Maximum speed (lateral and angular)
+        real_t minSpeed = 0;            // Minimum speed for motion chaining
+        real_t earlyExitRange = 0.0;    // Exit early when within this distance
+        real_t settleDistance = 7.5;    // Distance to start settling (disable turning)
+        real_t driftCompensation = 2.0; // Drift compensation factor (2 for omni, 8 for traction)
+        real_t slew = 0;                // Acceleration limit (0 = disabled)
     };
     /**
      * Parameters for moveToPose function

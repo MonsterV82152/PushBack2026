@@ -3,6 +3,10 @@
 void Piston::init()
 {
     piston->set_value(state);
+    if (doublePiston && piston2 != nullptr)
+    {
+        piston2->set_value(!state);
+    }
 }
 
 void Piston::toggle()
@@ -11,6 +15,10 @@ void Piston::toggle()
     if (state)
     {
         piston->set_value(true);
+        if (doublePiston && piston2 != nullptr)
+        {
+            piston2->set_value(false);
+        }
     }
     else
     {
@@ -26,6 +34,10 @@ void Piston::setState(bool Istate)
     }
     state = Istate;
     piston->set_value(state);
+    if (doublePiston && piston2 != nullptr)
+    {
+        piston2->set_value(!state);
+    }
 }
 
 bool Piston::getState() const
