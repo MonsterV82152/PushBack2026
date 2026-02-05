@@ -2,47 +2,777 @@
 
 void left()
 {
-    
+    robot.setPose(-48, 17.25, 90);
+    helper.descore.setState(true);
+    // robot.moveToPoint(-36, -16, 700, {.minSpeed = 40, .earlyExitRange = 5.0});
+    pros::delay(200);
+    helper.descore.setState(false);
+    // robot.turnToPoint(-24, -26, 700);
+    robot.intake();
+    robot.moveToPoint(-24, 26, 700, {.minSpeed = 30, .earlyExitRange = 5.0});
+    // robot.turnToPoint(-7, -46, 700);
+    robot.moveToPoint(-9, 46, 1000);
+    robot.waitUntilDone();
+    correct_position(frontDistanceSensor, &locator, false);
+    robot.turnToPoint(-24, 32, 500, {false});
+    robot.moveToPoint(-24, 32, 700, {false});
+    robot.turnToPoint(-48, 48, 500, {false});
+    robot.moveToPoint(-48, 48, 800, {false});
+    robot.turnToPoint(-70, 48, 700);
+    robot.waitUntilDone();
+    correct_position(frontDistanceSensor, &locator, true);
+    correct_position(rightDistanceSensor, &locator, false);
+    robot.matchLoad(true);
+    robot.moveToPoint(-70, 48, 1200, {.minSpeed = 90});
+    robot.moveToPoint(-48, 48, 900, {false});
+    robot.matchLoad(false);
+    robot.turnToPoint(-28, 48, 900);
+    robot.moveToPoint(-28, 48, 700);
+    robot.lift();
+    robot.waitUntilDone();
+    robot.setScoringAction(ScoringAction::SCOREANDHOLD);
 }
 
 void left2()
+{
+    robot.setPose(-48, 17.25, 90);
+    helper.descore.setState(true);
+    // robot.moveToPoint(-36, -16, 700, {.minSpeed = 40, .earlyExitRange = 5.0});
+    pros::delay(200);
+    helper.descore.setState(false);
+    // robot.turnToPoint(-24, -26, 700);
+    robot.intake();
+    robot.moveToPoint(-24, 26, 700, {.minSpeed = 30, .earlyExitRange = 5.0});
+    // robot.turnToPoint(-7, -46, 700);
+    robot.moveToPoint(-9, 46, 1000);
+    robot.waitUntilDone();
+    robot.matchLoad();
+    correct_position(frontDistanceSensor, &locator, false);
+    robot.turnToPoint(-24, 24, 500, {false});
+    robot.moveToPoint(-24, 24, 900, {false});
+    robot.turnToPoint(-12, 11, 700);
+    robot.moveToPoint(-12, 11, 700);
+    robot.waitUntilDone();
+    robot.score(1750);
+    pros::delay(500);
+    robot.turnToPoint(-48, 48, 800, {false});
+    pros::delay(200);
+    robot.moveToPoint(-48, 48, 1000, {false});
+    robot.turnToPoint(-70, 48, 800);
+    robot.matchLoad(true);
+    robot.moveToPoint(-70, 48, 1200);
+    correct_position(frontDistanceSensor, &locator, true);
+    correct_position(leftDistanceSensor, &locator, false);
+    robot.moveToPoint(-48, 48, 700, {false});
+    robot.turnToPoint(-28, 48, 900);
+    robot.moveToPoint(-28, 48, 700);
+    robot.matchLoad(false);
+    robot.lift();
+    robot.waitUntilDone();
+    robot.setScoringAction(ScoringAction::SCOREANDHOLD);
+}
+
+void left3()
 {
 }
 
 void printPose()
 {
 }
+
 void soloAWP()
 {
-}
-
-void halfSAWPRight()
-{
-}
-
-void halfSAWPLeft()
-{
+    robot.setPose(-48, -9, 0);
+    helper.descore.setState(true);
+    correct_position(leftDistanceSensor, &locator, true);
+    robot.intake();
+    robot.moveToPoint(-48, 15, 500);
+    robot.moveToPoint(-48, -48, 1400, {false});
+    pros::delay(400);
+    helper.descore.setState(false);
+    // correct_position(backDistanceSensor, &locator, false);
+    robot.turnToPoint(-70, -49, 500);
+    robot.matchLoad(true);
+    robot.moveToPoint(-60, -49, 400, {.maxSpeed = 100, .minSpeed = 80, .earlyExitRange = 5.0});
+    robot.moveToPoint(-70, -49, 200, {.maxSpeed = 71, .minSpeed = 70});
+    robot.waitUntilDone();
+    helper.leftDT.move(100);
+    helper.rightDT.move(100);
+    pros::delay(300);
+    robot.moveToPoint(-48, -49, 600, {false});
+    robot.matchLoad(false);
+    robot.turnToPoint(-28, -49, 900);
+    pros::delay(600);
+    robot.moveState({ON, LEAVE, -127, LEAVE});
+    robot.lift();
+    robot.moveToPoint(-28, -49, 1000);
+    pros::delay(300);
+    robot.score(1750);
+    robot.waitUntilDone();
+    pros::delay(800);
+    robot.lift(false);
+    robot.moveState({ON, LEAVE, -127, LEAVE});
+    robot.setLow();
+    robot.moveToPoint(-48, -49, 500, {false});
+    pros::delay(300);
+    robot.intake();
+    robot.turnToPoint(-24, -24, 500);
+    robot.moveToPoint(-24, -24, 900);
+    robot.moveToPoint(-8, -8, 1000);
+    pros::delay(700);
+    robot.scoreLow(127);
+    robot.moveState({ON, LEAVE, -100, LEAVE});
+    pros::delay(1000);
+    robot.moveToPoint(-24, -24, 700, {false});
+    robot.turnToPoint(-24, 21, 500);
+    robot.reset();
+    robot.lowerIntake();
+    robot.intake();
+    robot.moveToPoint(-24, 21, 1100, {.minSpeed = 30});
+    pros::delay(1000);
+    robot.matchLoad(true);
+    robot.turnToPoint(-10, 10.5, 700);
+    robot.moveToPoint(-10, 10.5, 1000);
+    robot.matchLoad(false);
+    pros::delay(200);
+    robot.score(1770);
 }
 
 void right()
 {
+    robot.setPose(-48, -17.25, 90);
+    helper.descore.setState(true);
+    // robot.moveToPoint(-36, -16, 700, {.minSpeed = 40, .earlyExitRange = 5.0});
+    pros::delay(200);
+    helper.descore.setState(false);
+    // robot.turnToPoint(-24, -26, 700);
+    robot.intake();
+    robot.moveToPoint(-24, -26, 700, {.minSpeed = 30, .earlyExitRange = 5.0});
+    // robot.turnToPoint(-7, -46, 700);
+    robot.moveToPoint(-9, -46, 1000);
+    robot.waitUntilDone();
+    correct_position(frontDistanceSensor, &locator, false);
+    robot.turnToPoint(-24, -30, 500, {false});
+    robot.moveToPoint(-24, -30, 700, {false});
+    robot.turnToPoint(-48, -48, 500, {false});
+    robot.moveToPoint(-48, -48, 800, {false});
+    robot.turnToPoint(-70, -48, 700);
+    robot.waitUntilDone();
+    correct_position(frontDistanceSensor, &locator, true);
+    robot.matchLoad(true);
+    robot.moveToPoint(-70, -48, 1200, {.maxSpeed = 90});
+    robot.moveToPoint(-48, -49, 900, {false});
+    robot.matchLoad(false);
+    robot.turnToPoint(-28, -49, 900);
+    robot.moveToPoint(-28, -49, 700);
+    robot.lift();
+    robot.waitUntilDone();
+    robot.setScoringAction(ScoringAction::SCOREANDHOLD);
 }
 
 void right2()
 {
+    robot.setPose(-48, -17.25, 90);
+    helper.descore.setState(true);
+    // robot.moveToPoint(-36, -16, 700, {.minSpeed = 40, .earlyExitRange = 5.0});
+    pros::delay(200);
+    helper.descore.setState(false);
+    // robot.turnToPoint(-24, -26, 700);
+    robot.intake();
+    robot.moveToPoint(-24, -26, 700, {.minSpeed = 30, .earlyExitRange = 5.0});
+    // robot.turnToPoint(-7, -46, 700);
+    robot.moveToPoint(-9, -46, 1000);
+    robot.waitUntilDone();
+    correct_position(frontDistanceSensor, &locator, false);
+    robot.turnToPoint(-29, -24, 500, {false});
+    robot.moveToPoint(-29, -24, 900, {false});
+    robot.turnToPoint(-9, -9, 700);
+    robot.moveToPoint(-9, -9, 700, {.maxSpeed = 90});
+    robot.waitUntilDone();
+    robot.matchLoad(true);
+    robot.raiseIntake();
+    robot.moveState({ON, LEAVE, -80, LEAVE});
+    pros::delay(10);
+    move(60);
+    pros::delay(200);
+    move(-20);
+    pros::delay(100);
+    robot.matchLoad(false);
+    move(60);
+    pros::delay(200);
+    move(-20);
+    pros::delay(100);
+    move(60);
+    pros::delay(100);
+    move(-20);
+    pros::delay(100);
+    robot.turnToPoint(-50, -48, 700, {false});
+    move(60);
+    pros::delay(100);
+    move(-20);
+    pros::delay(100);
+    robot.lowerIntake();
+    robot.intake();
+    robot.moveToPoint(-50, -48, 1200, {false});
+    robot.turnToPoint(-70, -48, 800);
+    robot.matchLoad(true);
+    robot.moveToPoint(-70, -48, 1300, {.maxSpeed = 70});
+    correct_position(frontDistanceSensor, &locator, true);
+    correct_position(leftDistanceSensor, &locator, false, true);
+    robot.moveToPoint(-48, -48, 900, {false});
+    robot.matchLoad(false);
+    robot.turnToPoint(-28, -48, 900);
+    robot.waitUntilDone();
+    correct_position(rightDistanceSensor, &locator, false, true);
+    robot.moveToPoint(-28, -48, 700);
+    robot.moveState({ON, LEAVE, -127, LEAVE});
+    robot.lift();
+    robot.waitUntilDone();
+    robot.setScoringAction(ScoringAction::SCOREANDHOLD);
+    pros::delay(50);
+    move(60);
+}
+
+void right3()
+{
+    // robot.setPose(-48, -17.25, 90);
+    // robot.lift();
+    // // robot.moveToPoint(-36, -16, 700, {.minSpeed = 40, .earlyExitRange = 5.0});
+    // pros::delay(200);
+    // robot.lift(false);
+    // // robot.turnToPoint(-24, -26, 700);
+    // robot.intake();
+    // robot.moveToPoint(-24, -26, 700, {.minSpeed = 30, .earlyExitRange = 5.0});
+    // // robot.turnToPoint(-7, -46, 700);
+    // robot.moveToPoint(-7, -46, 1000, {.curve = 1});
+    // robot.waitUntilDone();
+    // correct_position(rightDistanceSensor, &locator, false);
+    // robot.moveToPoint(-24, -60, 700, {.minSpeed = 30, .earlyExitRange = 5.0});
+    // robot.turnToPoint(-48, -48, 500);
+    // robot.moveToPoint(-48, -48, 1000, {false});
+    // robot.turnToPoint(-70, -48, 700);
+    // robot.waitUntilDone();
+    // correct_position(frontDistanceSensor, &locator, true);
+    // robot.matchLoad(true);
+    // robot.moveToPoint(-70, -48, 1200);
+    // robot.moveToPoint(-48, -48, 900, {false});
+    // robot.matchLoad(false);
+    // robot.turnToPoint(-28, -48, 900);
+    // robot.moveToPoint(-28, -48, 700);
+    // robot.lift();
+    // robot.waitUntilDone();
+    // robot.score();
+}
+
+void move(int speed)
+{
+    helper.leftDT.move(speed);
+    helper.rightDT.move(speed);
 }
 
 void skills()
 {
+    // robot.setPose(-50, 0, 270);
+    // robot.lift();
+    // pros::delay(500);
+    // robot.lift(false);
+    // robot.setLow();
+    // pros::delay(200);
+    // robot.intake();
+    // // getting out of park
+    // move(40);
+    // pros::delay(500);
+    // move(-30);
+    // pros::delay(200);
+    // move(30);
+    // pros::delay(500);
+    // move(-50);
+    // pros::delay(400);
+    // move(70);
+    // pros::delay(500);
+    // move(-30);
+    // pros::delay(300);
+    // move(30);
+    // pros::delay(400);
+    // move(-30);
+    // pros::delay(300);
+    // move(30);
+    // pros::delay(400);
+    // move(-80);
+
+    // // incase if balls are missed
+    // pros::delay(600);
+
+    // // move to high tube
+    // robot.turnToPoint(-24, -24, 700);
+    // robot.moveToPoint(-24, -24, 900);
+    // pros::delay(500);
+    // robot.intake(false);
+    // robot.turnToPoint(-9, -9, 700);
+    // robot.moveToPoint(-9, -9, 1100);
+    // robot.intake();
+    // robot.waitUntilDone();
+    // pros::delay(100);
+
+    // // score to high tube
+    // robot.moveState({ON, LEAVE, -30, LEAVE});
+    // robot.scoreLow(50);
+    // pros::delay(3000);
+    // robot.matchLoad(false);
+    // robot.reset();
+    // robot.moveToPoint(-46, -48, 1500, {false});
+
+    // // bottom left match load
+    // robot.turnToPoint(-70, -48, 900);
+    // robot.lowerIntake();
+    // robot.intake();
+    // robot.matchLoad(true);
+    // robot.moveToPoint(-70, -48, 1000, {.maxSpeed = 100});
+    // robot.waitUntilDone();
+    // move(-20);
+    // pros::delay(100);
+    // move(60);
+    // pros::delay(200);
+    // move(-20);
+    // pros::delay(100);
+    // move(60);
+    // pros::delay(200);
+    // move(-20);
+    // pros::delay(100);
+    // move(60);
+    // pros::delay(200);
+    // move(-20);
+    // pros::delay(100);
+    // move(60);
+    // pros::delay(200);
+
+    // // move to bottom tube
+    // robot.moveToPoint(-52, -48, 700, {false});
+    // robot.matchLoad(false);
+    // robot.turnToPoint(-24, -31, 700, {false});
+    // robot.moveToPoint(-24, -31, 800, {false});
+    // robot.turnToPoint(24, -31, 400, {false});
+    // robot.moveToPoint(24, -31, 1100, {false});
+    robot.setPose(24, -31, 270);
+    robot.turnToPoint(48, -48, 400, {false});
+    robot.moveToPoint(48, -48, 900, {false});
+    robot.turnToPoint(28, -48, 600);
+    robot.moveToPoint(28, -48, 1000);
+
+    // score to bottom tube
+    robot.lift();
+    robot.descore(false);
+    pros::delay(700);
+    robot.score(1750);
+    pros::delay(1500);
+    robot.lift(false);
+
+    // bottom right match load
+    robot.intake();
+    robot.moveToPoint(44, -48, 1000, {false});
+    robot.turnToPoint(70, -48, 1000);
+    robot.matchLoad(true);
+    robot.moveToPoint(70, -48, 1000, {.maxSpeed = 100});
+    robot.waitUntilDone();
+    move(-20);
+    pros::delay(100);
+    move(80);
+    pros::delay(200);
+    move(-20);
+    pros::delay(100);
+    move(80);
+    pros::delay(200);
+    move(-20);
+    pros::delay(100);
+    move(80);
+    pros::delay(200);
+    move(-20);
+    pros::delay(100);
+    move(80);
+    pros::delay(200);
+
+    // move to bottom tube again
+    robot.moveToPoint(48, -48, 700, {false});
+    robot.matchLoad(false);
+    robot.turnToPoint(28, -48, 1000);
+    robot.moveToPoint(28, -48, 1000);
+
+    // score to bottom tube
+    robot.lift();
+    robot.descore(false);
+    pros::delay(700);
+    robot.score(1750);
+    pros::delay(1500);
+    robot.lift(false);
+
+    // right side balls
+    robot.intake();
+    robot.moveToPoint(44, -48, 800, {false});
+
+    // top right match load
+    robot.turnToPoint(44, 48, 800);
+    robot.moveToPoint(48, 48, 2500);
+    robot.turnToPoint(70, 48, 700);
+    robot.matchLoad(true);
+    robot.intake();
+    robot.moveToPoint(70, 48, 1000, {.maxSpeed = 100});
+    robot.waitUntilDone();
+    move(-20);
+    pros::delay(100);
+    move(80);
+    pros::delay(200);
+    move(-20);
+    pros::delay(100);
+    move(80);
+    pros::delay(200);
+    move(-20);
+    pros::delay(100);
+    move(80);
+    pros::delay(200);
+    move(-20);
+    pros::delay(100);
+    move(80);
+    pros::delay(200);
+
+    // move to top tube
+    robot.moveToPoint(52, 48, 700, {false});
+    robot.matchLoad(false);
+    robot.turnToPoint(24, 32, 700, {false});
+    robot.moveToPoint(24, 32, 800, {false});
+    robot.turnToPoint(-24, 32, 700, {false});
+    robot.moveToPoint(-24, 32, 1200, {false});
+    robot.turnToPoint(-48, 48, 700, {false});
+    robot.moveToPoint(-48, 48, 1000, {false});
+    robot.turnToPoint(-28, 48, 700);
+    robot.moveToPoint(-28, 48, 1000);
+
+    // score to top tube
+    pros::delay(400);
+    robot.lift();
+    robot.waitUntilDone();
+    robot.score(1740);
+    pros::delay(1500);
+    robot.lift(false);
+
+    // top left match load
+    robot.intake();
+    robot.moveToPoint(-48, 48, 1000, {false});
+    robot.turnToPoint(-70, 48, 900);
+    robot.matchLoad(true);
+    robot.moveToPoint(-70, 48, 1000, {.maxSpeed = 100});
+    robot.waitUntilDone();
+    move(-20);
+    pros::delay(100);
+    move(80);
+    pros::delay(200);
+    move(-20);
+    pros::delay(100);
+    move(80);
+    pros::delay(200);
+    move(-20);
+    pros::delay(100);
+    move(80);
+    pros::delay(200);
+    move(-20);
+    pros::delay(100);
+    move(80);
+    pros::delay(200);
+    robot.moveToPoint(-48, 48, 700, {false});
+
+    // move to top tube again
+    robot.matchLoad(false);
+    robot.turnToPoint(-28, 48, 700);
+    robot.moveToPoint(-28, 48, 700);
+
+    // score to top tube again
+    pros::delay(400);
+    robot.lift();
+    robot.waitUntilDone();
+    robot.score(1740);
+    pros::delay(1500);
+    robot.lift(false);
+
+    // park
+    robot.intake();
+    robot.moveToPoint(-48, 48, 1000, {false});
+    robot.turnToPoint(-56, 24, 700);
+    robot.moveToPoint(-56, 24, 1000);
+    robot.turnToPoint(-60, 0, 700);
+    robot.waitUntilDone();
+    move(80);
+    pros::delay(1500);
+    move(0);
 }
 
-void riskySkills()
+void skills2()
 {
-}
-void riskySkillsV2()
-{
+    robot.setPose(-50, 0, 270);
+    robot.setLow();
+
+    robot.intake();
+    // getting out of park
+    move(40);
+    pros::delay(500);
+    move(-30);
+    pros::delay(200);
+    move(30);
+    pros::delay(500);
+    move(-50);
+    pros::delay(400);
+    move(70);
+    pros::delay(500);
+    move(-30);
+    pros::delay(300);
+    move(30);
+    pros::delay(400);
+    move(-30);
+    pros::delay(300);
+    robot.setScoringAction(ScoringAction::IDLE);
+    move(30);
+    pros::delay(400);
+    move(-95);
+
+    // incase if balls are missed
+    pros::delay(600);
+    // correct_position(frontDistanceSensor, &locator, true);
+    // move to high tube
+    helper.descore.setState(true);
+
+    robot.turnToPoint(-25, -23, 700);
+    helper.descore.setState(false);
+    robot.moveToPoint(-25, -23, 900);
+    robot.waitUntilDone();
+    robot.intake(false);
+    robot.turnToPoint(-9.5, -7.5, 650);
+    robot.moveToPoint(-9.5, -7.5, 1000);
+    robot.intake();
+    robot.waitUntilDone();
+    pros::delay(100);
+    // score to high tube
+    robot.moveState({ON, LEAVE, -40, LEAVE});
+    robot.scoreLow(45);
+    pros::delay(3500);
+    robot.matchLoad(false);
+    robot.reset();
+    move(-10);
+    pros::delay(100);
+    move(20);
+    pros::delay(200);
+    robot.moveToPoint(-24, -24, 1000, {false});
+    robot.turnToPoint(-24, 24, 500);
+    robot.lowerIntake();
+    robot.reset();
+    robot.intake();
+    robot.moveToPoint(-24, 24, 1100);
+    // correct_position(leftDistanceSensor, &locator, true);
+    pros::delay(1000);
+    // correct_position(frontDistanceSensor, &locator, false);
+
+    // top left match load
+    robot.turnToPoint(-48, 45, 500);
+    robot.moveToPoint(-48, 45, 1000);
+    robot.turnToPoint(-70, 45, 500);
+    robot.matchLoad(true);
+    robot.moveToPoint(-70, 46, 1000, {.maxSpeed = 80});
+    // correct_position(frontDistanceSensor, &locator, true);
+    // correct_position(rightDistanceSensor, &locator, false);
+    robot.waitUntilDone();
+    pros::delay(100);
+    move(40);
+    pros::delay(100);
+    move(60);
+    pros::delay(200);
+    move(40);
+    pros::delay(100);
+    move(60);
+    pros::delay(200);
+    move(40);
+    pros::delay(100);
+    move(60);
+    pros::delay(200);
+    move(40);
+    pros::delay(100);
+    move(60);
+    pros::delay(200);
+
+    // move to bottom tube
+    robot.moveToPoint(-48, 47, 700, {false});
+    robot.matchLoad(false);
+    robot.turnToPoint(-24, 32, 600, {false});
+    robot.moveToPoint(-24, 32, 800, {false});
+    robot.turnToPoint(24, 32, 400, {false});
+    robot.moveToPoint(24, 32, 1100, {false});
+    pros::delay(500);
+    correct_position(rightDistanceSensor, &locator, false);
+    // robot.setPose(24, 32, 270);
+    robot.turnToPoint(48, 48, 400, {false});
+    robot.moveToPoint(48, 48, 900, {false});
+    robot.turnToPoint(28, 47, 400);
+    // correct_position(rightDistanceSensor, &locator, false);
+    // correct_position(backDistanceSensor, &locator, true);
+    robot.moveToPoint(28, 47, 900);
+    // score to bottom tube
+    robot.lift();
+    robot.descore(false);
+    pros::delay(600);
+    robot.score(1750);
+    pros::delay(1500);
+    robot.lift(false);
+
+    // bottom right match load
+    pros::delay(100);
+    robot.intake();
+    robot.moveToPoint(44, 48, 800, {false});
+    robot.turnToPoint(70, 48, 900);
+    robot.matchLoad(true);
+    robot.moveToPoint(70, 48, 1000, {.maxSpeed = 80});
+    // correct_position(frontDistanceSensor, &locator, true);
+    // correct_position(leftDistanceSensor, &locator, false);
+    robot.waitUntilDone();
+    pros::delay(100);
+    move(40);
+    pros::delay(100);
+    move(60);
+    pros::delay(200);
+    move(40);
+    pros::delay(100);
+    move(60);
+    pros::delay(200);
+    move(40);
+    pros::delay(100);
+    move(60);
+    pros::delay(200);
+    move(40);
+    pros::delay(100);
+    move(60);
+    pros::delay(200);
+
+    // move to bottom tube again
+    robot.moveToPoint(48, 48, 700, {false});
+    robot.matchLoad(false);
+    robot.turnToPoint(28, 46, 800);
+    robot.moveToPoint(28, 46, 900);
+    // correct_position(rightDistanceSensor, &locator, false);
+
+    // score to bottom tube
+    robot.lift();
+    robot.descore(false);
+    pros::delay(700);
+    robot.score(1750);
+    pros::delay(1500);
+    robot.lift(false);
+    pros::delay(100);
+    // right side balls
+    robot.intake();
+    robot.moveToPoint(44, 48, 800, {false});
+    robot.turnToPoint(44, -48, 500);
+    robot.moveToPoint(44, -45, 2300);
+    pros::delay(2000);
+    // correct_position(frontDistanceSensor, &locator, false);
+    // correct_position(leftDistanceSensor, &locator, true);
+    robot.turnToPoint(70, -48, 500);
+    robot.matchLoad(true);
+    robot.intake();
+    robot.moveToPoint(70, -48, 900, {.maxSpeed = 80});
+    // correct_position(rightDistanceSensor, &locator, false);
+    robot.waitUntilDone();
+    pros::delay(100);
+    move(40);
+    pros::delay(100);
+    move(60);
+    pros::delay(200);
+    move(40);
+    pros::delay(100);
+    move(60);
+    pros::delay(200);
+    move(40);
+    pros::delay(100);
+    move(60);
+    pros::delay(200);
+    move(40);
+    pros::delay(100);
+    move(60);
+    pros::delay(200);
+
+    // move to top tube
+    robot.moveToPoint(48, -48, 500, {false});
+    robot.matchLoad(false);
+    robot.turnToPoint(24, -32, 500, {false});
+    robot.moveToPoint(24, -32, 800, {false});
+    // correct_position(rightDistanceSensor, &locator, false);
+    robot.turnToPoint(-24, -32, 400, {false});
+    robot.moveToPoint(-24, -32, 1200, {false});
+    pros::delay(500);
+    // correct_position(rightDistanceSensor, &locator, false);
+    // robot.setPose(-24, -32, 90);
+    robot.turnToPoint(-48, -48, 400, {false});
+    robot.moveToPoint(-48, -48, 900, {false});
+    robot.turnToPoint(-28, -47, 500);
+    // correct_position(rightDistanceSensor, &locator, false);
+    // correct_position(backDistanceSensor, &locator, true);
+    robot.moveToPoint(-28, -47, 1000);
+
+    // score to top tube
+    robot.lift();
+    pros::delay(600);
+    robot.score(1740);
+    pros::delay(1500);
+    robot.lift(false);
+    pros::delay(100);
+    // top left match load
+    robot.intake();
+    robot.moveToPoint(-48, -46, 800, {false});
+    robot.turnToPoint(-70, -46, 900);
+    robot.matchLoad(true);
+    robot.moveToPoint(-70, -46, 1000, {.maxSpeed = 80});
+    robot.waitUntilDone();
+    pros::delay(100);
+    move(40);
+    pros::delay(100);
+    move(60);
+    pros::delay(200);
+    move(40);
+    pros::delay(100);
+    move(60);
+    pros::delay(200);
+    move(40);
+    pros::delay(100);
+    move(60);
+    pros::delay(200);
+    move(40);
+    pros::delay(100);
+    move(60);
+    pros::delay(200);
+    robot.moveToPoint(-48, -48, 600, {false});
+
+    // move to top tube again
+    robot.matchLoad(false);
+    robot.turnToPoint(-28, -46.5, 900);
+    robot.moveToPoint(-28, -46.5, 900);
+
+    // score to top tube again
+    robot.lift();
+    pros::delay(600);
+    robot.score(1740);
+    pros::delay(1500);
+    robot.lift(false);
+
+    // park
+    robot.intake();
+    robot.moveToPoint(-48, -48, 700, {false});
+    robot.turnToPoint(-65, -24, 600);
+    robot.moveToPoint(-65, -24, 800);
+    robot.turnToPoint(-65, 0, 500);
+    robot.waitUntilDone();
+    pros::delay(100);
+    move(80);
+    pros::delay(1000);
+    move(0);
 }
 
 void test()
 {
+    move(50);
+    pros::delay(500);
+    move(0);
 }

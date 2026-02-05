@@ -14,24 +14,17 @@ void left();
  * Scores in long goal only - 7 blocks
  */
 void left2();
+/**
+ * @brief Autonomous path for left side starting position
+ */
+void left3();
+
 
 /**
  * @brief Autonomous path for right side starting position
  * Scores in long and top middle goal - 4 + 6 + 3 blocks
  */
 void soloAWP();
-
-/**
- * @brief Autonomous path for right side starting position
- * Scores in long and top middle goal - 4 + 6 + 3 blocks
- */
-void halfSAWPRight();
-
-/**
- * @brief Autonomous path for right side starting position
- * Scores in long and top middle goal - 4 + 6 + 3 blocks
- */
-void halfSAWPLeft();
 
 /**
  * @brief Autonomous path for right side starting position
@@ -43,6 +36,12 @@ void right();
  * Scores in long goal only - 7 blocks
  */
 void right2();
+/**
+ * @brief Autonomous path for right side starting position
+ */
+void right3();
+
+void move(int speed);
 
 /**
  * @brief Autonomous path for skills challenge
@@ -51,20 +50,14 @@ void right2();
 void skills();
 
 /**
+ * @brief Autonomous path for skills challenge
+ * Aggressive route that gets ~100 points
+ */
+void skills2();
+
+/**
  * @brief Drives forward for 500ms at speed 20
  */
 void test();
-
-/**
- * @brief Risky autonomous path for skills challenge
- * Risky path that gets ~80-90 points
- */
-void riskySkills();
-
-/**
- * @brief Risky autonomous path for skills challenge
- * Risky path that gets ~90-100 points
- */
-void riskySkillsV2();
 
 #endif

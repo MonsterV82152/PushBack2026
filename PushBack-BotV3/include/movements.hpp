@@ -5,6 +5,8 @@
 
 #include "main.h"
 #include "piston.hpp"
+#include "autonomous_selector.hpp"
+#include "sensor_loc.hpp"
 
 /**
  * @brief Helper class to bundle robot components
@@ -37,11 +39,14 @@ public:
         std::int8_t leftHook,
         std::int8_t rightHook,
         pros::Rotation &scoringRotation,
+        pros::Distance &intakeDS,
         Piston &scoreLift,
         Piston &matchLoader,
         Piston &descore,
         Piston &intakePTO,
-        Piston &hookPTO);
+        Piston &hookPTO,
+        Piston &intakeLift,
+        AutonSelector &autonSelector);
     std::int8_t leftIntakeMotorPort;
     std::int8_t rightIntakeMotorPort;
     std::int8_t leftHookMotorPort;
@@ -56,11 +61,16 @@ public:
     pros::MotorGroup rightDT;
 
     pros::Rotation &scoringRotation;
+    pros::Distance &intakeDS;
+
     Piston &scoreLift;
     Piston &matchLoader;
     Piston &descore;
     Piston &intakePTO;
     Piston &hookPTO;
+    Piston &intakeLift;
+
+    AutonSelector &autonSelector;
 
 private:
 };
@@ -86,8 +96,8 @@ struct PTOState
  */
 enum class ScoringAction
 {
-    DESCOREANDHOLD,
-    DESCOREANDRESET,
+    LOWGOAL,
+    SCORELOW,
     /**
      * @brief Score and reset the scoring mechanism
      */
@@ -96,15 +106,18 @@ enum class ScoringAction
      * @brief Score and hold the scoring mechanism in position
      */
     SCOREANDHOLD,
+
+    UNJAM,
     /**
      * @brief Reset the scoring mechanism to its initial position
      */
     RESET,
+    // RESET1,
     /**
      * @brief Hold the scoring mechanism in its current position
      */
     HOLD,
-    DEHOLD
+    IDLE
 };
 
 class Robot
@@ -113,14 +126,15 @@ public:
     /**
      * @brief Constructor for Robot class
      * @param helper Reference to a Helper object containing robot components
-     * @param mcl Reference to a limelib::MCL object for motion control
+     * @param locator Reference to a limelib::Locator object for motion control
      * @param controller Reference to a pros::Controller object for user input
      */
-    Robot(Helper &helper, limelib::MCL &mcl, pros::Controller &controller);
+    Robot(Helper &helper, limelib::Locator &locator, pros::Controller &controller);
     /**
      * @brief Initialize the robot's systems
      */
     void init();
+    void debug();
     /**
      * @brief Control the robot during teleoperation
      */
@@ -129,10 +143,12 @@ public:
      * @brief Control the intake mechanism
      */
     void intake(bool on = true);
+    void setLow();
+    void scoreLow(int maxSpeed = 35);
     /**
      * @brief Control the lift mechanism
      */
-    void score();
+    void score(int position = DEFAULT_SCORING_POSITION, int maxSpeed = 127, bool approach = false);
     /**
      * @brief Control the lift mechanism
      * @param up True to lift up, false to lower
@@ -148,6 +164,21 @@ public:
      * @param descoring True to engage descore, false to disengage
      */
     void descore(bool descoring = true);
+    void lowerIntake();
+    void raiseIntake();
+    void disabled();
+    void reset();
+    /**
+     * @brief Set the robot's pose
+     * @param x The desired x-coordinate of the pose
+     * @param y The desired y-coordinate of the pose
+     * @param theta The desired orientation (in degrees) of the pose
+     */
+    void setPose(limelib::real_t x, limelib::real_t y, limelib::real_t theta);
+    /**
+     * @brief Wait until the current movement is complete
+     */
+    void waitUntilDone();
     /**
      * @brief Move the robot based on the given PTO state
      * @param state The desired PTO state
@@ -155,11 +186,12 @@ public:
     void moveState(PTOState state);
     /**
      * @brief Move the robot to a specific point
-     * @param point The target point to move to
+     * @param x The target x-coordinate
+     * @param y The target y-coordinate
      * @param timeout The maximum time to attempt the movement
      * @param params Additional parameters for the movement
      */
-    void moveToPoint(limelib::Point2D point, int timeout, limelib::moveToPointParams params = limelib::moveToPointParams());
+    void moveToPoint(limelib::real_t x, limelib::real_t y, int timeout, limelib::moveToPointParams params = limelib::moveToPointParams());
     /**
      * @brief Turn the robot to a specific heading
      * @param heading The target heading in degrees
@@ -167,17 +199,25 @@ public:
     void turnToHeading(limelib::real_t heading, int timeout, limelib::turnToHeadingParams params = limelib::turnToHeadingParams());
     /**
      * @brief Turn the robot to face a specific point
-     * @param point The target point to face
+     * @param x The target x-coordinate
+     * @param y The target y-coordinate
      */
-    void turnToPoint(limelib::Point2D point, int timeout, limelib::turnToHeadingParams params = limelib::turnToHeadingParams());
-
-private:
-    void scoringLoop();                          // Main scoring task function
+    void turnToPoint(limelib::real_t x, limelib::real_t y, int timeout, limelib::turnToHeadingParams params = limelib::turnToHeadingParams());
     void setScoringAction(ScoringAction action); // Set the current scoring action
 
-    constexpr static int SCORING_POSITION = 1800;
-    constexpr static int DESCORING_POSITION = -1800;
-
+private:
+    void scoringLoop();                    // Main scoring task function
+    constexpr static int FEEDFORWARD = 10; // Angle to unjam the scoring mechanism
+    constexpr static int DEFAULT_SCORING_POSITION = 1800;
+    constexpr static int DEFAULT_DESCORING_POSITION = -1750;
+    constexpr static int LOWGOAL_POSITION = 1730;
+    constexpr static int SCORELOW_POSITION = 50;
+    constexpr static int TURN_THRESHOLD = 10;         // Threshold for in-place turning
+    constexpr static double TURN_SENSITIVITY = 0.012; // Adjust for desired turning responsiveness
+    int scoringPosition = DEFAULT_SCORING_POSITION;
+    int descoringPosition = DEFAULT_DESCORING_POSITION;
+    int maxSpeed = 127;
+    ScoringAction lastState = ScoringAction::IDLE;
     Helper &helper;
     pros::Controller &master;
 
@@ -188,21 +228,26 @@ private:
     limelib::PID angularPID6;
     limelib::PID linearPID4;
     limelib::PID angularPID4;
-    limelib::MCL &mcl;
+    limelib::Locator &locator;
 
     std::unique_ptr<pros::Task> hookPTOTask;
     std::unique_ptr<pros::Task> intakePTOTask;
     std::unique_ptr<pros::Task> scoringTask;
+    std::unique_ptr<pros::Task> descoreTask;
     std::atomic<bool> hookPTOState;
     std::atomic<bool> intakePTOState;
     std::atomic<bool> intakeTaskQueued{false};
     std::atomic<bool> hookTaskQueued{false};
-    std::atomic<ScoringAction> currentScoringAction{ScoringAction::RESET};
+    std::atomic<bool> fullSpeed{false};
+    std::atomic<bool> descoring{false};
+    std::atomic<bool> lowGoalPosition{false};
+    std::atomic<bool> approaching{false};
+    std::atomic<ScoringAction> currentScoringAction{ScoringAction::IDLE};
     std::atomic<bool> scoringTaskRunning{false};
+    std::atomic<bool> parking{false};
     limelib::PID hookPID;
     bool intaking = false;
     bool liftState = false;
-    double currentAngle = 0;
     int motorCount = 4;
 };
 
