@@ -264,10 +264,8 @@ void AutonSelector::setAutons(std::vector<autonomousRoute> autons)
                         screenElement{"text", pros::Color::white, 20, 20, 0, 0, 0, pros::text_format_e_t::E_TEXT_LARGE_CENTER, auton.name},
                         screenElement{"text", pros::Color::white, 20, 60, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, auton.description},
                         screenElement{"fillCircle", pros::Color::red, 434, 196, 0, 0, 33},
-                        screenElement{"lineRect", pros::Color::white, 10, 163, 390, 230},
-                        screenElement{"text", pros::Color::white, 190, 190, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, "Back"}},
-                    std::vector<button>{
-                        button(10, 163, 394, 230, "redAutonPage")}));
+                        screenElement{"lineRect", pros::Color::white, 10, 163, 390, 230}},
+                    std::vector<button>{}));
         }
         else if (auton.teamColor == "blue")
         {
@@ -282,10 +280,8 @@ void AutonSelector::setAutons(std::vector<autonomousRoute> autons)
                         screenElement{"text", pros::Color::white, 20, 20, 0, 0, 0, pros::text_format_e_t::E_TEXT_LARGE_CENTER, auton.name},
                         screenElement{"text", pros::Color::white, 20, 60, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, auton.description},
                         screenElement{"fillCircle", pros::Color::blue, 434, 196, 0, 0, 33},
-                        screenElement{"lineRect", pros::Color::white, 10, 163, 390, 230},
-                        screenElement{"text", pros::Color::white, 190, 190, 0, 0, 0, pros::text_format_e_t::E_TEXT_MEDIUM_CENTER, "Back"}},
-                    std::vector<button>{
-                        button(10, 163, 394, 230, "blueAutonPage")}));
+                        screenElement{"lineRect", pros::Color::white, 10, 163, 390, 230}},
+                    std::vector<button>{}));
         }
     }
 }

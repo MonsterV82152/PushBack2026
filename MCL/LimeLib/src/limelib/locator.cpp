@@ -45,7 +45,6 @@ void limelib::Odometry::setPose(real_t x, real_t y, real_t theta)
 {
     setPose(limelib::Pose2D(x, y, theta));
 }
-
 limelib::Pose2D limelib::Odometry::update()
 {
     // Calculate time delta in seconds
@@ -76,9 +75,13 @@ limelib::Pose2D limelib::Odometry::update()
 
     return Pose2D(xChange, yChange, headingDiff);
 }
-
 limelib::Pose2D limelib::Odometry::getPose(bool radians) const
 {
+    Pose2D currentPose = this->currentPose;
+    while (currentPose.theta < 0)
+        currentPose.theta += 2 * M_PI;
+    while (currentPose.theta >= 2 * M_PI)
+        currentPose.theta -= 2 * M_PI;
     return radians ? currentPose : currentPose.toDegrees();
 }
 
@@ -218,13 +221,14 @@ void limelib::MCL::updateMCL()
     {
         // Get raw int32_t value first to check for errors
         int32_t raw = sensor.sensor.get_distance();
+        int16_t size = sensor.sensor.get_object_size();
         if (debug && debugCounter >= 50)
         {
-            std::cout << "Sensor at angle " << sensor.pose.theta << "deg: " << raw << " ";
+            std::cout << "Sensor at angle " << sensor.pose.theta << "deg: " << raw << " size: " << size << " ";
         }
         // Valid readings are positive and less than 9999 (no object detected)
         // PROS_ERR is typically negative, which becomes huge positive when cast to float
-        if (raw > 0 && raw < 2000)
+        if (raw > 0 && raw < 2000 && size > 80)
         {
             if (debug && debugCounter >= 50)
                 std::cout << "(valid) " << std::endl;
@@ -242,7 +246,7 @@ void limelib::MCL::updateMCL()
         std::cout << std::endl;
 
     // Debug: Print sensor readings
-    if ((debug && debugCounter >= 50)/* || master.get_digital(pros::E_CONTROLLER_DIGITAL_A)*/)
+    if ((debug && debugCounter >= 50) /* || master.get_digital(pros::E_CONTROLLER_DIGITAL_A)*/)
     {
         std::cout << "Valid sensors: " << validSensorCount << "/" << sensors.size() << " - Readings: ";
         for (const MCLDistance &sensor : sensors)
@@ -313,7 +317,7 @@ void limelib::MCL::updateMCL()
             //           3 inch error → likelihood ≈ 0.84
             //           5 inch error → likelihood ≈ 0.61
             //          10 inch error → likelihood ≈ 0.14
-            real_t sensorLikelihood = exp(-error * error / (2.0 * 25.0));
+            real_t sensorLikelihood = exp(-error * error / (2.0 * 16.0));
             // Apply minimum likelihood floor to prevent complete particle starvation
             sensorLikelihood = std::max(sensorLikelihood, real_t(0.001));
 

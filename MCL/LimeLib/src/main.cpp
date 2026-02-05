@@ -34,6 +34,11 @@ void opcontrol()
     while (true)
     {
         pros::delay(20);
+        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B))
+        {
+            Pose2D pos = mcl.getPose();
+            std::cout << "MCL Pose: (" << pos.x << ", " << pos.y << ", " << pos.theta << "deg)" << std::endl;
+        }
         if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A))
         {
             chassis.setPose(0, 0, 0);
