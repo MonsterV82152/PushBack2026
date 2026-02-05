@@ -34,6 +34,7 @@ void opcontrol()
 {
     while (true)
     {
-        pros::delay(20);
+        if(BUTTON)
+        pros::delay(10);
     }
 }

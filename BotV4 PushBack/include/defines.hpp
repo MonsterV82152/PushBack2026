@@ -9,16 +9,57 @@
 
 inline AutonSelector autonSelect;
 
-inline pros::MotorGroup leftDT({-1, -2, 3});  // Change these ports to match your left drivetrain motors
-inline pros::MotorGroup rightDT({-8, 9, 10}); // Change these ports to match your left drivetrain motors
-inline pros::Imu imu(4);
+// Drivetrain motors
+inline pros::MotorGroup leftDT({1, 2, 3});
+inline pros::MotorGroup rightDT({4, 5, 6});
+
+// System motors
+inline pros::MotorGroup systemMotors({7, 8});
+
+// sensors
+inline pros::Imu imu(9);
+inline pros::Rotation vTrack(10);
+inline pros::Rotation hTrack(11);
+
+// loc sensors
+inline pros::Distance LOCF(12);
+inline pros::Distance LOCB(13);
+inline pros::Distance LOCL(14);
+inline pros::Distance LOCR(15);
+
+// loc sensor wrappers with robot relative poses (x,y,theta);
+inline dist_sensor LF(&LOCF, lemlib::Pose(3.5, 5.0, 0));
+inline dist_sensor LB(&LOCB, lemlib::Pose(-3.5, 5.0, 0));
+inline dist_sensor LR(&LOCL, lemlib::Pose(0, -5.0, -90));
+inline dist_sensor LL(&LOCR, lemlib::Pose(0, 5.0, 90));
+
+// pistons
+inline pros::ADIDigitalOut lift('A');
+inline pros::ADIDigitalOut matchLoad('B');
+inline pros::ADIDigitalOut pto('C');
+inline pros::ADIDigitalOut intakeLift('D');
+inline pros::ADIDigitalOut hood('E');
+
+// piston wrappers
+inline Piston liftPiston(&lift);
+inline Piston matchLoadPiston(&matchLoad);
+inline Piston ptoPiston(&pto);
+inline Piston intakeLiftPiston(&intakeLift);
+inline Piston hoodPiston(&hood);
+
+
+inline lemlib::TrackingWheel verticalWheel(&vTrack, lemlib::Omniwheel::NEW_275, 0);
+inline lemlib::TrackingWheel horizontalWheel(&hTrack, lemlib::Omniwheel::NEW_275, 0);
+
+
+
 inline lemlib::Drivetrain LEMLIB_drivetrain(&leftDT, &rightDT,
-                                            12,
-                                            lemlib::Omniwheel::NEW_325,
-                                            450,
+                                            10.85,
+                                            lemlib::Omniwheel::NEW_275,
+                                            600,
                                             2);
 
-inline lemlib::OdomSensors LEMLIB_sensors(nullptr, nullptr, nullptr, nullptr, &imu);
+inline lemlib::OdomSensors LEMLIB_sensors(&verticalWheel, nullptr, &horizontalWheel, nullptr, &imu);
 inline lemlib::ControllerSettings LEMLIB_lateral_controller(
     10,    // proportional gain (kP)
     0,     // integral gain (kI)
