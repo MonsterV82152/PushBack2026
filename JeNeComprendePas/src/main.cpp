@@ -77,40 +77,19 @@ void colourSort(void *params)
             }
         }
 
-        // Read color sensor values
-        hue = middleCS.get_hue();
-        int distance = middleCS.get_proximity();
-
-        // Determine if sensed ring is red or blue
-        red = (hue > redMin || hue < redMax) && distance < 100;
-        blue = (hue > blueMin && hue < blueMax) && distance < 100;
-
         // Automated intake state progression
         // Transition from INTAKE to INTAKE2 when ring is secured
-        if (!intakeTask && robot.getRollerState() == INTAKE && frontDS.get_distance() < 30 && front.get_actual_velocity() < 30)
-        {
-            intakeTask = true;
-            timeouts.push_back({currentTime + 300, []()
-                                { robot.setState(INTAKE2); intakeTask = false; }});
-        }
+        // if (!intakeTask && robot.getRollerState() == INTAKE && front.get_actual_velocity() < 1)
+        // {
+        //     intakeTask = true;
+        //     timeouts.push_back({currentTime + 300, []()
+        //                         { robot.setState(INTAKE2); intakeTask = false; }});
+        // }
         // Transition from INTAKE2 to INTAKE3 when ring velocity stabilizes
-        else if (robot.getRollerState() == INTAKE2 && middle.get_actual_velocity() < 20)
-        {
-            robot.setState(INTAKE3);
-        }
-
-        // Color sorting - eject enemy-colored rings
-        if (colourSortOn)
-        {
-            if ((!isRedTeam && red) || (isRedTeam && blue))
-            {
-                colourSorting = true;
-                robot.addTempState(COLOURSORT, 10);
-                pros::delay(300);
-                robot.removeTempState(COLOURSORT);
-                colourSorting = false;
-            }
-        }
+        // else if (robot.getRollerState() == INTAKE2 && middle.get_actual_velocity() < 20)
+        // {
+        //     robot.setState(INTAKE3);
+        // }
 
         // LEFT BUTTON: Activate parking mechanism
         if (master.get_digital_new_press(buttons::LEFT))
@@ -143,17 +122,19 @@ void colourSort(void *params)
             if (autonSelect.isSkills())
             {
                 timeouts.push_back({currentTime + 200, []()
-                                    { 
-                                        if (robot.getRollerState() == L2HELPER) robot.removeTempState(L2HELPER); 
-                                        robot.addTempState(L2SKILLS, 1); 
+                                    {
+                                        if (robot.getRollerState() == L2HELPER)
+                                            robot.removeTempState(L2HELPER);
+                                        robot.addTempState(L2SKILLS, 1);
                                     }});
             }
             else
             {
                 timeouts.push_back({currentTime + 200, []()
-                                    { 
-                                        if (robot.getRollerState() == L2HELPER) robot.removeTempState(L2HELPER); 
-                                        robot.addTempState(L2, 1); 
+                                    {
+                                        if (robot.getRollerState() == L2HELPER)
+                                            robot.removeTempState(L2HELPER);
+                                        robot.addTempState(L2, 1);
                                     }});
             }
         }
@@ -169,16 +150,17 @@ void colourSort(void *params)
             {
                 robot.addTempState(L3, 1);
             }
-        }`
+        }
 
         // RIGHT BUTTON: Activate back L3 lift (with helper state)
         if (master.get_digital_new_press(buttons::RIGHT))
         {
             robot.addTempState(BACKL3HELPER, 1);
             timeouts.push_back({currentTime + 200, []()
-                                { 
-                                    if (robot.getRollerState() == BACKL3HELPER) robot.removeTempState(BACKL3HELPER); 
-                                    robot.addTempState(BACKL3, 1); 
+                                {
+                                    if (robot.getRollerState() == BACKL3HELPER)
+                                        robot.removeTempState(BACKL3HELPER);
+                                    robot.addTempState(BACKL3, 1);
                                 }});
         }
 
@@ -277,11 +259,11 @@ void on_center_button() {}
 void initialize()
 {
     autonSelect.setAutons(std::vector<autonomousRoute>{
-        autonomousRoute{"red", "Left2G", "Position: Left, facing up", left(2)},
+        autonomousRoute{"red", "Left2G", "Position: Left, facing up", left},
         autonomousRoute{"red", "Right2G", "Position: Right, facing up", right},
         autonomousRoute{"red", "Left1G", "Position: Left, facing up", left2},
         autonomousRoute{"red", "Right1G", "Position: Right, facing up", right2},
-        autonomousRoute{"blue", "Left2G", "Position: Left, facing up", left(2)},
+        autonomousRoute{"blue", "Left2G", "Position: Left, facing up", left},
         autonomousRoute{"blue", "Right2G", "Position: Right, facing up", right},
         autonomousRoute{"blue", "Left1G", "Position: Left, facing up", left2},
         autonomousRoute{"blue", "Right1G", "Position: Right, facing up", right2},
@@ -422,7 +404,7 @@ void opcontrol()
 
         robot.mapButtons({L3, buttons::L2, true});
 
-        robot.mapButtons({DESCORE, buttons::DOWN, true});
+        robot.mapButtons({DESCORE, buttons::DOWN, false});
 
         robot.mapButtons({BACKINTAKE, buttons::X, false});
 
@@ -446,38 +428,10 @@ void opcontrol()
                 }
             }
 
-            // Cycle team color and color sorting (Off → Red → Blue)
+            // Match load mechanism (held)
             if (master.get_digital_new_press(buttons::Y))
             {
-                teamColorIndex++;
-                teamColorIndex %= 3;
-                if (teamColorIndex == 0)
-                {
-                    colourSortOn = false;
-                    master.print(1, 1, "Off %f", batteryLevel);
-                }
-                else if (teamColorIndex == 1)
-                {
-                    isRedTeam = true;
-                    colourSortOn = true;
-                    master.print(1, 1, "Red %f", batteryLevel);
-                }
-                else if (teamColorIndex == 2)
-                {
-                    isRedTeam = false;
-                    colourSortOn = true;
-                    master.print(1, 1, "Blue%f", batteryLevel);
-                }
-            }
-
-            // Match load mechanism (held)
-            if (master.get_digital(buttons::B))
-            {
-                robot.matchLoad(true, false);
-            }
-            else
-            {
-                robot.matchLoad(false);
+                robot.toggleMatchLoad();
             }
 
             // Toggle intake on/off

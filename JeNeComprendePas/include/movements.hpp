@@ -76,7 +76,7 @@ rollerState operator*(const rollerState &lhs, double scalar);
 inline const pros::rtos::Clock isAuton = pros::rtos::Clock(); ///< Clock for autonomous timing
 
 // Basic intake and movement states
-inline const rollerState INTAKE = {200, 200, 200, 200, OFF, OFF};       ///< Standard intake from ground
+inline const rollerState INTAKE = {200, 200, 200, 100, OFF, OFF};       ///< Standard intake from ground
 inline const rollerState INTAKE2 = {200, 200, 200, 0, OFF, OFF};        ///< Intake variant without front roller
 inline const rollerState INTAKE3 = {0, 1, 127, 0, OFF, OFF, OFF, true}; ///< Low-power intake (voltage mode)
 inline const rollerState BACKINTAKE = {200, 200, 200, 200, ON, OFF};    ///<   Intake with flip piston extended
@@ -187,7 +187,6 @@ struct StateControllerMapping
     pros::controller_digital_e_t button2 = pros::E_CONTROLLER_DIGITAL_A; ///< Secondary button for combinations
     short importance = 1;                                                ///< Priority level for temporary states
 };
-
 
 /**
  * @class Robot

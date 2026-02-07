@@ -36,18 +36,18 @@ inline AutonSelector autonSelect; ///< Autonomous selector for pre-match routine
 // Drivetrain Motors
 // ==============================
 
-inline pros::MotorGroup leftDT({-1, -2, -3}); ///< Left drivetrain motor group (ports 1, 2, 3 - reversed)
-inline pros::MotorGroup rightDT({8, 9, 10});  ///< Right drivetrain motor group (ports 8, 9, 10)
+inline pros::MotorGroup leftDT({-3, -2, -1}); ///< Left drivetrain motor group (ports 1, 2, 3 - reversed)
+inline pros::MotorGroup rightDT({4, 21, 6});  ///< Right drivetrain motor group (ports 8, 9, 10)
 inline pros::Imu imu(13);                     ///< Inertial sensor for heading/orientation (port 13)
 
 // ==============================
 // Roller System Motors
 // ==============================
 
-inline pros::Motor front(16);   ///< Front roller motor (port 16)
-inline pros::Motor back(-19);   ///< Back roller motor (port 19 - reversed)
-inline pros::Motor middle(6);   ///< Middle roller motor (port 6)
-inline pros::Motor intake(-18); ///< Intake roller motor (port 18 - reversed)
+inline pros::Motor front(15);   ///< Front roller motor (port 16)
+inline pros::Motor back(0);     ///< Back roller motor (port 19 - reversed)
+inline pros::Motor middle(-12); ///< Middle roller motor (port 6)
+inline pros::Motor intake(-14); ///< Intake roller motor (port 18 - reversed)
 
 // ==============================
 // Sensors - Distance and Optical
@@ -82,11 +82,11 @@ inline pros::Rotation trackingVertical(14); ///< Vertical tracking wheel rotatio
 // Pneumatic Pistons (ADI Ports)
 // ==============================
 
-inline pros::ADIDigitalOut flipPiston('C');        ///< Flip piston for ring redirection (ADI port C)
-inline pros::ADIDigitalOut blockerPiston('D');     ///< Blocker piston for ring flow control (ADI port D)
+inline pros::ADIDigitalOut flipPiston('O');        ///< Flip piston for ring redirection (ADI port C)
+inline pros::ADIDigitalOut blockerPiston('A');     ///< Blocker piston for ring flow control (ADI port D)
 inline pros::ADIDigitalOut matchLoaderPiston('B'); ///< Match loader piston for skills loading (ADI port B)
-inline pros::ADIDigitalOut parkPiston('A');        ///< Park piston for endgame positioning (ADI port A)
-inline pros::ADIDigitalOut intakeLiftPiston('H');  ///< Intake lift piston for height adjustment (ADI port H)
+inline pros::ADIDigitalOut parkPiston('O');        ///< Park piston for endgame positioning (ADI port A)
+inline pros::ADIDigitalOut intakeLiftPiston('O');  ///< Intake lift piston for height adjustment (ADI port H)
 
 // Piston wrapper objects for state management
 inline Piston blocker(&blockerPiston);         ///< Blocker piston controller

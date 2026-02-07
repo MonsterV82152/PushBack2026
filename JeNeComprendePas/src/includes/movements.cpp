@@ -71,7 +71,7 @@ void Roller::setState(rollerState state)
     }
     if (state.blockerPiston != LEAVE)
     {
-        blockerPiston.setState(state.blockerPiston == 1);
+        blockerPiston.setState(state.blockerPiston == 0);
     }
     if (state.intakeL != LEAVE)
     {

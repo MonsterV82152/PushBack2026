@@ -1,6 +1,6 @@
 #include "autonomous_paths.hpp"
 
-void left(int b)
+void left()
 {
     chassis.setPose(-47.5, 18, 90);
     correct_position(LF, &chassis, false);
