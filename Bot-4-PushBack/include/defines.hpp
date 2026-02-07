@@ -14,7 +14,7 @@ inline pros::MotorGroup leftDT({-12, 13, -14});
 inline pros::MotorGroup rightDT({18, 17, -20});
 
 // System motors
-inline pros::MotorGroup systemMotors({15, -19}, pros::MotorGearset::red);
+inline pros::MotorGroup systemMotors({-15, 19}, pros::MotorGearset::red, pros::MotorUnits::degrees);
 
 // sensors
 inline pros::Imu imu(16);
@@ -44,11 +44,11 @@ inline pros::ADIDigitalOut wingPiston('G');
 
 // piston wrappers
 inline Piston hood(&hoodPiston);
-inline Piston matchLoadPiston(&matchLoadPiston);
-inline Piston ptoPiston(&ptoPiston);
-inline Piston intakeLiftPiston(&intakeLiftPiston);
-inline Piston liftPiston(&liftPiston);
-inline Piston wingPiston(&wingPiston);
+inline Piston matchLoad(&matchLoadPiston);
+inline Piston pto(&ptoPiston);
+inline Piston intakeLift(&intakeLiftPiston);
+inline Piston lift(&liftPiston);
+inline Piston wing(&wingPiston);
 
 inline lemlib::TrackingWheel verticalWheel(&vTrack, lemlib::Omniwheel::NEW_275, 0);
 inline lemlib::TrackingWheel horizontalWheel(&hTrack, lemlib::Omniwheel::NEW_275, -5);

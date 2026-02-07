@@ -20,6 +20,10 @@ void Piston::toggle()
 
 void Piston::setState(bool Istate)
 {
+    if (state == Istate)
+    {
+        return;
+    }
     state = Istate;
     piston->set_value(state);
 }
