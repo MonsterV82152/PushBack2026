@@ -10,22 +10,23 @@
 inline AutonSelector autonSelect;
 
 // Drivetrain motors
-inline pros::MotorGroup leftDT({1, 2, 3});
-inline pros::MotorGroup rightDT({4, 5, 6});
+inline pros::MotorGroup leftDT({-12, 13, -14});
+inline pros::MotorGroup rightDT({18, 17, -20});
 
 // System motors
-inline pros::MotorGroup systemMotors({7, 8});
+inline pros::MotorGroup systemMotors({15, -19}, pros::MotorGearset::red);
 
 // sensors
-inline pros::Imu imu(9);
-inline pros::Rotation vTrack(10);
-inline pros::Rotation hTrack(11);
+inline pros::Imu imu(16);
+inline pros::Imu liftImu(9);
+inline pros::Rotation vTrack(4);
+inline pros::Rotation hTrack(-5);
 
 // loc sensors
-inline pros::Distance LOCF(12);
-inline pros::Distance LOCB(13);
-inline pros::Distance LOCL(14);
-inline pros::Distance LOCR(15);
+inline pros::Distance LOCF(7);
+inline pros::Distance LOCB(10);
+inline pros::Distance LOCL(11);
+inline pros::Distance LOCR(8);
 
 // loc sensor wrappers with robot relative poses (x,y,theta);
 inline dist_sensor LF(&LOCF, lemlib::Pose(3.5, 5.0, 0));
@@ -34,24 +35,23 @@ inline dist_sensor LR(&LOCL, lemlib::Pose(0, -5.0, -90));
 inline dist_sensor LL(&LOCR, lemlib::Pose(0, 5.0, 90));
 
 // pistons
-inline pros::ADIDigitalOut lift('A');
-inline pros::ADIDigitalOut matchLoad('B');
-inline pros::ADIDigitalOut pto('C');
-inline pros::ADIDigitalOut intakeLift('D');
-inline pros::ADIDigitalOut hood('E');
+inline pros::ADIDigitalOut hoodPiston('A');
+inline pros::ADIDigitalOut matchLoadPiston('C');
+inline pros::ADIDigitalOut ptoPiston('B');
+inline pros::ADIDigitalOut intakeLiftPiston('D');
+inline pros::ADIDigitalOut liftPiston('F');
+inline pros::ADIDigitalOut wingPiston('G');
 
 // piston wrappers
-inline Piston liftPiston(&lift);
-inline Piston matchLoadPiston(&matchLoad);
-inline Piston ptoPiston(&pto);
-inline Piston intakeLiftPiston(&intakeLift);
-inline Piston hoodPiston(&hood);
-
+inline Piston hood(&hoodPiston);
+inline Piston matchLoadPiston(&matchLoadPiston);
+inline Piston ptoPiston(&ptoPiston);
+inline Piston intakeLiftPiston(&intakeLiftPiston);
+inline Piston liftPiston(&liftPiston);
+inline Piston wingPiston(&wingPiston);
 
 inline lemlib::TrackingWheel verticalWheel(&vTrack, lemlib::Omniwheel::NEW_275, 0);
-inline lemlib::TrackingWheel horizontalWheel(&hTrack, lemlib::Omniwheel::NEW_275, 0);
-
-
+inline lemlib::TrackingWheel horizontalWheel(&hTrack, lemlib::Omniwheel::NEW_275, -5);
 
 inline lemlib::Drivetrain LEMLIB_drivetrain(&leftDT, &rightDT,
                                             10.85,

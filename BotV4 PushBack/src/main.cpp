@@ -6,20 +6,11 @@ void on_center_button() {}
 
 void initialize()
 {
-
-    autonSelect.setAutons(std::vector<autonomousRoute>{
-        autonomousRoute{"red", "Left", "Position: Left", left},
-        autonomousRoute{"red", "Right", "Position: Right", right},
-        autonomousRoute{"blue", "Left", "Position: Left", left},
-        autonomousRoute{"blue", "Right", "Position: Right", right}});
-    autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", skills});
-
-    pros::delay(500);
-    autonSelect.start();
-
-    chassis.calibrate();
-    master.clear();
-    chassis.setPose(0, 0, 0);
+    imu.reset();
+    liftImu.reset(true);
+    // autonSelect.start();
+    pros::lcd::initialize();
+    
 }
 
 void disabled() {}
@@ -32,9 +23,21 @@ void autonomous()
 
 void opcontrol()
 {
+    bool intakeToggle = false;
+    bool hoodToggle = false;
+    bool scoring = false;
     while (true)
     {
-        if(BUTTON)
+        if (L1_NEW_PRESS) {
+            scoring = true;
+        } else if (L1_RELEASED) {
+            scoring = false;
+        }
+
+        if (R1_NEW_PRESS) {
+            intakeToggle = !intakeToggle;
+        }
+
         pros::delay(10);
     }
 }
