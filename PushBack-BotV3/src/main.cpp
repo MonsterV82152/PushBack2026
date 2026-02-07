@@ -68,13 +68,14 @@ void competition_initialize() {}
 void autonomous()
 {
 	// soloAWP();
-	// left();
+	//left();
 	// left();
 	// soloAWP();
-	left2();
+	//left2();
 	// skills2();
 	// autonSelect.runAuton();
 	// skills2();
+	right2();
 }
 
 /**
