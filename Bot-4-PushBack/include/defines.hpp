@@ -18,7 +18,7 @@ inline pros::MotorGroup systemMotors({-15, 19}, pros::MotorGearset::red, pros::M
 
 // sensors
 inline pros::Imu imu(16);
-inline pros::Imu liftImu(9);
+inline pros::Imu leverImu(9);
 inline pros::Rotation vTrack(4);
 inline pros::Rotation hTrack(-5);
 

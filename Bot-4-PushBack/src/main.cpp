@@ -18,7 +18,9 @@ void competition_initialize() {}
 
 void autonomous()
 {
-    autonSelect.runAuton();
+    // autonSelect.runAuton();
+    chassis.setPose(0, 0, 0);
+    chassis.moveToPoint(0, 24, 10000);
 }
 
 void opcontrol()
@@ -34,14 +36,11 @@ void opcontrol()
     while (true)
     {
         time = pros::millis();
+        double currentAngle = leverImu.get_pitch();
         chassis.arcade(LEFT_Y, RIGHT_X, false, 0.54);
         if (L1_NEW_PRESS)
         {
             scoring = true;
-            if (liftDown)
-            {
-                systemMotors.set_zero_position(0);
-            }
             liftDown = false;
         }
         else if (L1_RELEASED)
@@ -61,6 +60,11 @@ void opcontrol()
         if (L2_NEW_PRESS)
         {
             liftToggle = !liftToggle;
+            if (!liftToggle)
+            {
+                wingState = false;
+                wing.setState(false);
+            }
         }
         if (R2_NEW_PRESS)
         {
@@ -77,21 +81,44 @@ void opcontrol()
 
         if (scoring)
         {
-            pto.setState(false);
-            if (systemMotors.get_position() < 200)
-                systemMotors.move(127);
-            else if (systemMotors.get_position() < 240)
-                systemMotors.move(40);
+            if (pto.getState())
+            {
+                engageTime = time;
+                pto.setState(false);
+            }
+            else if (time - engageTime < 100)
+            {
+                systemMotors.move(0);
+            }
             else
-                systemMotors.move(-10);
+            {
+                if (systemMotors.get_position() < 60)
+                    systemMotors.move(100);
+                else if (systemMotors.get_position() < 79)
+                    systemMotors.move(30);
+                else
+                    systemMotors.move(-10);
+            }
         }
         else if (!liftDown)
         {
-            pto.setState(false);
-            systemMotors.move(-127);
-            if (systemMotors.get_position() < 20)
+            if (pto.getState())
             {
-                liftDown = true;
+                engageTime = time;
+                pto.setState(false);
+            }
+            else if (time - engageTime < 100)
+            {
+                systemMotors.move(0);
+            }
+            else
+            {
+                pto.setState(false);
+                systemMotors.move(-60);
+                if (systemMotors.get_position() < -20)
+                {
+                    liftDown = true;
+                }
             }
         }
         else if (reverse)
@@ -101,7 +128,7 @@ void opcontrol()
                 engageTime = time;
                 pto.setState(true);
             }
-            else if (time - engageTime < 500)
+            else if (time - engageTime < 100)
             {
                 systemMotors.move(0);
             }
@@ -118,13 +145,13 @@ void opcontrol()
                 engageTime = time;
                 pto.setState(true);
             }
-            else if (time - engageTime < 500)
+            else if (time - engageTime < 100)
             {
                 systemMotors.move(0);
             }
             else
             {
-                systemMotors.move(127);
+                systemMotors.move(-127);
             } // systemMotors.move(127);
         }
         else
@@ -139,6 +166,15 @@ void opcontrol()
         else
         {
             lift.setState(false);
+        }
+
+        if (B_HELD)
+        {
+            matchLoad.setState(true);
+        }
+        else
+        {
+            matchLoad.setState(false);
         }
 
         pros::delay(10);

@@ -52,14 +52,13 @@ public:
 class AutonSelector
 {
 public:
-
-    AutonSelector();
+    AutonSelector(pros::ADIDigitalIn potentiometer);
 
     void start();
     void runAuton();
     void setSkillsAuton(autonomousRoute auton);
     void setAutons(std::vector<autonomousRoute> autons);
-    bool isRedTeam () const;
+    bool isRedTeam() const;
     bool isSkills() const;
     void exit();
 
@@ -81,7 +80,6 @@ private:
         std::vector<button>{
             button(20, 15, 225, 220, "skills"),
             button(250, 15, 455, 220, "match")});
-
 
     void drawPage(std::string pageName);
     void handleTouch(pros::screen_touch_status_s_t touch);
