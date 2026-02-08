@@ -1,4 +1,5 @@
 #include "includes.hpp"
+#include "movements.hpp"
 
 using namespace pros;
 
@@ -6,9 +7,10 @@ void on_center_button() {}
 
 void initialize()
 {
-    imu.reset();
+    // imu.reset();
     // liftImu.reset(true);
     // autonSelect.start();
+    chassis.calibrate();
     pros::lcd::initialize();
     systemMotors.set_zero_position(0);
 }
@@ -25,156 +27,50 @@ void autonomous()
 
 void opcontrol()
 {
-    bool intakeToggle = false;
-    bool liftToggle = false;
-    bool scoring = false;
-    bool reverse = false;
-    bool liftDown = false;
-    bool wingState = false;
-    int time = 0;
-    int engageTime = 0;
     while (true)
     {
-        time = pros::millis();
-        double currentAngle = leverImu.get_pitch();
         chassis.arcade(LEFT_Y, RIGHT_X, false, 0.54);
         if (L1_NEW_PRESS)
         {
-            scoring = true;
-            liftDown = false;
+            scoreAndHold();
         }
         else if (L1_RELEASED)
         {
-            scoring = false;
+            lowerScoring();
         }
         if (DOWN_NEW_PRESS)
         {
-            wingState = true;
-            wing.setState(true);
+            wingToggle(true);
         }
         else if (DOWN_RELEASED)
         {
-            wingState = false;
-            wing.setState(false);
+            wingToggle(false);
         }
         if (L2_NEW_PRESS)
         {
-            liftToggle = !liftToggle;
-            if (!liftToggle)
-            {
-                wingState = false;
-                wing.setState(false);
-            }
+            liftToggle();
         }
         if (R2_NEW_PRESS)
         {
-            reverse = true;
+            reverse(true);
+            intakeLiftToggle(true);
         }
         else if (R2_RELEASED)
         {
-            reverse = false;
+            reverse(false);
+            intakeLiftToggle(false);
         }
         if (R1_NEW_PRESS)
         {
-            intakeToggle = !intakeToggle;
+            intake();
         }
-
-        if (scoring)
+        if (Y_NEW_PRESS)
         {
-            if (pto.getState())
-            {
-                engageTime = time;
-                pto.setState(false);
-            }
-            else if (time - engageTime < 100)
-            {
-                systemMotors.move(0);
-            }
-            else
-            {
-                if (systemMotors.get_position() < 60)
-                    systemMotors.move(100);
-                else if (systemMotors.get_position() < 79)
-                    systemMotors.move(30);
-                else
-                    systemMotors.move(-10);
-            }
+            matchLoad(true);
         }
-        else if (!liftDown)
+        else if (Y_RELEASED)
         {
-            if (pto.getState())
-            {
-                engageTime = time;
-                pto.setState(false);
-            }
-            else if (time - engageTime < 100)
-            {
-                systemMotors.move(0);
-            }
-            else
-            {
-                pto.setState(false);
-                systemMotors.move(-60);
-                if (systemMotors.get_position() < -20)
-                {
-                    liftDown = true;
-                }
-            }
-        }
-        else if (reverse)
-        {
-            if (!pto.getState())
-            {
-                engageTime = time;
-                pto.setState(true);
-            }
-            else if (time - engageTime < 100)
-            {
-                systemMotors.move(0);
-            }
-            else
-            {
-                systemMotors.move(127);
-            }
-            // systemMotors.move(-127);
-        }
-        else if (intakeToggle)
-        {
-            if (!pto.getState())
-            {
-                engageTime = time;
-                pto.setState(true);
-            }
-            else if (time - engageTime < 100)
-            {
-                systemMotors.move(0);
-            }
-            else
-            {
-                systemMotors.move(-127);
-            } // systemMotors.move(127);
-        }
-        else
-        {
-            systemMotors.move(0);
-        }
-
-        if (liftToggle)
-        {
-            lift.setState(true);
-        }
-        else
-        {
-            lift.setState(false);
-        }
-
-        if (B_HELD)
-        {
-            matchLoad.setState(true);
-        }
-        else
-        {
-            matchLoad.setState(false);
+            matchLoad(false);
         }
 
         pros::delay(10);

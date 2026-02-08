@@ -1,8 +1,7 @@
 #ifndef AUTON_HPP
 #define AUTON_HPP
 
-#include "globals.hpp"
-
+#include "movements.hpp"
 
 void left();
 void left2();

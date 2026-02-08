@@ -18,7 +18,7 @@ inline pros::MotorGroup systemMotors({-15, 19}, pros::MotorGearset::red, pros::M
 
 // sensors
 inline pros::Imu imu(16);
-inline pros::Imu leverImu(9);
+inline pros::ADIAnalogIn potentiometer('E');
 inline pros::Rotation vTrack(4);
 inline pros::Rotation hTrack(-5);
 
@@ -36,7 +36,7 @@ inline dist_sensor LL(&LOCR, lemlib::Pose(0, 5.0, 90));
 
 // pistons
 inline pros::ADIDigitalOut hoodPiston('A');
-inline pros::ADIDigitalOut matchLoadPiston('C');
+inline pros::ADIDigitalOut matchLoaderPiston('C');
 inline pros::ADIDigitalOut ptoPiston('B');
 inline pros::ADIDigitalOut intakeLiftPiston('D');
 inline pros::ADIDigitalOut liftPiston('F');
@@ -44,7 +44,7 @@ inline pros::ADIDigitalOut wingPiston('G');
 
 // piston wrappers
 inline Piston hood(&hoodPiston);
-inline Piston matchLoad(&matchLoadPiston);
+inline Piston matchLoader(&matchLoaderPiston);
 inline Piston pto(&ptoPiston);
 inline Piston intakeLift(&intakeLiftPiston);
 inline Piston lift(&liftPiston);
