@@ -72,8 +72,8 @@ void togglePTO(bool value)
 {
     if (pto.getState() != value)
     {
-        pros::delay(100); // debounce delay
         pto.setState(value);
+        pros::delay(500); // debounce delay
     }
 }
 

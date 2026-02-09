@@ -7,8 +7,6 @@
 #include "sensor_loc.hpp"
 #include "piston.hpp"
 
-inline AutonSelector autonSelect;
-
 // Drivetrain motors
 inline pros::MotorGroup leftDT({-12, 13, -14});
 inline pros::MotorGroup rightDT({18, 17, -20});
@@ -35,17 +33,16 @@ inline dist_sensor LR(&LOCL, lemlib::Pose(0, -5.0, -90));
 inline dist_sensor LL(&LOCR, lemlib::Pose(0, 5.0, 90));
 
 // pistons
-inline pros::ADIDigitalOut hoodPiston('A');
 inline pros::ADIDigitalOut matchLoaderPiston('C');
 inline pros::ADIDigitalOut ptoPiston('B');
+inline pros::ADIDigitalOut ptoPiston2('A');
 inline pros::ADIDigitalOut intakeLiftPiston('D');
 inline pros::ADIDigitalOut liftPiston('F');
 inline pros::ADIDigitalOut wingPiston('G');
 
 // piston wrappers
-inline Piston hood(&hoodPiston);
 inline Piston matchLoader(&matchLoaderPiston);
-inline Piston pto(&ptoPiston);
+inline Piston pto(&ptoPiston2, &ptoPiston);
 inline Piston intakeLift(&intakeLiftPiston);
 inline Piston lift(&liftPiston);
 inline Piston wing(&wingPiston);

@@ -1,3 +1,8 @@
+#pragma once
+
+#ifndef MOVEMENTS_HPP
+#define MOVEMENTS_HPP
+
 #include "includes.hpp"
 
 enum class ScoringState
@@ -9,39 +14,42 @@ enum class ScoringState
 };
 
 const double SCORE_ANGLE = 100; // placeholder value, adjust as needed
-const double DOWN_ANGLE = 50; // placeholder value, adjust as needed
+const double DOWN_ANGLE = 50;   // placeholder value, adjust as needed
 
-std::atomic<double> maxScoringSpeed = std::atomic<double>(127);
+inline std::atomic<double> maxScoringSpeed = std::atomic<double>(127);
+inline std::atomic<bool> reverseToggle = std::atomic<bool>(false);
+inline std::atomic<bool> wingState = std::atomic<bool>(false);
+inline std::atomic<bool> intakeToggle = std::atomic<bool>(false);
+inline std::atomic<ScoringState> scoringState = std::atomic<ScoringState>(ScoringState::IDLE);
 
-std::atomic<bool> reverseToggle = std::atomic<bool>(false);
-std::atomic<bool> wingState = std::atomic<bool>(false);
-std::atomic<bool> intakeToggle = std::atomic<bool>(false);
-std::atomic<ScoringState> scoringState = std::atomic<ScoringState>(ScoringState::IDLE);
+extern void score(double maxSpeed = 127);
 
-void score(double maxSpeed = 127);
+extern void scoreAndHold(double maxSpeed = 127);
 
-void scoreAndHold(double maxSpeed = 127);
+extern void lowerScoring();
 
-void lowerScoring();
+extern void liftToggle();
 
-void liftToggle();
+extern void liftToggle(bool value);
 
-void liftToggle(bool value);
+extern void matchLoad();
 
-void matchLoad();
+extern void matchLoad(bool value);
 
-void matchLoad(bool value);
+extern void intakeLiftToggle(bool value);
 
-void intakeLiftToggle(bool value);
+extern void intake();
 
-void intake();
+extern void intake(bool value);
 
-void intake(bool value);
+extern void reverse(bool value);
 
-void reverse(bool value);
+extern void move(double left, double right);
 
-void move(double left, double right);
+extern void togglePTO(bool value);
 
-void wingToggle(bool value);
+extern void wingToggle(bool value);
 
-void periodic();
+extern void periodic();
+
+#endif

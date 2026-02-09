@@ -32,11 +32,12 @@ void opcontrol()
         chassis.arcade(LEFT_Y, RIGHT_X, false, 0.54);
         if (L1_NEW_PRESS)
         {
-            scoreAndHold();
+            togglePTO(false);
+            systemMotors.move(127);
         }
         else if (L1_RELEASED)
         {
-            lowerScoring();
+            systemMotors.move(0);
         }
         if (DOWN_NEW_PRESS)
         {
@@ -52,17 +53,23 @@ void opcontrol()
         }
         if (R2_NEW_PRESS)
         {
-            reverse(true);
+            togglePTO(true);
+            systemMotors.move(127);
             intakeLiftToggle(true);
         }
         else if (R2_RELEASED)
         {
-            reverse(false);
+            systemMotors.move(0);
             intakeLiftToggle(false);
         }
         if (R1_NEW_PRESS)
         {
-            intake();
+            togglePTO(true);
+            systemMotors.move(-127);
+        }
+        else if (R1_RELEASED)
+        {
+            systemMotors.move(0);
         }
         if (Y_NEW_PRESS)
         {
