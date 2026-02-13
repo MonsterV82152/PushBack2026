@@ -13,4 +13,6 @@ void right2();
 
 void skills();
 
+void test();
+
 #endif

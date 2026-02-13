@@ -29,17 +29,20 @@ void liftToggle()
 
 void intake()
 {
+    maxRollerSpeed.store(127);
     intakeToggle.store(!intakeToggle.load());
 }
 
-void intake(bool value)
+void intake(bool value, double maxSpeed)
 {
+    maxRollerSpeed.store(maxSpeed);
     intakeToggle.store(value);
 }
 
-void reverse(bool value)
+void reverse(bool value, double maxSpeed)
 {
     reverseToggle.store(value);
+    maxRollerSpeed.store(maxSpeed);
 }
 
 void move(double left, double right)
@@ -86,7 +89,7 @@ void periodic()
     case ScoringState::IDLE:
         break;
     case ScoringState::SCORE_HOLD:
-        if (currentAngle < SCORE_ANGLE - 30)
+        if (currentAngle > SCORE_ANGLE + 30)
         {
             togglePTO(false);
             systemMotors.move(abs(maxScoringSpeed.load()));
@@ -103,7 +106,7 @@ void periodic()
         }
         break;
     case ScoringState::SCORE_RELEASE:
-        if (currentAngle < SCORE_ANGLE)
+        if (currentAngle > SCORE_ANGLE)
         {
             togglePTO(false);
             systemMotors.move(abs(maxScoringSpeed.load()));
@@ -114,7 +117,7 @@ void periodic()
         }
         break;
     case ScoringState::RESET:
-        if (currentAngle > DOWN_ANGLE)
+        if (currentAngle < DOWN_ANGLE)
         {
             togglePTO(false);
             systemMotors.move(-127);
@@ -132,12 +135,14 @@ void periodic()
         if (reverseToggle.load())
         {
             togglePTO(true);
-            systemMotors.move(127);
+            systemMotors.move(maxRollerSpeed.load());
         }
         else if (intakeToggle.load())
         {
             togglePTO(true);
-            systemMotors.move(-127);
+            systemMotors.move(-maxRollerSpeed.load());
+        } else {
+            systemMotors.move(0);
         }
     }
     wing.setState(wingState.load());
