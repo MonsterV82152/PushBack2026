@@ -2,29 +2,25 @@
 #include "movements.hpp"
 #include "autonomous_selector.hpp"
 
-
-
 using namespace pros;
 
 void on_center_button() {}
 
 void initialize()
 {
-    //autonSelect.start();
+    // autonSelect.start();
     chassis.calibrate();
     pros::lcd::initialize();
     systemMotors.set_zero_position(0);
-    pros::Task periodicTask([&](){
+    pros::Task periodicTask([&]()
+                            {
         while (true)
         {
             periodic();
             pros::delay(10);
-        }
-    });
+        } });
     wingToggle(false);
     liftToggle(false);
-    
-
 }
 
 void disabled() {}
@@ -35,13 +31,12 @@ void autonomous()
     // autonSelect.runAuton();
     chassis.setPose(0, 0, 0);
     chassis.moveToPoint(0, 24, 10000);
-    
 }
 
 void opcontrol()
 {
-    //right();
-    test();
+    // right();
+    // test();
     while (true)
     {
         lcd::print(0, "X: %.3f, %.3f, %.3f", chassis.getPose().x, chassis.getPose().y, chassis.getPose().theta); // x, y, theta
@@ -62,7 +57,7 @@ void opcontrol()
         {
             lowerScoring();
         }
-        if(lift.getState())
+        if (lift.getState())
         {
             if (DOWN_NEW_PRESS)
             {
@@ -76,7 +71,7 @@ void opcontrol()
         if (L2_NEW_PRESS)
         {
             liftToggle();
-            if(!lift.getState())
+            if (!lift.getState())
             {
                 wingToggle(false);
             }
@@ -108,8 +103,7 @@ void opcontrol()
             matchLoad(false);
         }
 
-        
-        //PID tuning
+        // PID tuning
         if (LEFT_NEW_PRESS)
         {
             chassis.setPose(0, 0, 0);
@@ -126,30 +120,42 @@ void opcontrol()
             delay(5500);
             master.print(1, 0, "X: %.2f, Y: %.4f", chassis.getPose().x, chassis.getPose().y);
         }
-        
-        if (X_NEW_PRESS) {
-            double tot = 0;
-            for (double i = 48; i <= 48; i += 8) {
-                double target = chassis.getPose().y + i;
-                chassis.moveToPoint(0, target, 4000);
-                delay(4050);
-                master.print(0, 0, "%f", target-chassis.getPose().y);
-                tot += target-chassis.getPose().y;
-            }
-
-            master.print(1, 0, "%.4f", tot);
-            delay(5000);
+        if (Y_NEW_PRESS)
+        {
+            chassis.arcade(0, -127);
+            pros::delay(200);
+            chassis.arcade(0, 127);
+            pros::delay(200);
+            chassis.arcade(0, 0);
         }
-        if (A_NEW_PRESS) {
+        if (X_NEW_PRESS)
+        {
+            // double tot = 0;
+            // for (double i = 48; i <= 48; i += 8)
+            // {
+            //     double target = chassis.getPose().y + i;
+            //     chassis.moveToPoint(0, target, 4000);
+            //     delay(4050);
+            //     master.print(0, 0, "%f", target - chassis.getPose().y);
+            //     tot += target - chassis.getPose().y;
+            // }
+
+            // master.print(1, 0, "%.4f", tot);
+            // delay(5000);
+            right();
+        }
+        if (A_NEW_PRESS)
+        {
             double tot = 0;
-            for (double i = 9.99; i <= 180; i += 10) {
+            for (double i = 9.99; i <= 180; i += 10)
+            {
                 double target = chassis.getPose().theta + i;
                 chassis.turnToHeading(target, 1500);
                 delay(2000);
                 tot += target - chassis.getPose().theta;
             }
             delay(500);
-	        master.print(1, 0, "%.5f", tot);
+            master.print(1, 0, "%.5f", tot);
         }
 
         pros::delay(10);

@@ -18,7 +18,7 @@ inline pros::MotorGroup systemMotors({-15, 19}, pros::MotorGearset::red, pros::M
 inline pros::Imu imu(16);
 inline pros::ADIAnalogIn potentiometer('A');
 inline pros::Rotation vTrack(4);
-inline pros::Rotation hTrack(-5);
+inline pros::Rotation hTrack(5);
 
 // loc sensors
 inline pros::Distance LOCF(7);
@@ -27,10 +27,10 @@ inline pros::Distance LOCL(11);
 inline pros::Distance LOCR(8);
 
 // loc sensor wrappers with robot relative poses (x,y,theta);
-inline dist_sensor LF(&LOCF, lemlib::Pose(3.5, 5.0, 0));
-inline dist_sensor LB(&LOCB, lemlib::Pose(-3.5, 5.0, 0));
-inline dist_sensor LR(&LOCL, lemlib::Pose(0, -5.0, -90));
-inline dist_sensor LL(&LOCR, lemlib::Pose(0, 5.0, 90));
+// inline dist_sensor LF(&LOCF, lemlib::Pose(3.5, 5.0, 0));
+// inline dist_sensor LB(&LOCB, lemlib::Pose(-3.5, 5.0, 0));
+inline dist_sensor LR(&LOCL, lemlib::Pose(4, 3.5, 90));
+inline dist_sensor LL(&LOCR, lemlib::Pose(-4, 3.5, -90));
 
 // pistons
 inline pros::ADIDigitalOut matchLoaderPiston('D');
@@ -58,29 +58,30 @@ inline lemlib::Drivetrain LEMLIB_drivetrain(&leftDT, &rightDT,
 
 inline lemlib::OdomSensors LEMLIB_sensors(&verticalWheel, nullptr, &horizontalWheel, nullptr, &imu);
 inline lemlib::ControllerSettings LEMLIB_lateral_controller(
-    10,    // proportional gain (kP)
-    0.1,     // integral gain (kI)
-    67,    // derivative gain (kD)
+    10,     // proportional gain (kP)
+    0.1,    // integral gain (kI)
+    67,     // derivative gain (kD)
     0.0392, // anti windup
 
     1,   // small error range, in inches
     100, // small error range timeout, in milliseconds
     3,   // large error range, in inches
     500, // large error range timeout, in milliseconds
-    0   // maximum acceleration (slew)
+    0    // maximum acceleration (slew)
 );
 
 inline lemlib::ControllerSettings LEMLIB_angular_controller(
-    2,  // proportional gain (kP)
-    0.1,  // integral gain (kI)
-    16, // derivative gain (kD)
-    5.3961,  // anti windup
+    4.5, // proportional gain (kP)
+    0,   // integral gain (kI)
+    50,  // derivative gain (kD)
+    // 5.3961, // anti windup
+    0,
 
-    1, // small error range, in inches
+    1,   // small error range, in inches
     100, // small error range timeout, in milliseconds
-    3, // large error range, in inches
+    3,   // large error range, in inches
     500, // large error range timeout, in milliseconds
-    0  // maximum acceleration (slew)
+    0    // maximum acceleration (slew)
 );
 
 inline lemlib::Chassis chassis(LEMLIB_drivetrain,         // drivetrain settins

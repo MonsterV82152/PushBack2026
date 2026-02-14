@@ -76,7 +76,7 @@ void togglePTO(bool value)
     if (pto.getState() != value)
     {
         pto.setState(value);
-        pros::delay(500); // debounce delay
+        pros::delay(300); // debounce delay
     }
 }
 
@@ -141,7 +141,9 @@ void periodic()
         {
             togglePTO(true);
             systemMotors.move(-maxRollerSpeed.load());
-        } else {
+        }
+        else
+        {
             systemMotors.move(0);
         }
     }
