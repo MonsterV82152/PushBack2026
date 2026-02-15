@@ -1,76 +1,103 @@
 #include "movements.hpp"
 
+/// Initiates scoring sequence with release motion
+/// @param maxSpeed Maximum speed for scoring motors
 void score(double maxSpeed)
 {
     maxScoringSpeed.store(maxSpeed);
     scoringState.store(ScoringState::SCORE_RELEASE);
 }
 
+/// Initiates scoring sequence while holding position at target angle
+/// @param maxSpeed Maximum speed for scoring motors
 void scoreAndHold(double maxSpeed)
 {
     maxScoringSpeed.store(maxSpeed);
     scoringState.store(ScoringState::SCORE_HOLD);
 }
 
+/// Resets scoring system to down position
 void lowerScoring()
 {
     scoringState.store(ScoringState::RESET);
 }
 
+/// Sets lift to specified state
+/// @param value Desired lift state (true = up, false = down)
 void liftToggle(bool value)
 {
     lift.setState(value);
 }
 
+/// Toggles lift between up and down states
 void liftToggle()
 {
     lift.toggle();
 }
 
+/// Toggles intake at maximum speed (127)
 void intake()
 {
     maxRollerSpeed.store(127);
     intakeToggle.store(!intakeToggle.load());
 }
 
+/// Sets intake state and speed
+/// @param value Intake enabled state
+/// @param maxSpeed Maximum speed for intake roller
 void intake(bool value, double maxSpeed)
 {
     maxRollerSpeed.store(maxSpeed);
     intakeToggle.store(value);
 }
 
+/// Sets reverse (outtake) state and speed
+/// @param value Reverse enabled state
+/// @param maxSpeed Maximum speed for reverse
 void reverse(bool value, double maxSpeed)
 {
     reverseToggle.store(value);
     maxRollerSpeed.store(maxSpeed);
 }
 
+/// Tank drive control
+/// @param left Left side motor power (-127 to 127)
+/// @param right Right side motor power (-127 to 127)
 void move(double left, double right)
 {
     chassis.tank(left, right);
 }
 
+/// Sets wing state
+/// @param value Desired wing state (true = extended, false = retracted)
 void wingToggle(bool value)
 {
     wingState.store(value);
     wing.setState(value);
 }
 
+/// Toggles match loader
 void matchLoad()
 {
     matchLoader.toggle();
 }
 
+/// Sets match loader state
+/// @param value Desired loader state
 void matchLoad(bool value)
 {
     matchLoader.setState(value);
 }
 
+/// Sets intake lift state
+/// @param value Desired intake lift state
 void intakeLiftToggle(bool value)
 {
     intakeLift.setState(value);
 }
 
+/// Toggles PTO (Power Take-Off) state with debounce delay
+/// @param value Desired PTO state
 void togglePTO(bool value)
 {
     if (pto.getState() != value)
@@ -80,6 +107,8 @@ void togglePTO(bool value)
     }
 }
 
+/// Main control loop for scoring system and intake
+/// Handles state machine for scoring positions and intake/reverse control
 void periodic()
 {
     double currentAngle = potentiometer.get_value();
