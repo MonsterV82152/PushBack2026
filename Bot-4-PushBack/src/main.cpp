@@ -57,23 +57,25 @@ void opcontrol()
         // lcd::print(1, "Y: %.3f", ); // y
         
         // Arcade drive control with 0.6 deadzone
-        chassis.arcade(LEFT_Y, RIGHT_X, false, 0.6);
+        chassis.arcade(LEFT_Y, RIGHT_X, false, 0.67);
         
         // L1: Scoring control
         if (L1_NEW_PRESS)
         {
             if (lift.getState())
             {
-                scoreAndHold(127); //change for skills 80
+                scoreAndHold(127); //change for skills 80/match 127
             }
             else
             {
-                scoreAndHold(90); //change for skills 50
+                intakeLiftToggle(true);
+                scoreAndHold(90); //change for skills 50/match 90
             }
         }
         else if (L1_RELEASED)
         {
             lowerScoring();  // Return to idle position
+            intakeLiftToggle(false);
         }
         // DOWN: Wing control (only when lift is up)
         if (lift.getState())
@@ -104,7 +106,7 @@ void opcontrol()
         if (R2_NEW_PRESS)
         {
             intakeLiftToggle(true);  // Raise intake lift
-            reverse(true, 127);      // Start reverse at full speed (change for skills 40)
+            reverse(true, 127);      // Start reverse at full speed (change for skills 40) / match 127
         }
         else if (R2_RELEASED)
         {
@@ -169,7 +171,8 @@ void opcontrol()
 
             // master.print(1, 0, "%.4f", tot);
             // delay(5000);
-            right();  // Run right side autonomous routine
+            //right();  // Run right side autonomous routine
+            skills();
         }
         if (A_NEW_PRESS)
         {

@@ -56,33 +56,39 @@ void left()
 }
 void left2() {
     chassis.setPose(-46, 0, 0);
-    liftToggle(true);
     intake(true);
-    chassis.moveToPoint(-46, -32, 700, {.forwards = false, .earlyExitRange = 8});
-    chassis.moveToPoint(-46, -48, 550, {.forwards = false, .maxSpeed = 90});
-    correct_position(LL, &chassis, false);
-    chassis.turnToPoint(-70, -48, 700);
     matchLoad(true);
-    chassis.moveToPoint(-60, -48, 200, {.earlyExitRange = 3});
-    chassis.moveToPoint(-70, -48, 300, {.maxSpeed = 80});
-    chassis.arcade(-30, 0);
-    pros::delay(1000);
-    correct_position(LL, &chassis, false);
-    chassis.moveToPoint(-24, -48, 1000, {.forwards = false, .maxSpeed = 80});
+    chassis.moveToPoint(-46, 47, 2000);
+    chassis.turnToPoint(-70, 47, 700);
     chassis.waitUntilDone();
-    scoreAndHold(127);
-    matchLoad(false);
-    pros::delay(400);
+    correct_position(LR, &chassis, false);
+    chassis.moveToPoint(-65, 47, 200, {.earlyExitRange = 8});
+    chassis.moveToPoint(-70, 47, 300, {.maxSpeed = 90});
+
+    chassis.moveToPoint(-24, 47, 2000, {.forwards = false});
+    scoreAndHold();
+    pros::delay(500);
     lowerScoring();
-    intake(true);
-    chassis.arcade(-70, 127);
-    pros::delay(550);
-    chassis.moveToPoint(-24, -24, 1000);
-    chassis.turnToPoint(0, 0, 400);
-    chassis.moveToPoint(-11, -11, 500);
-    chassis.waitUntilDone();
-    reverse(true, 30);
-    
+    matchLoad(false);
+
+    chassis.arcade(-30, -127);
+    pros::delay(1000);
+    chassis.moveToPoint(-20, 20, 1000);
+    pros::delay(500);
+    matchLoad(true);
+    chassis.turnToPoint(0, 0, 500, {false});
+    liftToggle(false);
+    chassis.moveToPoint(-11, 11, 1000, {.forwards = false});
+    scoreAndHold();
+    pros::delay(500);
+    lowerScoring();
+    liftToggle(true);
+    chassis.moveToPoint(-25, 37.5, 1000);
+    chassis.turnToPoint(-70, 37.5, 500);
+    wingToggle(true);
+    chassis.moveToPose(-9, 37.5, 270, 5000, {.forwards = false});
+
+
 }
 void driveOff() {
     chassis.setPose(0, 0, 0); 
@@ -105,7 +111,7 @@ void soloAWP() {
     correct_position(LL, &chassis, false);
     chassis.turnToPoint(-70, -47, 700);
     matchLoad(true);
-    chassis.moveToPoint(-70, -47, 200, {.earlyExitRange = 8});
+    chassis.moveToPoint(-65, -47, 200, {.earlyExitRange = 8});
     chassis.moveToPoint(-70, -47, 300, {.maxSpeed = 90});
 
     //score
@@ -221,10 +227,10 @@ void skills() {
     liftToggle(true);
     matchLoad(true);
     
-    chassis.moveToPoint(-48, 46.5, 2500);
-    chassis.turnToPoint(-70, 46.5, 700);
+    chassis.moveToPoint(-48, 46, 5000);
+    chassis.turnToPoint(-70, 46, 1000);
     correct_position(LR, &chassis, false);
-    chassis.moveToPoint(-65, 46.5, 3000, {.maxSpeed = 70}, true);
+    chassis.moveToPoint(-65, 46, 5000, {.maxSpeed = 70}, true);
     pros::delay(500);
     // chassis.turnToPoint(-70, 50, 200);
     // chassis.turnToPoint(-70, 46, 200);
@@ -233,14 +239,14 @@ void skills() {
     // chassis.turnToPoint(-70, 50, 200);
     // chassis.turnToPoint(-70, 48, 200);
 
-    chassis.moveToPoint(-48, 48, 1000, {.forwards = false});
-    chassis.turnToPoint(-26.5, 58.5, 500, {false});
-    chassis.moveToPoint(-26.5, 58.5, 1000, {.forwards = false});
-    moveTo(37, 58.5, 500, 3000, false, false);
+    chassis.moveToPoint(-48, 46, 3000, {.forwards = false});
+    chassis.turnToPoint(-26.5, 58.5, 1000, {false});
+    chassis.moveToPoint(-26.5, 58.5, 2000, {.forwards = false});
+    moveTo(37, 58.5, 1000, 5000, false, false);
+    correct_position(LR, &chassis, false);
     matchLoad(false);
-    correct_position(LL, &chassis, false);
-    moveTo(37, 48, 500, 500, false, false);
-    moveTo(24, 48, 500, 700, false, false);
+    moveTo(37, 46, 1000, 1000, false, false);
+    moveTo(24, 46, 1000, 1500, false, false);
     chassis.waitUntilDone();
     scoreAndHold(80);
     pros::delay(250);
@@ -248,7 +254,7 @@ void skills() {
     pros::delay(250);
     intake(true);
     matchLoad(true);
-    chassis.moveToPoint(70, 46.5, 3000, {.maxSpeed = 70}, true);
+    chassis.moveToPoint(70, 46, 5000, {.maxSpeed = 70}, true);
     pros::delay(500);
     // chassis.turnToPoint(70, 50, 200);
     // chassis.turnToPoint(70, 46, 200);
@@ -257,37 +263,37 @@ void skills() {
     // chassis.turnToPoint(70, 50, 200);
     // chassis.turnToPoint(70, 48, 200);
 
-    chassis.moveToPoint(24, 46.5, 1500, {.forwards = false});
+    chassis.moveToPoint(24, 46, 3000, {.forwards = false});
     chassis.waitUntilDone();
     scoreAndHold(80);
     pros::delay(250);
     lowerScoring();
     matchLoad(false);
-    moveTo(48, 48, 1, 700, true, true);
-    moveTo(36, 0, 700, 3000, true, true);
+    moveTo(48, 48, 500, 1000, true, true);
+    moveTo(36, 0, 1000, 5000, true, true);
     intake(true);
-    moveTo(65, 0, 500, 2500, true, true);
-    moveTo(40, 0, 1, 2000, true, false);
-    moveTo(65, 0, 1, 2500, true, true);
+    moveTo(65, 0, 1000, 3500, true, true);
+    moveTo(40, 0, 1000, 4000, false, false);
+    moveTo(65, 0, 1000, 5000, true, true);
 
-    chassis.moveToPoint(36, 0, 2000);
-    chassis.turnToPoint(36, 36, 500);
+    chassis.moveToPoint(36, 0, 3000, {.forwards = false});
+    chassis.turnToPoint(36, 36, 1000);
     correct_position(LR, &chassis, true);
-    chassis.moveToPoint(36, 36, 2000);
-    chassis.turnToPoint(0, 36, 500);
+    chassis.moveToPoint(36, 36, 3000);
+    chassis.turnToPoint(0, 36, 1000);
     correct_position(LR, &chassis, false);
-    chassis.turnToPoint(16, 16, 700);
-    chassis.moveToPoint(14, 14, 2000);
+    chassis.turnToPoint(16, 16, 1500);
+    chassis.moveToPoint(14, 14, 3000);
     reverse(true, 40);
     pros::delay(2000);
-    chassis.moveToPoint(16, 16, 2000, {.forwards = false});
-    moveTo(48, -48, 500, 4000, true, true);
+    chassis.moveToPoint(16, 16, 3000, {.forwards = false});
+    moveTo(48, -48, 1000, 5000, true, true);
     intake(true);
     matchLoad(true);
 
-    chassis.turnToPoint(70, -46.5, 700);
+    chassis.turnToPoint(70, -46, 1000);
     correct_position(LR, &chassis, false);
-    chassis.moveToPoint(65, -46.5, 3000, {.maxSpeed = 70}, true);
+    chassis.moveToPoint(65, -46, 4000, {.maxSpeed = 70}, true);
     pros::delay(500);
     // chassis.turnToPoint(70, -50, 200);
     // chassis.turnToPoint(70, -46, 200);
@@ -296,20 +302,22 @@ void skills() {
     // chassis.turnToPoint(70, -50, 200);
     // chassis.turnToPoint(70, -48, 200);
     
-    chassis.moveToPoint(48, -46.5, 1000, {.forwards = false});
-    moveTo(36, -58.5, 500, 2000, false, false);
-    moveTo(-37, -58.5, 500, 3000, false, false);
-    moveTo(-48, -48, 500, 1000, false, false);
-    chassis.turnToPoint(-70, -46.5, 500);
+    chassis.moveToPoint(48, -46, 1500, {.forwards = false});
+    moveTo(36, -58.5, 1000, 3000, false, false);
+    moveTo(-37, -58.5, 1000, 4000, false, false);
+    matchLoad(false);
+    moveTo(-48, -48, 1000, 2000, false, false);
+    chassis.turnToPoint(-70, -46, 1000);
     correct_position(LL, &chassis, false);
-    chassis.moveToPoint(-24, -46.5, 1000, {.forwards = false});
+    chassis.moveToPoint(-24, -46, 2000, {.forwards = false});
     chassis.waitUntilDone();
     scoreAndHold(80);
     pros::delay(250);
     lowerScoring();
+    matchLoad(true);
     
     correct_position(LL, &chassis, false);
-    chassis.moveToPoint(-70, -46.5, 3000, {.maxSpeed = 70}, true);
+    chassis.moveToPoint(-70, -46, 5000, {.maxSpeed = 70}, true);
     pros::delay(500);
     // chassis.turnToPoint(-70, -50, 200);
     // chassis.turnToPoint(-70, -46, 200);
@@ -318,17 +326,18 @@ void skills() {
     // chassis.turnToPoint(-70, -50, 200);
     // chassis.turnToPoint(-70, -48, 200);
 
-    chassis.moveToPoint(-24, -46.5, 2000, {.forwards = false});
+    chassis.moveToPoint(-24, -46, 3000, {.forwards = false});
     chassis.waitUntilDone();
     scoreAndHold(80);
     pros::delay(250);
     lowerScoring();
+    matchLoad(false);
 
-    chassis.moveToPoint(-48, -46.5, 2000);
-    moveTo(-62, -24, 500, 2000, true, true);
+    chassis.moveToPoint(-48, -46, 3000);
+    moveTo(-62, -24, 1000, 3000, true, true);
     intake(true);
-    chassis.turnToPoint(-65, 5, 500);
-    chassis.moveToPoint(-65, 5, 3000);
+    chassis.turnToPoint(-62, 5, 1000);
+    chassis.moveToPoint(-62, 5, 5000);
 
 }
 
