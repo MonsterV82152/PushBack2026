@@ -4,10 +4,11 @@ void correct_position(dist_sensor sensor, lemlib::Chassis *chassis, bool x, bool
 {
     double wall_dist = 70.5;
     lemlib::Pose currentPos = chassis->getPose(true);
-    double distanceValue = sensor.sensor->get_distance();
+    double distanceValue = sensor.sensor->get();
 
     if (distanceValue == 9999)
     {
+        std::cout << "distance value invalid, not correcting position" << std::endl;
         return;
     }
     else
@@ -30,6 +31,7 @@ void correct_position(dist_sensor sensor, lemlib::Chassis *chassis, bool x, bool
         x_value = wall_dist * x_value / abs(x_value) - x_value;
         if (abs(x_value - currentPos.x) < correct_rate || forced)
         {
+            std::cout << "Corrected Pose: " << x_value << " " << currentPos.y << std::endl;
             chassis->setPose(x_value, currentPos.y, currentPos.theta, true);
         }
     }
@@ -38,7 +40,9 @@ void correct_position(dist_sensor sensor, lemlib::Chassis *chassis, bool x, bool
         y_value = wall_dist * y_value / abs(y_value) - y_value;
         if (abs(y_value - currentPos.y) < correct_rate || forced)
         {
+            std::cout << "Corrected Pose: " << currentPos.x << " " << y_value << std::endl;
             chassis->setPose(currentPos.x, y_value, currentPos.theta, true);
         }
     }
+    pros::delay(100);
 }

@@ -5,6 +5,14 @@
 void score(double maxSpeed)
 {
     maxScoringSpeed.store(maxSpeed);
+    scoringSpeedFunction = [](double position)
+    { return maxScoringSpeed.load(); };
+    scoringState.store(ScoringState::SCORE_RELEASE);
+}
+
+void score(std::function<double(double)> speedFunction)
+{
+    scoringSpeedFunction = speedFunction;
     scoringState.store(ScoringState::SCORE_RELEASE);
 }
 
@@ -13,6 +21,14 @@ void score(double maxSpeed)
 void scoreAndHold(double maxSpeed)
 {
     maxScoringSpeed.store(maxSpeed);
+    scoringSpeedFunction = [](double position)
+    { return maxScoringSpeed.load(); };
+    scoringState.store(ScoringState::SCORE_HOLD);
+}
+
+void scoreAndHold(std::function<double(double)> speedFunction)
+{
+    scoringSpeedFunction = speedFunction;
     scoringState.store(ScoringState::SCORE_HOLD);
 }
 
@@ -118,15 +134,10 @@ void periodic()
     case ScoringState::IDLE:
         break;
     case ScoringState::SCORE_HOLD:
-        if (currentAngle > SCORE_ANGLE + 30)
+        if (currentAngle > SCORE_ANGLE)
         {
             togglePTO(false);
-            systemMotors.move(abs(maxScoringSpeed.load()));
-        }
-        else if (currentAngle < SCORE_ANGLE)
-        {
-            togglePTO(false);
-            systemMotors.move(20);
+            systemMotors.move(abs(scoringSpeedFunction(currentAngle)));
         }
         else
         {
@@ -138,7 +149,7 @@ void periodic()
         if (currentAngle > SCORE_ANGLE)
         {
             togglePTO(false);
-            systemMotors.move(abs(maxScoringSpeed.load()));
+            systemMotors.move(abs(scoringSpeedFunction(currentAngle)));
         }
         else
         {

@@ -13,11 +13,13 @@ enum class ScoringState
     RESET
 };
 
-const double SCORE_ANGLE = 930; // placeholder value, adjust as needed
-const double DOWN_ANGLE = 2245;   // placeholder value, adjust as needed
+const double SCORE_ANGLE = 940; // placeholder value, adjust as needed
+const double DOWN_ANGLE = 2245; // placeholder value, adjust as needed
 
 inline std::atomic<double> maxRollerSpeed = std::atomic<double>(127);
 inline std::atomic<double> maxScoringSpeed = std::atomic<double>(127);
+inline std::function<double(double)> scoringSpeedFunction = std::function<double(double)>(std::function<double(double)>([](double position)
+                                                                                                                        { return maxScoringSpeed.load(); }));
 inline std::atomic<bool> reverseToggle = std::atomic<bool>(false);
 inline std::atomic<bool> wingState = std::atomic<bool>(false);
 inline std::atomic<bool> intakeToggle = std::atomic<bool>(false);
@@ -25,7 +27,11 @@ inline std::atomic<ScoringState> scoringState = std::atomic<ScoringState>(Scorin
 
 extern void score(double maxSpeed = 127);
 
+extern void score(std::function<double(double)> speedFunction);
+
 extern void scoreAndHold(double maxSpeed = 127);
+
+extern void scoreAndHold(std::function<double(double)> speedFunction);
 
 extern void lowerScoring();
 

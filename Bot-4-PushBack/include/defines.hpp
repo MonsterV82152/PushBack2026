@@ -7,6 +7,8 @@
 #include "sensor_loc.hpp"
 #include "piston.hpp"
 
+inline AutonSelector autonSelect;
+
 // Drivetrain motors
 inline pros::MotorGroup leftDT({-12, 13, -14});
 inline pros::MotorGroup rightDT({18, 17, -20});
@@ -48,7 +50,7 @@ inline Piston lift(&liftPiston);
 inline Piston wing(&wingPiston);
 
 inline lemlib::TrackingWheel verticalWheel(&vTrack, 1.975, 0.05);
-inline lemlib::TrackingWheel horizontalWheel(&hTrack, 1.975, -4.75);
+// inline lemlib::TrackingWheel horizontalWheel(&hTrack, 1.975, -4.75);
 
 inline lemlib::Drivetrain LEMLIB_drivetrain(&leftDT, &rightDT,
                                             10.85,
@@ -56,7 +58,7 @@ inline lemlib::Drivetrain LEMLIB_drivetrain(&leftDT, &rightDT,
                                             600,
                                             1.95);
 
-inline lemlib::OdomSensors LEMLIB_sensors(&verticalWheel, nullptr, &horizontalWheel, nullptr, &imu);
+inline lemlib::OdomSensors LEMLIB_sensors(&verticalWheel, nullptr, nullptr, nullptr, &imu);
 inline lemlib::ControllerSettings LEMLIB_lateral_controller(
     10,     // proportional gain (kP)
     0.1,    // integral gain (kI)
