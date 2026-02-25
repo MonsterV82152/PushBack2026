@@ -40,9 +40,10 @@ void initialize()
     });
     autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", skills});
     autonSelect.start(); // Start autonomous selector task
+    chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
 
-    wingToggle(false); // Initialize wings retracted
-    liftToggle(false); // Initialize lift down
+    wingToggle(true); // Initialize wings retracted
+    liftToggle(true); // Initialize lift up
 }
 
 /// Called when robot is disabled
@@ -60,12 +61,13 @@ void autonomous()
     // right();  // Alternative right side routine
     // soloAWP();  // Run solo AWP (Autonomous Win Point) strategy
     // right2();  // Alternative strategy
-    skills(); // Run skills routine
+    // skills(); // Run skills routine
 }
 
 /// Main driver control loop
 void opcontrol()
 {
+    wingToggle(false);
     // skills();  // Skills routine disabled
     while (true)
     {
@@ -76,6 +78,14 @@ void opcontrol()
         // Arcade drive control with 0.6 deadzone
         chassis.arcade(LEFT_Y, RIGHT_X, false, 0.67);
 
+        /*
+        *******OPTIMIZED DRIVER CONTROL LOGIC FOR SCORING AND LIFT***********
+            - if l1 pressed and lift isnt up, lift goes up
+            - if l1 pressed and lift is up, score
+            - if l2 pressed and lift isnt down, list goes down
+            - if l2 pressed and lift is down, score
+        */
+
         // L1: Scoring control
         if (L1_NEW_PRESS)
         {
@@ -83,33 +93,57 @@ void opcontrol()
             {
                 if (autonSelect.isSkills())
                     scoreAndHold([&](double position)
-                                 { return 80; }); // change for skills 80/match 127
+                                 { return powf(((position - SCORE_ANGLE) / (DOWN_ANGLE - SCORE_ANGLE)), 5) * 102 + 25;; }); // change for skills 80/match 127
                 else
                     scoreAndHold(127); // change for skills 80/match 127
             }
             else
             {
-                if (autonSelect.isSkills())
-                    scoreAndHold([&](double position)
-                                 { return powf(((position - SCORE_ANGLE) / (DOWN_ANGLE - SCORE_ANGLE)), 5) * 102 + 25; }); // change for skills 30/match 90
-                else
-                    scoreAndHold(90); // change for skills 30/match 90
+                // if (autonSelect.isSkills())
+                //     scoreAndHold([&](double position)
+                //                  { return powf(((position - SCORE_ANGLE) / (DOWN_ANGLE - SCORE_ANGLE)), 5) * 102 + 25; }); // change for skills 30/match 90
+                // else
+                //     scoreAndHold(90); // change for skills 30/match 90
+                liftToggle(true);
             }
         }
-        else if (L1_RELEASED)
+        else if (L1_RELEASED && scoringState == ScoringState::SCORE_HOLD)
         {
             lowerScoring(); // Return to idle position
+        }
+        
+        if (L2_NEW_PRESS) {
+            if (!lift.getState())
+            {
+                if (autonSelect.isSkills())
+                    scoreAndHold([&](double position)
+                                 { return powf(((position - SCORE_ANGLE) / (DOWN_ANGLE - SCORE_ANGLE)), 5) * 102 + 25;; }); // change for skills 80/match 127
+                else
+                    scoreAndHold(90); // change for skills 80/match 127
+            }
+            else
+            {
+                // if (autonSelect.isSkills())
+                //     scoreAndHold([&](double position)
+                //                  { return powf(((position - SCORE_ANGLE) / (DOWN_ANGLE - SCORE_ANGLE)), 5) * 102 + 25; }); // change for skills 30/match 90
+                // else
+                //     scoreAndHold(90); // change for skills 30/match 90
+                liftToggle(false);
+            }
+        }
+        else if (L2_RELEASED && scoringState == ScoringState::SCORE_HOLD) {
+            lowerScoring();
         }
         // DOWN: Wing control (only when lift is up)
         if (lift.getState())
         {
             if (DOWN_NEW_PRESS)
             {
-                wingToggle(false); // Retract wings
+                wingToggle(true); // Retract wings
             }
             else if (DOWN_RELEASED)
             {
-                wingToggle(true); // Extend wings
+                wingToggle(false); // Extend wings
             }
         }
         // L2: Lift toggle with automatic wing control
@@ -129,10 +163,14 @@ void opcontrol()
         if (R2_NEW_PRESS)
         {
             intakeLiftToggle(true); // Raise intake lift
-            if (autonSelect.isSkills())
+            if (autonSelect.isSkills()) {
+                matchLoad(true);
+                pros::delay(50);
                 reverse(true, 40); // Start reverse at slower speed for skills
-            else
+            }
+            else {
                 reverse(true, 127); // Start reverse at full speed (change for skills 40) / match 127
+            }
         }
         else if (R2_RELEASED)
         {
@@ -173,13 +211,13 @@ void opcontrol()
         //     delay(5500);
         //     master.print(1, 0, "X: %.2f, Y: %.4f", chassis.getPose().x, chassis.getPose().y);
         // }
-        if (Y_NEW_PRESS)
-        {
-            // Quick rotation test
-            chassis.setPose(0, 0, 0);
-            chassis.turnToHeading(-80, 500);
-            chassis.turnToHeading(0, 500);
-        }
+        // if (Y_NEW_PRESS)
+        // {
+        //     // Quick rotation test
+        //     chassis.setPose(0, 0, 0);
+        //     chassis.turnToHeading(-80, 500);
+        //     chassis.turnToHeading(0, 500);
+        // }
         // if (X_NEW_PRESS)
         // {
         //     // Forward movement distance test (disabled)
