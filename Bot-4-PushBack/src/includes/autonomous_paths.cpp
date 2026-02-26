@@ -298,13 +298,13 @@ void skills()
     chassis.turnToHeading(0, 1000);
     chassis.waitUntilDone();
     correct_position(LR, &chassis, true, true);
-    chassis.moveToPoint(36, 36, 1000);
+    chassis.moveToPoint(36, 36, 1200);//1000
     // chassis.turnToPoint(0, 36, 700);
     chassis.turnToHeading(270, 1000);
     chassis.waitUntilDone();
     correct_position(LR, &chassis, false, true);
-    chassis.turnToPoint(10, 10, 700);
-    chassis.moveToPoint(10, 10, 2000);
+    chassis.turnToPoint(10, 6.5, 700);
+    chassis.moveToPoint(10, 6.5, 2000);
     intakeLiftToggle(true);
     reverse(true, 40);
     pros::delay(2000);
@@ -329,12 +329,13 @@ void skills()
 
     chassis.moveToPoint(40, -48, 1500, {.forwards = false});
     moveTo(36, -58.5, 700, 1000, false, false);
-    // moveTo(-37, -60, 700, 2000, false, false);
+    // moveTo(-37, -0, 700, 2000, false, false);
     chassis.turnToPoint(36, -60, 700, {false});
     chassis.waitUntilDone();
     correct_position(LR, &chassis, false);
     chassis.moveToPoint(36, -60, 1000, {.forwards = false});
-
+    //chassis.turnToPoint(-48, -60, 700); //add to make it smoother
+    //chassis.moveToPoint(-48, -60, 700); 
     matchLoad(false);
     moveTo(-48, -48, 700, 1000, false, false);
     correct_position(LR, &chassis, false);
