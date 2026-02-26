@@ -99,65 +99,32 @@ void opcontrol()
             }
             else
             {
-                // if (autonSelect.isSkills())
-                //     scoreAndHold([&](double position)
-                //                  { return powf(((position - SCORE_ANGLE) / (DOWN_ANGLE - SCORE_ANGLE)), 5) * 102 + 25; }); // change for skills 30/match 90
-                // else
-                //     scoreAndHold(90); // change for skills 30/match 90
-                liftToggle(true);
+                if (autonSelect.isSkills())
+                    scoreAndHold([&](double position)
+                                 { return powf(((position - SCORE_ANGLE) / (DOWN_ANGLE - SCORE_ANGLE)), 5) * 102 + 25; }); // change for skills 30/match 90
+                else
+                    scoreAndHold(90); // change for skills 30/match 90
+                // liftToggle(true);
             }
         }
         else if (L1_RELEASED && scoringState == ScoringState::SCORE_HOLD)
         {
             lowerScoring(); // Return to idle position
         }
-        
-        if (L2_NEW_PRESS) {
-            if (!lift.getState())
-            {
-                if (autonSelect.isSkills())
-                    scoreAndHold([&](double position)
-                                 { return powf(((position - SCORE_ANGLE) / (DOWN_ANGLE - SCORE_ANGLE)), 5) * 102 + 25;; }); // change for skills 80/match 127
-                else
-                    scoreAndHold(90); // change for skills 80/match 127
-            }
-            else
-            {
-                // if (autonSelect.isSkills())
-                //     scoreAndHold([&](double position)
-                //                  { return powf(((position - SCORE_ANGLE) / (DOWN_ANGLE - SCORE_ANGLE)), 5) * 102 + 25; }); // change for skills 30/match 90
-                // else
-                //     scoreAndHold(90); // change for skills 30/match 90
-                liftToggle(false);
-            }
-        }
-        else if (L2_RELEASED && scoringState == ScoringState::SCORE_HOLD) {
-            lowerScoring();
-        }
+
         // DOWN: Wing control (only when lift is up)
-        if (lift.getState())
+        if (DOWN_NEW_PRESS)
         {
-            if (DOWN_NEW_PRESS)
-            {
-                wingToggle(true); // Retract wings
-            }
-            else if (DOWN_RELEASED)
-            {
-                wingToggle(false); // Extend wings
-            }
+            wingToggle(true); // Retract wings
+        }
+        else if (DOWN_RELEASED)
+        {
+            wingToggle(false); // Extend wings
         }
         // L2: Lift toggle with automatic wing control
         if (L2_NEW_PRESS)
         {
             liftToggle(); // Toggle lift up/down
-            if (!lift.getState())
-            {
-                wingToggle(false); // Retract wings when lifting down
-            }
-            else
-            {
-                wingToggle(true); // Extend wings when lifting up
-            }
         }
         // R2: Reverse (outtake) control
         if (R2_NEW_PRESS)
