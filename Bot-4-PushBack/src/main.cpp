@@ -61,7 +61,7 @@ void autonomous()
     // right();  // Alternative right side routine
     // soloAWP();  // Run solo AWP (Autonomous Win Point) strategy
     // right2();  // Alternative strategy
-    // skills(); // Run skills routine
+    skills(); // Run skills routine
 }
 
 /// Main driver control loop
@@ -71,12 +71,16 @@ void opcontrol()
     // skills();  // Skills routine disabled
     while (true)
     {
+        if (A_NEW_PRESS) {
+            master.print(0, 0, "Distance: %.2f", LOCR.get());
+        }
         // Display chassis position on LCD
         // lcd::print(0, "X: %.3f, %.3f, %.3f", chassis.getPose().x, chassis.getPose().y, chassis.getPose().theta); // x, y, theta
         // lcd::print(1, "Y: %.3f", ); // y
-
+        double lefty = LEFT_Y;
+        double rightx = RIGHT_X;
         // Arcade drive control with 0.6 deadzone
-        chassis.arcade(LEFT_Y, RIGHT_X, false, 0.67);
+        chassis.arcade(lefty, rightx+lefty*0.05, false, 0.67);
 
         /*
         *******OPTIMIZED DRIVER CONTROL LOGIC FOR SCORING AND LIFT***********
@@ -93,7 +97,7 @@ void opcontrol()
             {
                 if (autonSelect.isSkills())
                     scoreAndHold([&](double position)
-                                 { return powf(((position - SCORE_ANGLE) / (DOWN_ANGLE - SCORE_ANGLE)), 5) * 102 + 25;; }); // change for skills 80/match 127
+                                 {return powf(((position - SCORE_ANGLE) / (DOWN_ANGLE - SCORE_ANGLE)), 5) * 95 + 35; }); // change for skills 80/match 127
                 else
                     scoreAndHold(127); // change for skills 80/match 127
             }
@@ -130,6 +134,23 @@ void opcontrol()
         if (R2_NEW_PRESS)
         {
             intakeLiftToggle(true); // Raise intake lift
+            // if (autonSelect.isSkills()) {
+            //     matchLoad(true);
+            //     pros::delay(50);
+            //     reverse(true, 40); // Start reverse at slower speed for skills
+            // }
+            // else {
+                reverse(true, 127); // Start reverse at full speed (change for skills 40) / match 127
+            // }
+        }
+        else if (R2_RELEASED)
+        {
+            intakeLiftToggle(false); // Lower intake lift
+            reverse(false);          // Stop reverse
+        }
+        if (X_NEW_PRESS)
+        {
+            intakeLiftToggle(true); // Raise intake lift
             if (autonSelect.isSkills()) {
                 matchLoad(true);
                 pros::delay(50);
@@ -139,8 +160,10 @@ void opcontrol()
                 reverse(true, 127); // Start reverse at full speed (change for skills 40) / match 127
             }
         }
-        else if (R2_RELEASED)
+        else if (X_RELEASED)
         {
+            if (autonSelect.isSkills())
+            matchLoad(false);
             intakeLiftToggle(false); // Lower intake lift
             reverse(false);          // Stop reverse
         }
@@ -178,13 +201,13 @@ void opcontrol()
         //     delay(5500);
         //     master.print(1, 0, "X: %.2f, Y: %.4f", chassis.getPose().x, chassis.getPose().y);
         // }
-        // if (Y_NEW_PRESS)
-        // {
-        //     // Quick rotation test
-        //     chassis.setPose(0, 0, 0);
-        //     chassis.turnToHeading(-80, 500);
-        //     chassis.turnToHeading(0, 500);
-        // }
+        if (Y_NEW_PRESS)
+        {
+            // Quick rotation test
+            chassis.setPose(0, 0, 0);
+            chassis.turnToHeading(-80, 500);
+            chassis.turnToHeading(0, 500);
+        }
         // if (X_NEW_PRESS)
         // {
         //     // Forward movement distance test (disabled)
