@@ -10,7 +10,7 @@
  */
 struct dist_sensor
 {
-    pros::Distance *sensor;
+    pros::Distance &sensor;
     lemlib::Pose offset;
 };
 /**

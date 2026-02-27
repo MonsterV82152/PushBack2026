@@ -1,8 +1,7 @@
 #ifndef AUTON_HPP
 #define AUTON_HPP
 
-#include "movements.hpp"
-#include "sensor_loc.hpp"
+#include "includes.hpp"
 
 void left();
 void left2();

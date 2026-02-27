@@ -3,7 +3,14 @@
 #ifndef MOVEMENTS_HPP
 #define MOVEMENTS_HPP
 
-#include "includes.hpp"
+#include "globals.hpp"
+#include "defines.hpp"
+#include <string>
+#include <stdlib.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <cmath>
 
 enum class ScoringState
 {
@@ -13,7 +20,7 @@ enum class ScoringState
     RESET
 };
 
-const double SCORE_ANGLE = 940; // placeholder value, adjust as needed
+const double SCORE_ANGLE = 950; // placeholder value, adjust as needed
 const double DOWN_ANGLE = 2245; // placeholder value, adjust as needed
 
 inline std::atomic<double> maxRollerSpeed = std::atomic<double>(127);

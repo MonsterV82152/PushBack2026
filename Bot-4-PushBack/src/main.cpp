@@ -1,8 +1,5 @@
 #include "includes.hpp"
-#include "movements.hpp"
-#include "autonomous_selector.hpp"
-
-using namespace pros;
+#include "autonomous_paths.hpp"
 
 /// Callback for center button press (currently unused)
 void on_center_button() {}
@@ -16,7 +13,7 @@ void initialize()
     systemMotors.set_zero_position(0); // Reset system motor positions
 
     // Start background task for periodic control loop
-    // pros::lcd::initialize(); // Initialize brain LCD
+    pros::lcd::initialize(); // Initialize brain LCD
     pros::Task periodicTask([&]()
                             {
         while (true)
@@ -39,7 +36,7 @@ void initialize()
         autonomousRoute{"red", "DriveOff", "a", test},
     });
     autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", skills});
-    autonSelect.start(); // Start autonomous selector task
+    // autonSelect.start(); // Start autonomous selector task
     chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
 
     wingToggle(true); // Initialize wings retracted
@@ -72,11 +69,11 @@ void opcontrol()
     while (true)
     {
         if (A_NEW_PRESS) {
-            master.print(0, 0, "Distance: %.2f", LOCR.get());
+            // master.print(0, 0, "%d %d %d %d", LOCR.get() , LOCL.get() , LOCF.get(), LOCB.get());
+            correct_position(LR, &chassis, false, true);
         }
         // Display chassis position on LCD
-        // lcd::print(0, "X: %.3f, %.3f, %.3f", chassis.getPose().x, chassis.getPose().y, chassis.getPose().theta); // x, y, theta
-        // lcd::print(1, "Y: %.3f", ); // y
+        pros::lcd::print(0, "%.3f, %.3f, %.3f", chassis.getPose().x, chassis.getPose().y, chassis.getPose().theta); // x, y, theta
         double lefty = LEFT_Y;
         double rightx = RIGHT_X;
         // Arcade drive control with 0.6 deadzone
@@ -155,6 +152,8 @@ void opcontrol()
                 matchLoad(true);
                 pros::delay(50);
                 reverse(true, 40); // Start reverse at slower speed for skills
+                pros::delay(300);
+                matchLoad(false);
             }
             else {
                 reverse(true, 127); // Start reverse at full speed (change for skills 40) / match 127

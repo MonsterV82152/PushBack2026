@@ -116,6 +116,7 @@ void intakeLiftToggle(bool value)
 /// @param value Desired PTO state
 void togglePTO(bool value)
 {
+    systemMotors.move(systemMotors.get_voltage()*0.5);
     if (pto.getState() != value)
     {
         pto.setState(value);
