@@ -11,6 +11,7 @@
 #include <sstream>
 #include <string>
 #include <cmath>
+#include <atomic>
 
 enum class ScoringState
 {

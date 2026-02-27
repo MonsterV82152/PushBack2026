@@ -461,7 +461,7 @@ void skills()
     chassis.waitUntilDone();
     correct_position(LL, &chassis, true);
     move(67, 67);
-    pros::delay(2000);
+    pros::delay(1800);
     move(0, 0);
     correct_position(LL, &chassis, true);
     move(-30, -30);
@@ -474,11 +474,11 @@ void skills()
     chassis.turnToPoint(28, -20, 700, {false});
     chassis.moveToPoint(28, -20, 1000, {.forwards = false});
     liftToggle(false);
-    chassis.turnToPoint(4.5, 4.5, 700, {false});
-    chassis.moveToPoint(16.5, -7.5, 1500, {.forwards = false, .maxSpeed = 80});
+    chassis.turnToPoint(4, 4, 700, {false});
+    chassis.moveToPoint(16, -8.5, 1500, {.forwards = false, .maxSpeed = 80});
     chassis.waitUntilDone();
     scoreAndHold([&](double position)
-          { return powf(((position - SCORE_ANGLE) / (DOWN_ANGLE - SCORE_ANGLE)), 5) * 102 + 25; });
+                 { return powf(((position - SCORE_ANGLE) / (DOWN_ANGLE - SCORE_ANGLE)), 5) * 102 + 25; });
     pros::delay(3000);
     chassis.moveToPoint(48, -46, 1500);
     pros::delay(500);
@@ -497,16 +497,16 @@ void skills()
     matchLoad(false);
     chassis.waitUntilDone();
     correct_position(LR, &chassis, false);
-    chassis.moveToPoint(-34, -64, 1500, {.forwards = false});
-    chassis.turnToPoint(-34, -48, 600);
+    chassis.moveToPoint(-36, -64, 1500, {.forwards = false});
+    chassis.turnToPoint(-36, -48, 600);
     chassis.waitUntilDone();
     correct_position(LL, &chassis, true);
     correct_position(LB, &chassis, false);
-    chassis.moveToPoint(-40, -49, 1000);
+    chassis.moveToPoint(-42, -50, 1000);
     chassis.waitUntilDone();
     correct_position(LB, &chassis, false);
-    chassis.turnToPoint(-24, -49, 600, {false});
-    chassis.moveToPoint(-24, -49, 1000, {.forwards = false});
+    chassis.turnToPoint(-24, -50, 600, {false});
+    chassis.moveToPoint(-24, -50, 1000, {.forwards = false});
     chassis.waitUntilDone();
     move(-10, -10);
     score([&](double position)

@@ -13,7 +13,7 @@ void initialize()
     systemMotors.set_zero_position(0); // Reset system motor positions
 
     // Start background task for periodic control loop
-    pros::lcd::initialize(); // Initialize brain LCD
+    // pros::lcd::initialize(); // Initialize brain LCD
     pros::Task periodicTask([&]()
                             {
         while (true)
@@ -36,7 +36,7 @@ void initialize()
         autonomousRoute{"red", "DriveOff", "a", test},
     });
     autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", skills});
-    // autonSelect.start(); // Start autonomous selector task
+    autonSelect.start(); // Start autonomous selector task
     chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
 
     wingToggle(true); // Initialize wings retracted
@@ -52,7 +52,7 @@ void competition_initialize() {}
 /// Autonomous routine - runs selected autonomous strategy
 void autonomous()
 {
-    // autonSelect.runAuton();  // Use autonomous selector
+    // autonSelect.runAuton(); // Use autonomous selector
     // chassis.setPose(0, 0, 0);
     // chassis.moveToPoint(0, 24, 10000);
     // right();  // Alternative right side routine
@@ -68,16 +68,17 @@ void opcontrol()
     // skills();  // Skills routine disabled
     while (true)
     {
-        if (A_NEW_PRESS) {
+        if (A_NEW_PRESS)
+        {
             // master.print(0, 0, "%d %d %d %d", LOCR.get() , LOCL.get() , LOCF.get(), LOCB.get());
             correct_position(LR, &chassis, false, true);
         }
         // Display chassis position on LCD
-        pros::lcd::print(0, "%.3f, %.3f, %.3f", chassis.getPose().x, chassis.getPose().y, chassis.getPose().theta); // x, y, theta
+        // pros::lcd::print(0, "%.3f, %.3f, %.3f", chassis.getPose().x, chassis.getPose().y, chassis.getPose().theta); // x, y, theta
         double lefty = LEFT_Y;
         double rightx = RIGHT_X;
         // Arcade drive control with 0.6 deadzone
-        chassis.arcade(lefty, rightx+lefty*0.05, false, 0.67);
+        chassis.arcade(lefty, rightx + lefty * 0.05, false, 0.67);
 
         /*
         *******OPTIMIZED DRIVER CONTROL LOGIC FOR SCORING AND LIFT***********
@@ -94,7 +95,7 @@ void opcontrol()
             {
                 if (autonSelect.isSkills())
                     scoreAndHold([&](double position)
-                                 {return powf(((position - SCORE_ANGLE) / (DOWN_ANGLE - SCORE_ANGLE)), 5) * 95 + 35; }); // change for skills 80/match 127
+                                 { return powf(((position - SCORE_ANGLE) / (DOWN_ANGLE - SCORE_ANGLE)), 5) * 95 + 35; }); // change for skills 80/match 127
                 else
                     scoreAndHold(127); // change for skills 80/match 127
             }
@@ -131,13 +132,13 @@ void opcontrol()
         if (R2_NEW_PRESS)
         {
             intakeLiftToggle(true); // Raise intake lift
-            // if (autonSelect.isSkills()) {
-            //     matchLoad(true);
-            //     pros::delay(50);
-            //     reverse(true, 40); // Start reverse at slower speed for skills
-            // }
-            // else {
-                reverse(true, 127); // Start reverse at full speed (change for skills 40) / match 127
+                                    // if (autonSelect.isSkills()) {
+                                    //     matchLoad(true);
+                                    //     pros::delay(50);
+                                    //     reverse(true, 40); // Start reverse at slower speed for skills
+                                    // }
+                                    // else {
+            reverse(true, 127);     // Start reverse at full speed (change for skills 40) / match 127
             // }
         }
         else if (R2_RELEASED)
@@ -148,21 +149,23 @@ void opcontrol()
         if (X_NEW_PRESS)
         {
             intakeLiftToggle(true); // Raise intake lift
-            if (autonSelect.isSkills()) {
+            if (autonSelect.isSkills())
+            {
                 matchLoad(true);
                 pros::delay(50);
                 reverse(true, 40); // Start reverse at slower speed for skills
                 pros::delay(300);
                 matchLoad(false);
             }
-            else {
+            else
+            {
                 reverse(true, 127); // Start reverse at full speed (change for skills 40) / match 127
             }
         }
         else if (X_RELEASED)
         {
             if (autonSelect.isSkills())
-            matchLoad(false);
+                matchLoad(false);
             intakeLiftToggle(false); // Lower intake lift
             reverse(false);          // Stop reverse
         }
