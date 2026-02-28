@@ -96,40 +96,55 @@ void driveOff()
 }
 void soloAWP()
 {
-    chassis.setPose(-46, 0, 0); // initial position
+    chassis.setPose(-46, -8, 0); // initial position
     liftToggle(true);
     intake(true);
 
-    // chassis.moveToPoint(-46, 8, 800);
+    chassis.moveToPoint(-46, 8, 500);
 
     // drive to matchloader
-    chassis.moveToPoint(-46, -32, 700, {.forwards = false, .earlyExitRange = 8});
-    chassis.moveToPoint(-46, -47, 550, {.forwards = false, .maxSpeed = 90});
+    // chassis.moveToPoint(-46, -32, 700, {.forwards = false, .earlyExitRange = 8});
+    correct_position(LL, &chassis, false);
+    chassis.moveToPoint(-46, -48, 1200, {false});
+    chassis.waitUntil(24);
+    correct_position(LB, &chassis, true);
 
     // matchload
-    correct_position(LL, &chassis, false);
-    chassis.turnToPoint(-70, -47, 700);
+    chassis.turnToPoint(-70, -48, 700);
     matchLoad(true);
-    chassis.moveToPoint(-65, -47, 200, {.earlyExitRange = 8});
-    chassis.moveToPoint(-70, -47, 300, {.maxSpeed = 90});
+    chassis.moveToPoint(-65, -48, 200, {.earlyExitRange = 8});
+    chassis.moveToPoint(-70, -48, 300, {.maxSpeed = 70});
+    correct_position(LL, &chassis, false);
 
     // score
-    chassis.arcade(-30, 0);
+    chassis.arcade(10, 0);
     pros::delay(1000);
     correct_position(LL, &chassis, false);
-    chassis.moveToPoint(-24, -47, 1000, {.forwards = false, .maxSpeed = 80});
+    chassis.moveToPoint(-24, -49, 1000, {.forwards = false, .maxSpeed = 80});
     chassis.waitUntilDone();
-    score(100);
+    score();
     pros::delay(1000);
     matchLoad(false);
     intake(true);
 
     // low goal
-    chassis.arcade(-70, 127);
-    pros::delay(550);
-    chassis.moveToPoint(-24, -24, 1000);
-    chassis.turnToPoint(0, 0, 400);
-    chassis.moveToPoint(-11, -11, 500);
+    chassis.arcade(-60, 127);
+    pros::delay(700);
+    move(0, 0);
+    pros::delay(100);
+    int counter = 0;
+    if (correct_position(LB, &chassis, false, false, 24))
+    {
+        counter += 1;
+    }
+    if (correct_position(LL, &chassis, true))
+    {
+        counter += 2;
+    }
+    master.print(0, 0, "Counter: %d", counter);
+    chassis.moveToPoint(-22, -24, 1000);
+    chassis.turnToPoint(1, -1, 400);
+    chassis.moveToPoint(-11, -13, 500);
     chassis.waitUntilDone();
     reverse(true, 50); // change the number to make scoring lowgoal fast/slow. 0-127
     pros::delay(1000);
@@ -139,6 +154,8 @@ void soloAWP()
     // middle goal
     chassis.moveToPoint(-24, -24, 700, {.forwards = false});
     chassis.turnToPoint(-24, 24, 400);
+    chassis.waitUntilDone();
+    correct_position(LL, &chassis, true);
     chassis.moveToPoint(-24, 12, 700, {.earlyExitRange = 5});
     chassis.moveToPoint(-24, 24, 500, {.maxSpeed = 80});
     pros::delay(100);
@@ -147,6 +164,7 @@ void soloAWP()
     chassis.turnToPoint(0, 0, 700, {false});
     chassis.moveToPoint(-12, 12, 700, {.forwards = false});
     chassis.waitUntilDone();
+    matchLoad(false);
     scoreAndHold(60);
     pros::delay(2000);
     lowerScoring();
@@ -471,11 +489,11 @@ void skills()
     chassis.setPose(currentPose.x, -20, currentPose.theta);
     chassis.moveToPoint(66, -28, 500);
 
-    chassis.turnToPoint(28, -20, 700, {false});
-    chassis.moveToPoint(28, -20, 1000, {.forwards = false});
+    chassis.turnToPoint(28, -24, 700, {false});
+    chassis.moveToPoint(28, -24, 1000, {.forwards = false});
     liftToggle(false);
     chassis.turnToPoint(4, 4, 700, {false});
-    chassis.moveToPoint(16, -8.5, 1500, {.forwards = false, .maxSpeed = 80});
+    chassis.moveToPoint(16, -10, 1500, {.forwards = false, .maxSpeed = 80});
     chassis.waitUntilDone();
     scoreAndHold([&](double position)
                  { return powf(((position - SCORE_ANGLE) / (DOWN_ANGLE - SCORE_ANGLE)), 5) * 102 + 25; });
@@ -514,9 +532,14 @@ void skills()
     pros::delay(1600);
     matchLoad(true);
     correct_position(LL, &chassis, false);
-    chassis.moveToPoint(-70, -48, 1300, {.maxSpeed = 67});
+    chassis.moveToPoint(-70, -48, 1300, {.maxSpeed = 64});
     chassis.waitUntilDone();
-    pros::delay(1500);
+    move(-10, -10);
+    pros::delay(200);
+    move(20, 20);
+    pros::delay(400);
+    move(0, 0);
+    pros::delay(1000);
     chassis.moveToPoint(-24, -49, 1500, {.forwards = false, .maxSpeed = 70});
     chassis.waitUntilDone();
     move(-10, -10);
@@ -535,12 +558,13 @@ void skills()
     pros::delay(1300);
     move(0, 0);
 }
+
 void sawp4()
 {
     chassis.setPose(-48, 0, 0);
     liftToggle(true);
     intake(true);
-    chassis.moveToPoint(-46, 5, 400);
+    chassis.moveToPoint(-46, 5, 400); // push
     chassis.moveToPoint(-46, -32, 700, {.forwards = false, .earlyExitRange = 8});
     chassis.moveToPoint(-46, -48, 550, {.forwards = false, .maxSpeed = 90});
     correct_position(LL, &chassis, false);

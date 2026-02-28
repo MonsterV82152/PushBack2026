@@ -56,15 +56,16 @@ void autonomous()
     // chassis.setPose(0, 0, 0);
     // chassis.moveToPoint(0, 24, 10000);
     // right();  // Alternative right side routine
-    // soloAWP();  // Run solo AWP (Autonomous Win Point) strategy
+    soloAWP(); // Run solo AWP (Autonomous Win Point) strategy
     // right2();  // Alternative strategy
-    skills(); // Run skills routine
+    // skills(); // Run skills routine
 }
 
 /// Main driver control loop
 void opcontrol()
 {
     wingToggle(false);
+    lowerScoring();
     // skills();  // Skills routine disabled
     while (true)
     {
