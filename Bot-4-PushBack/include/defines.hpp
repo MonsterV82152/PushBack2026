@@ -31,8 +31,8 @@ inline pros::Distance LOCR(9);
 // loc sensor wrappers with robot relative poses (x,y,theta);
 inline dist_sensor LR(LOCR, lemlib::Pose(5.5, -3.25, 90));
 inline dist_sensor LL(LOCL, lemlib::Pose(-4, 3.5, -90));
-inline dist_sensor LF(LOCF, lemlib::Pose(-4.25, -3.5, 180));
-inline dist_sensor LB(LOCB, lemlib::Pose(4, 2.5, 0));
+inline dist_sensor LF(LOCF, lemlib::Pose(-4.25, -3.5, 0));
+inline dist_sensor LB(LOCB, lemlib::Pose(-4, -2.5, 180));
 
 // pistons
 inline pros::ADIDigitalOut matchLoaderPiston('D');

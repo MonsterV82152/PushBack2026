@@ -11,6 +11,7 @@ void initialize()
     // autonSelect.start();
     chassis.calibrate();               // Calibrate IMU and odometry
     systemMotors.set_zero_position(0); // Reset system motor positions
+    matchLoad(false);
     pto.init();
 
     // Start background task for periodic control loop
@@ -62,6 +63,7 @@ void autonomous()
     // right2(); // Alternative strategy
     // left();
     // skills(); // Run skills routine
+    right3();
 }
 
 /// Main driver control loop

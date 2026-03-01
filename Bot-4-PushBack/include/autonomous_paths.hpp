@@ -11,6 +11,7 @@ void soloAWP();
 
 void right();
 void right2();
+void right3();
 void sawp4();
 void driveOff();
 void skills();

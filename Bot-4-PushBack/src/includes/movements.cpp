@@ -102,7 +102,7 @@ void matchLoad()
 /// @param value Desired loader state
 void matchLoad(bool value)
 {
-    matchLoader.setState(value);
+    matchLoader.setState(!value);
 }
 
 /// Sets intake lift state

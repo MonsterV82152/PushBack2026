@@ -688,38 +688,58 @@ void skills()
     move(0, 0);
 }
 
-void right3() {
-    chassis.setPose(-48, -20, 180);
+void right3()
+{
+    chassis.setPose(-48, -14, 180);
     intake(true);
     correct_position(LR, &chassis, true);
-    chassis.moveToPoint(-48, -48, 1000);
-    chassis.turnToPoint(-70, -48, 700);
+    chassis.moveToPoint(-48, -48, 900);
+    chassis.turnToPoint(-70, -48, 600);
     matchLoad(true);
-    chassis.moveToPoint(-70, -48, 1000, {.maxSpeed = 60});
+    chassis.moveToPoint(-70, -48, 800, {.maxSpeed = 67});
     chassis.waitUntilDone();
+    pros::delay(200);
     correct_position(LL, &chassis, false);
-    chassis.moveToPoint(-24, -48, 1000, {.forwards = false, .maxSpeed = 80});
+    chassis.moveToPoint(-38, -48, 500, {.forwards = false, .maxSpeed = 90, .minSpeed = 70, .earlyExitRange = 5});
+    chassis.moveToPoint(-24, -48, 700, {.forwards = false, .maxSpeed = 40});
     chassis.waitUntilDone();
     score(127);
+    lemlib::Pose currentPose = chassis.getPose();
+    chassis.setPose(-29.5, -48, currentPose.theta);
     matchLoad(false);
-    pros::delay(2000);
-    chassis.moveToPoint(-48, -48, 1000);
+    pros::delay(1000);
+    chassis.moveToPoint(-48, -48, 700);
+    chassis.turnToPoint(-36, -39, 700);
+    chassis.moveToPoint(-36, -39, 700);
+    wingToggle(true);
+    chassis.turnToPoint(-16, -39, 300);
+    chassis.moveToPoint(-16, -39, 800, {.minSpeed = 127});
     chassis.waitUntilDone();
-    correct_position(LL, &chassis, false);
-    chassis.turnToPoint(0, 0, 700);
-    chassis.moveToPoint(-24, -24, 1000);
-    chassis.moveToPoint(-11, -11, 1000);
+    correct_position(LR, &chassis, false);
+    chassis.moveToPoint(-50, -37, 1000, {false});
+    chassis.turnToHeading(90, 100);
+    chassis.waitUntilDone();
+    if (correct_position(LB, &chassis, true, true))
+        master.rumble("-");
+    correct_position(LR, &chassis, false, true);
+    chassis.turnToPoint(0, 0, 800);
+    chassis.moveToPoint(-28, -24.5, 1000, {.maxSpeed = 60});
+    pros::delay(700);
+    matchLoad(true);
+    pros::delay(300);
+    matchLoad(false);
+    chassis.moveToPoint(-12, -12, 1000, {.maxSpeed = 60});
     chassis.waitUntilDone();
     intakeLiftToggle(true);
     reverse(true, 60);
-    pros::delay(1500);
+    pros::delay(1000);
     reverse(false);
-    liftToggle(false);
-    chassis.moveToPoint(-36, -36, 1000, {false});
-    chassis.turnToPoint(0, -36, 700);
+    intakeLiftToggle(false);
+    chassis.moveToPoint(-36, -36, 900, {false});
+    chassis.turnToPoint(-13, -36, 500);
     wingToggle(true);
-    chassis.moveToPoint(0, -36, 1000);
-
+    chassis.moveToPoint(-13, -36, 1000);
+    chassis.waitUntilDone();
 }
 
 void sawp4()
