@@ -4,6 +4,7 @@
 #include "includes.hpp"
 
 void left();
+void leftNoMiddle();
 void left2();
 
 void soloAWP();

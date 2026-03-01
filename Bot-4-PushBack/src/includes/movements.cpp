@@ -116,7 +116,7 @@ void intakeLiftToggle(bool value)
 /// @param value Desired PTO state
 void togglePTO(bool value)
 {
-    systemMotors.move(systemMotors.get_voltage()*0.5);
+    systemMotors.move(systemMotors.get_voltage() * 0.5);
     if (pto.getState() != value)
     {
         pto.setState(value);
@@ -137,19 +137,19 @@ void periodic()
     case ScoringState::SCORE_HOLD:
         if (currentAngle > SCORE_ANGLE)
         {
-            togglePTO(false);
+            togglePTO(true);
             systemMotors.move(abs(scoringSpeedFunction(currentAngle)));
         }
         else
         {
-            togglePTO(false);
+            togglePTO(true);
             systemMotors.move(0);
         }
         break;
     case ScoringState::SCORE_RELEASE:
         if (currentAngle > SCORE_ANGLE)
         {
-            togglePTO(false);
+            togglePTO(true);
             systemMotors.move(abs(scoringSpeedFunction(currentAngle)));
         }
         else
@@ -160,12 +160,12 @@ void periodic()
     case ScoringState::RESET:
         if (currentAngle < DOWN_ANGLE)
         {
-            togglePTO(false);
+            togglePTO(true);
             systemMotors.move(-127);
         }
         else
         {
-            togglePTO(false);
+            togglePTO(true);
             systemMotors.move(0);
             scoringState.store(ScoringState::IDLE);
         }
@@ -175,12 +175,12 @@ void periodic()
     {
         if (reverseToggle.load())
         {
-            togglePTO(true);
+            togglePTO(false);
             systemMotors.move(maxRollerSpeed.load());
         }
         else if (intakeToggle.load())
         {
-            togglePTO(true);
+            togglePTO(false);
             systemMotors.move(-maxRollerSpeed.load());
         }
         else

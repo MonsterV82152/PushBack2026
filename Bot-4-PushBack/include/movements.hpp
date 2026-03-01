@@ -21,8 +21,8 @@ enum class ScoringState
     RESET
 };
 
-const double SCORE_ANGLE = 950; // placeholder value, adjust as needed
-const double DOWN_ANGLE = 2245; // placeholder value, adjust as needed
+const double SCORE_ANGLE = 1000; // placeholder value, adjust as needed
+const double DOWN_ANGLE = 2100;  // placeholder value, adjust as needed
 
 inline std::atomic<double> maxRollerSpeed = std::atomic<double>(127);
 inline std::atomic<double> maxScoringSpeed = std::atomic<double>(127);
