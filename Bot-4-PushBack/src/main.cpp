@@ -11,6 +11,7 @@ void initialize()
     // autonSelect.start();
     chassis.calibrate();               // Calibrate IMU and odometry
     systemMotors.set_zero_position(0); // Reset system motor positions
+    pto.init();
 
     // Start background task for periodic control loop
     // pros::lcd::initialize(); // Initialize brain LCD
@@ -24,16 +25,17 @@ void initialize()
     autonSelect.setAutons(std::vector<autonomousRoute>{
         autonomousRoute{"red", "Left1G", "a", left},
         autonomousRoute{"red", "Right1G", "a", right},
-        autonomousRoute{"red", "Left2G", "a", left2},
         autonomousRoute{"red", "Right2G", "a", right2},
         autonomousRoute{"blue", "Left1G", "a", left},
         autonomousRoute{"blue", "Right1G", "a", right},
-        autonomousRoute{"blue", "Left2G", "a", left2},
         autonomousRoute{"blue", "Right2G", "a", right2},
         autonomousRoute{"blue", "SoloAWP", "a", soloAWP},
         autonomousRoute{"red", "SoloAWP", "a", soloAWP},
         autonomousRoute{"blue", "DriveOff", "a", test},
         autonomousRoute{"red", "DriveOff", "a", test},
+        autonomousRoute{"red", "left no middle", "a", leftNoMiddle},
+        autonomousRoute{"blue", "left no middle", "a", leftNoMiddle},
+
     });
     autonSelect.setSkillsAuton(autonomousRoute{"red", "Skills", "Skills Auton", skills});
     autonSelect.start(); // Start autonomous selector task
@@ -52,12 +54,13 @@ void competition_initialize() {}
 /// Autonomous routine - runs selected autonomous strategy
 void autonomous()
 {
-    // autonSelect.runAuton(); // Use autonomous selector
+    autonSelect.runAuton(); // Use autonomous selector
     // chassis.setPose(0, 0, 0);
     // chassis.moveToPoint(0, 24, 10000);
-    // right();  // Alternative right side routine
-    soloAWP(); // Run solo AWP (Autonomous Win Point) strategy
-    // right2();  // Alternative strategy
+    // right(); // Alternative right side routine
+    // soloAWP(); // Run solo AWP (Autonomous Win Point) strategy
+    // right2(); // Alternative strategy
+    // left();
     // skills(); // Run skills routine
 }
 

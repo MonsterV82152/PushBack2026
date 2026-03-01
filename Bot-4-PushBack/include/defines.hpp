@@ -44,7 +44,7 @@ inline pros::ADIDigitalOut wingPiston('H');
 
 // piston wrappers
 inline Piston matchLoader(&matchLoaderPiston);
-inline Piston pto(&ptoPiston2, &ptoPiston);
+inline Piston pto(&ptoPiston, &ptoPiston2);
 inline Piston intakeLift(&intakeLiftPiston);
 inline Piston lift(&liftPiston);
 inline Piston wing(&wingPiston);
