@@ -559,6 +559,40 @@ void skills()
     move(0, 0);
 }
 
+void right3() {
+    chassis.setPose(-48, -20, 180);
+    intake(true);
+    correct_position(LR, &chassis, true);
+    chassis.moveToPoint(-48, -48, 1000);
+    chassis.turnToPoint(-70, -48, 700);
+    matchLoad(true);
+    chassis.moveToPoint(-70, -48, 1000, {.maxSpeed = 60});
+    chassis.waitUntilDone();
+    correct_position(LL, &chassis, false);
+    chassis.moveToPoint(-24, -48, 1000, {.forwards = false, .maxSpeed = 80});
+    chassis.waitUntilDone();
+    score(127);
+    matchLoad(false);
+    pros::delay(2000);
+    chassis.moveToPoint(-48, -48, 1000);
+    chassis.waitUntilDone();
+    correct_position(LL, &chassis, false);
+    chassis.turnToPoint(0, 0, 700);
+    chassis.moveToPoint(-24, -24, 1000);
+    chassis.moveToPoint(-11, -11, 1000);
+    chassis.waitUntilDone();
+    intakeLiftToggle(true);
+    reverse(true, 60);
+    pros::delay(1500);
+    reverse(false);
+    liftToggle(false);
+    chassis.moveToPoint(-36, -36, 1000, {false});
+    chassis.turnToPoint(0, -36, 700);
+    wingToggle(true);
+    chassis.moveToPoint(0, -36, 1000);
+
+}
+
 void sawp4()
 {
     chassis.setPose(-48, 0, 0);
