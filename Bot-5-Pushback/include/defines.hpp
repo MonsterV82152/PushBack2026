@@ -36,18 +36,19 @@ inline dist_sensor LB(LOCB, lemlib::Pose(-4, -2.5, 180));
 
 // pistons
 inline pros::ADIDigitalOut matchLoaderPiston('D');
-inline pros::ADIDigitalOut ptoPiston('C'); // hood as well
-inline pros::ADIDigitalOut ptoPiston2('B');
+inline pros::ADIDigitalOut scoringPiston('G');
+inline pros::ADIDigitalOut ptoPiston('C');
 inline pros::ADIDigitalOut intakeLiftPiston('E');
 inline pros::ADIDigitalOut liftPiston('G');
 inline pros::ADIDigitalOut wingPiston('H');
 
 // piston wrappers
 inline Piston matchLoader(&matchLoaderPiston);
-inline Piston pto(&ptoPiston, &ptoPiston2);
+inline Piston pto(&ptoPiston);
 inline Piston intakeLift(&intakeLiftPiston);
 inline Piston lift(&liftPiston);
 inline Piston wing(&wingPiston);
+inline Piston scoring(&scoringPiston);
 
 // inline lemlib::TrackingWheel verticalWheel(&vTrack, 1.975, 0.05);
 // inline lemlib::TrackingWheel horizontalWheel(&hTrack, 1.975, -4.75);
