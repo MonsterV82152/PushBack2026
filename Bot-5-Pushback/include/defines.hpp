@@ -1,57 +1,39 @@
-#ifndef DEFINES_HPP
-#define DEFINES_HPP
+#pragma once
+
+#ifndef DEVICES_HPP
+#define DEVICES_HPP
 
 #include "main.h"
 #include "lemlib/api.hpp"
-#include "autonomous_selector.hpp"
-#include "sensor_loc.hpp"
 #include "piston.hpp"
 
-inline AutonSelector autonSelect;
+#define MANIPULATOR_ID 1
+#define DRIVETRAIN_ID 2
 
-// Drivetrain motors
-inline pros::MotorGroup leftDT({-12, 13, -14});
-inline pros::MotorGroup rightDT({18, 17, -20});
+inline pros::Controller master(pros::E_CONTROLLER_MASTER);
+inline pros::MotorGroup leftDT({1, -2, 3});
+inline pros::MotorGroup rightDT({-4, 5, -6});
+inline pros::MotorGroup motors({7, -8});
 
-// System motors
-inline pros::MotorGroup systemMotors({-15, 19}, pros::MotorGearset::red, pros::MotorUnits::degrees);
+inline pros::Rotation verticalTrackingWheel(9);
+inline pros::Rotation horizontalTrackingWheel(10);
 
-// sensors
-inline pros::Imu imu(16);
-inline pros::ADIAnalogIn potentiometer('A');
-inline pros::Rotation vTrack(4);
-inline pros::Rotation hTrack(5);
+inline pros::Imu imu(11);
 
-// loc sensors
-inline pros::Distance LOCF(7);
-inline pros::Distance LOCB(10);
-inline pros::Distance LOCL(11);
-inline pros::Distance LOCR(9);
+inline pros::ADIDigitalOut ptoPiston('A');
+inline pros::ADIDigitalOut wingPiston('B');
+inline pros::ADIDigitalOut liftPiston('C');
+inline pros::ADIDigitalOut intakeLiftPiston('D');
 
-// loc sensor wrappers with robot relative poses (x,y,theta);
-inline dist_sensor LR(LOCR, lemlib::Pose(5.5, -3.25, 90));
-inline dist_sensor LL(LOCL, lemlib::Pose(-4, 3.5, -90));
-inline dist_sensor LF(LOCF, lemlib::Pose(-4.25, -3.5, 0));
-inline dist_sensor LB(LOCB, lemlib::Pose(-4, -2.5, 180));
-
-// pistons
-inline pros::ADIDigitalOut matchLoaderPiston('D');
-inline pros::ADIDigitalOut scoringPiston('G');
-inline pros::ADIDigitalOut ptoPiston('C');
-inline pros::ADIDigitalOut intakeLiftPiston('E');
-inline pros::ADIDigitalOut liftPiston('G');
-inline pros::ADIDigitalOut wingPiston('H');
-
-// piston wrappers
-inline Piston matchLoader(&matchLoaderPiston);
 inline Piston pto(&ptoPiston);
-inline Piston intakeLift(&intakeLiftPiston);
-inline Piston lift(&liftPiston);
 inline Piston wing(&wingPiston);
-inline Piston scoring(&scoringPiston);
+inline Piston lift(&liftPiston);
+inline Piston intakeLift(&intakeLiftPiston);
 
-// inline lemlib::TrackingWheel verticalWheel(&vTrack, 1.975, 0.05);
-// inline lemlib::TrackingWheel horizontalWheel(&hTrack, 1.975, -4.75);
+inline pros::ADIAnalogIn potentiometer('E');
+
+inline lemlib::TrackingWheel verticalWheel(&verticalTrackingWheel, -2, 2);
+inline lemlib::TrackingWheel horizontalWheel(&horizontalTrackingWheel, -2, -3);
 
 inline lemlib::Drivetrain LEMLIB_drivetrain(&leftDT, &rightDT,
                                             10.85,
@@ -59,7 +41,7 @@ inline lemlib::Drivetrain LEMLIB_drivetrain(&leftDT, &rightDT,
                                             600,
                                             1.95);
 
-inline lemlib::OdomSensors LEMLIB_sensors(nullptr, nullptr, nullptr, nullptr, &imu);
+inline lemlib::OdomSensors LEMLIB_sensors(&verticalWheel, nullptr, &horizontalWheel, nullptr, &imu);
 inline lemlib::ControllerSettings LEMLIB_lateral_controller(
     10,     // proportional gain (kP)
     0.1,    // integral gain (kI)
@@ -92,5 +74,10 @@ inline lemlib::Chassis chassis(LEMLIB_drivetrain,         // drivetrain settins
                                LEMLIB_angular_controller, // angular PID settings
                                LEMLIB_sensors             // odometry sensors
 );
+
+
+
+
+
 
 #endif
