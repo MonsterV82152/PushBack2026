@@ -1,11 +1,11 @@
-#include "sensor_loc.hpp"
+#include "misc/sensor_loc.hpp"
 
 bool correct_position(dist_sensor sensor, lemlib::Chassis *chassis, bool x, bool forced, double correct_rate)
 {
     double wall_dist = 72;
     lemlib::Pose currentPos = chassis->getPose(true);
     int32_t sensorValue = sensor.sensor.get();
-    
+
     if (sensorValue == 9999)
     {
         std::cout << "distance value invalid, not correcting position" << std::endl;

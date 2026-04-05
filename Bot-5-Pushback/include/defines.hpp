@@ -5,32 +5,33 @@
 
 #include "main.h"
 #include "lemlib/api.hpp"
-#include "piston.hpp"
+#include "misc/piston.hpp"
+#include "misc/autonomous_selector.hpp"
 
 #define MANIPULATOR_ID 1
 #define DRIVETRAIN_ID 2
 
-inline pros::Controller master(pros::E_CONTROLLER_MASTER);
-inline pros::MotorGroup leftDT({1, -2, 3});
-inline pros::MotorGroup rightDT({-4, 5, -6});
-inline pros::MotorGroup motors({7, -8});
+inline pros::MotorGroup leftDT({-8, 9, -10});
+inline pros::MotorGroup rightDT({3, 4, -5});
+inline pros::MotorGroup motors({2, -19});
 
-inline pros::Rotation verticalTrackingWheel(9);
-inline pros::Rotation horizontalTrackingWheel(10);
+inline pros::Rotation verticalTrackingWheel(1);
+inline pros::Rotation horizontalTrackingWheel(20);
 
 inline pros::Imu imu(11);
 
-inline pros::ADIDigitalOut ptoPiston('A');
+inline pros::ADIDigitalOut ptoPiston('D');
 inline pros::ADIDigitalOut wingPiston('B');
 inline pros::ADIDigitalOut liftPiston('C');
-inline pros::ADIDigitalOut intakeLiftPiston('D');
+inline pros::ADIDigitalOut intakeLiftPiston('E');
+inline pros::ADIDigitalOut scoringPistonADI('F');
 
 inline Piston pto(&ptoPiston);
 inline Piston wing(&wingPiston);
 inline Piston lift(&liftPiston);
 inline Piston intakeLift(&intakeLiftPiston);
-
-inline pros::ADIAnalogIn potentiometer('E');
+inline Piston scoringPiston(&scoringPistonADI);
+inline pros::ADIAnalogIn potentiometer('A');
 
 inline lemlib::TrackingWheel verticalWheel(&verticalTrackingWheel, -2, 2);
 inline lemlib::TrackingWheel horizontalWheel(&horizontalTrackingWheel, -2, -3);
@@ -74,10 +75,5 @@ inline lemlib::Chassis chassis(LEMLIB_drivetrain,         // drivetrain settins
                                LEMLIB_angular_controller, // angular PID settings
                                LEMLIB_sensors             // odometry sensors
 );
-
-
-
-
-
 
 #endif

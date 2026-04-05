@@ -1,4 +1,4 @@
-#include "piston.hpp"
+#include "misc/piston.hpp"
 
 void Piston::init()
 {

@@ -12,7 +12,7 @@ public:
     virtual ~Command() = default;
     virtual void initialize() = 0;
     virtual void execute() = 0;
-    virtual void end() = 0;
+    virtual void end(bool interrupted) = 0;
     virtual bool isFinished() const = 0;
     Command *withTimeout(int timeout);
     void setCurrentTime(int currentTime);

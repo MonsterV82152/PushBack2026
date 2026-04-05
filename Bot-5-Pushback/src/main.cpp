@@ -1,14 +1,14 @@
 #include "main.h"
 #include "robot_commands.hpp"
 
-
 /**
  * A callback function for LLEMU's center button.
  *
  * When this callback is fired, it will toggle line 2 of the LCD text between
  * "I was pressed!" and nothing.
  */
-void on_center_button() {
+void on_center_button()
+{
 }
 
 /**
@@ -17,8 +17,10 @@ void on_center_button() {
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
-void initialize() {
-	CommandScheduler::start();  // Start the command scheduler
+void initialize()
+{
+	CommandScheduler::start(); // Start the command scheduler
+	pros::lcd::initialize();
 }
 
 /**
@@ -65,22 +67,63 @@ void autonomous() {}
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
-void opcontrol() {
-	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	pros::MotorGroup left_mg({1, -2, 3});    // Creates a motor group with forwards ports 1 & 3 and reversed port 2
-	pros::MotorGroup right_mg({-4, 5, -6});  // Creates a motor group with forwards port 5 and reversed ports 4 & 6
+void opcontrol()
+{
+	CommandScheduler::setDefaultCommand(new JoystickDrive(), DRIVETRAIN_ID);
+	while (true)
+	{
+		pros::lcd::clear_line(1);
+		pros::lcd::print(1, "%d", potentiometer.get_value());
 
+		if (R1_NEW_PRESS)
+		{
+			RobotStates::shouldBeIntaking = !RobotStates::shouldBeIntaking;
+			if (RobotStates::currentState != RobotState::SCORING)
+			{
+				if (RobotStates::shouldBeIntaking)
+					CommandScheduler::scheduleCommand(intake());
+				else
+					CommandScheduler::scheduleCommand(new StopIntake());
+			}
+		}
+		if (R2_NEW_PRESS)
+		{
+			if (RobotStates::stickState == RobotState::INTAKING)
+			{
+				CommandScheduler::scheduleCommand(reverseIntake());
+			}
+		}
+		if (R2_RELEASED)
+		{
+			if (RobotStates::stickState == RobotState::INTAKING && RobotStates::shouldBeIntaking)
+			{
+				CommandScheduler::scheduleCommand(intake());
+			}
+			else if (RobotStates::stickState == RobotState::INTAKING)
+			{
+				CommandScheduler::scheduleCommand(new StopIntake());
+			}
+		}
+		if (L1_NEW_PRESS)
+		{
+			CommandScheduler::scheduleCommand(score(matchScoreFunction));
+		}
+		if (L1_RELEASED)
+		{
+			if (R2_HELD)
+			{
+				CommandScheduler::scheduleCommand(reverseIntake());
+			}
+			else if (RobotStates::shouldBeIntaking)
+			{
+				CommandScheduler::scheduleCommand(intake());
+			}
+			else
+			{
+				CommandScheduler::scheduleCommand(lowerScoring());
+			}
+		}
 
-	while (true) {
-		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
-		                 (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
-		                 (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);  // Prints status of the emulated screen LCDs
-
-		// Arcade control scheme
-		int dir = master.get_analog(ANALOG_LEFT_Y);    // Gets amount forward/backward from left joystick
-		int turn = master.get_analog(ANALOG_RIGHT_X);  // Gets the turn left/right from right joystick
-		left_mg.move(dir - turn);                      // Sets left motor voltage
-		right_mg.move(dir + turn);                     // Sets right motor voltage
-		pros::delay(20);                               // Run for 20 ms then update
+		pros::delay(20); // Run for 20 ms then update
 	}
 }

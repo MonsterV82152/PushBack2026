@@ -6,6 +6,12 @@
 // Constants
 constexpr double PI = 3.141592;
 
+constexpr int SCORING_DOWN_ANGLE = 1620;
+constexpr int SCORING_UP_ANGLE = 2930;
+
+constexpr bool SCORING_ENGAGED = false;
+constexpr bool INTAKE_ENGAGED = true;
+
 /*---Controller---*/
 inline pros::Controller master(pros::E_CONTROLLER_MASTER);
 inline pros::Controller slave(pros::E_CONTROLLER_PARTNER);
@@ -75,7 +81,5 @@ const pros::motor_brake_mode_e_t hold = pros::E_MOTOR_BRAKE_HOLD;
 #define R2_RELEASED (master.get_digital_new_release(buttons::R2))
 #define L1_RELEASED (master.get_digital_new_release(buttons::L1))
 #define L2_RELEASED (master.get_digital_new_release(buttons::L2))
-
-
 
 #endif

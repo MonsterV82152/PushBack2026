@@ -45,7 +45,7 @@ public:
         bool timedOut = current->getTimeout() > 0 && now >= current->getEndTime();
         if (current->isFinished() || timedOut)
         {
-            current->end();
+            current->end(timedOut);
             ++currentIndex;
             if (currentIndex < (int)commands.size())
             {
@@ -55,10 +55,10 @@ public:
         }
     }
 
-    void end() override
+    void end(bool interrupted) override
     {
         if (currentIndex < (int)commands.size())
-            commands[currentIndex]->end();
+            commands[currentIndex]->end(interrupted);
     }
 
     bool isFinished() const override
@@ -111,19 +111,19 @@ public:
             bool timedOut = commands[i]->getTimeout() > 0 && now >= commands[i]->getEndTime();
             if (commands[i]->isFinished() || timedOut)
             {
-                commands[i]->end();
+                commands[i]->end(timedOut);
                 finished[i] = true;
             }
         }
     }
 
-    void end() override
+    void end(bool interrupted) override
     {
         for (int i = 0; i < (int)commands.size(); ++i)
         {
             if (!finished[i])
             {
-                commands[i]->end();
+                commands[i]->end(interrupted);
                 finished[i] = true;
             }
         }
@@ -184,7 +184,7 @@ public:
             bool timedOut = commands[i]->getTimeout() > 0 && now >= commands[i]->getEndTime();
             if (commands[i]->isFinished() || timedOut)
             {
-                commands[i]->end();
+                commands[i]->end(timedOut);
                 finished[i] = true;
                 raceWon = true;
                 break; // end() on the rest is handled by isFinished() → scheduler calls end()
@@ -192,13 +192,13 @@ public:
         }
     }
 
-    void end() override
+    void end(bool interrupted) override
     {
         for (int i = 0; i < (int)commands.size(); ++i)
         {
             if (!finished[i])
             {
-                commands[i]->end();
+                commands[i]->end(interrupted);
                 finished[i] = true;
             }
         }
@@ -213,6 +213,70 @@ private:
     std::vector<Command *> commands;
     std::vector<bool> finished;
     bool raceWon;
+};
+
+// Does nothing and finishes immediately. Useful as a no-op placeholder.
+class EmptyCommand : public Command
+{
+public:
+    void initialize() override {}
+    void execute() override {}
+    void end(bool interrupted) override {}
+    bool isFinished() const override { return true; }
+};
+
+// Evaluates a condition at initialization time and runs one of two commands.
+// Takes ownership of both branch commands.
+class ConditionalCommand : public Command
+{
+public:
+    ConditionalCommand(std::function<bool()> condition, Command *onTrue, Command *onFalse)
+        : condition(condition), onTrue(onTrue), onFalse(onFalse), selected(nullptr)
+    {
+        for (int req : onTrue->getRequirements())
+            requirements.push_back(req);
+        for (int req : onFalse->getRequirements())
+            requirements.push_back(req);
+    }
+
+    ~ConditionalCommand()
+    {
+        delete onTrue;
+        delete onFalse;
+    }
+
+    void initialize() override
+    {
+        selected = condition() ? onTrue : onFalse;
+        selected->setCurrentTime(pros::millis());
+        selected->initialize();
+    }
+
+    void execute() override
+    {
+        if (selected)
+            selected->execute();
+    }
+
+    void end(bool interrupted) override
+    {
+        if (selected)
+            selected->end(interrupted);
+    }
+
+    bool isFinished() const override
+    {
+        if (!selected)
+            return true;
+        bool timedOut = selected->getTimeout() > 0 && pros::millis() >= selected->getEndTime();
+        return selected->isFinished() || timedOut;
+    }
+
+private:
+    std::function<bool()> condition;
+    Command *onTrue;
+    Command *onFalse;
+    Command *selected;
 };
 
 #endif

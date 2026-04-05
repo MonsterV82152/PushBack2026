@@ -15,7 +15,10 @@ namespace CommandScheduler
     void setDefaultCommand(Command *command, int subsystem);
     void start();
     void run();
-    std::vector<Command *> scheduledCommands;
-    std::vector<std::pair<Command *, int>> defaultCommands; // pair of command and its requirements
+
+    inline pros::Mutex mutex;
+    inline std::vector<Command *> scheduledCommands;
+    inline std::vector<Command *> pendingCommands;                 // staged by external tasks, drained each tick
+    inline std::vector<std::pair<Command *, int>> defaultCommands; // pair of command and its subsystem
 }
 #endif
