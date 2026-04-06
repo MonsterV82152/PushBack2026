@@ -6,8 +6,8 @@
 // Constants
 constexpr double PI = 3.141592;
 
-constexpr int SCORING_DOWN_ANGLE = 1620;
-constexpr int SCORING_UP_ANGLE = 2930;
+constexpr int SCORING_DOWN_ANGLE = 3350;
+constexpr int SCORING_UP_ANGLE = 3750;
 
 constexpr bool SCORING_ENGAGED = false;
 constexpr bool INTAKE_ENGAGED = true;
