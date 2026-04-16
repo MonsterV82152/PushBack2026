@@ -21,6 +21,7 @@ void initialize()
 {
 	CommandScheduler::start(); // Start the command scheduler
 	pros::lcd::initialize();
+	wingPiston.set_value(false);
 }
 
 /**
@@ -67,8 +68,11 @@ void autonomous() {}
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
+
+bool liftStatus = false;
 void opcontrol()
 {
+	wingPiston.set_value(true);
 	CommandScheduler::setDefaultCommand(new JoystickDrive(), DRIVETRAIN_ID);
 	while (true)
 	{
@@ -77,6 +81,7 @@ void opcontrol()
 
 		if (R1_NEW_PRESS)
 		{
+			hood.set_value(false);
 			RobotStates::shouldBeIntaking = !RobotStates::shouldBeIntaking;
 			if (RobotStates::currentState != RobotState::SCORING)
 			{
@@ -106,10 +111,12 @@ void opcontrol()
 		}
 		if (L1_NEW_PRESS)
 		{
+			hood.set_value(true);
 			CommandScheduler::scheduleCommand(score(matchScoreFunction));
 		}
 		if (L1_RELEASED)
 		{
+			hood.set_value(false);
 			if (R2_HELD)
 			{
 				CommandScheduler::scheduleCommand(reverseIntake());
@@ -122,6 +129,24 @@ void opcontrol()
 			{
 				CommandScheduler::scheduleCommand(lowerScoring());
 			}
+		}
+
+		if(L2_NEW_PRESS) {
+			if(liftStatus) {
+				liftPiston.set_value(false);
+				liftStatus = false;
+			}
+			else {
+				liftPiston.set_value(true);
+				liftStatus = true;
+			}
+		}
+
+		if (B_NEW_PRESS) {
+			wingPiston.set_value(false);
+		}
+		else if (B_RELEASED) {
+			wingPiston.set_value(true);
 		}
 
 		pros::delay(20); // Run for 20 ms then update

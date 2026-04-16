@@ -13,7 +13,7 @@
 
 inline pros::MotorGroup leftDT({-8, 9, -10});
 inline pros::MotorGroup rightDT({3, 4, -5});
-inline pros::MotorGroup motors({2, -19});
+inline pros::MotorGroup motors({2, 19});
 
 inline pros::Rotation verticalTrackingWheel(1);
 inline pros::Rotation horizontalTrackingWheel(20);
@@ -21,15 +21,16 @@ inline pros::Rotation horizontalTrackingWheel(20);
 inline pros::Imu imu(11);
 
 inline pros::ADIDigitalOut ptoPiston('D');
-inline pros::ADIDigitalOut wingPiston('B');
-inline pros::ADIDigitalOut liftPiston('C');
+inline pros::ADIDigitalOut wingPiston('H');
+inline pros::ADIDigitalOut liftPiston('B');
 inline pros::ADIDigitalOut intakeLiftPiston('E');
 inline pros::ADIDigitalOut scoringPistonADI('F');
+inline pros::ADIDigitalOut hood('C');
 
 inline Piston pto(&ptoPiston);
-inline Piston wing(&wingPiston);
+//inline Piston wing(&wingPiston);
 inline Piston lift(&liftPiston);
-inline Piston intakeLift(&intakeLiftPiston);
+//inline Piston intakeLift(&intakeLiftPiston);
 inline Piston scoringPiston(&scoringPistonADI);
 inline pros::ADIAnalogIn potentiometer('A');
 
